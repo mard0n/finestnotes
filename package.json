@@ -1,0 +1,17 @@
+{
+  "name": "finest",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "pnpm -r dev",
+    "dev:web": "run --filter 'apps/web' dev",
+    "build": "pnpm -r build",
+    "build:web": "run --filter 'apps/web' build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.16.1"
+}
