@@ -1,9 +1,46 @@
-import { Hono } from 'hono'
+import { Hono } from "hono";
+import type { D1Database } from "@cloudflare/workers-types";
+import { drizzle } from "drizzle-orm/d1";
+import { notes } from "./db/schema";
+import { zValidator } from "@hono/zod-validator";
+import * as z from "zod";
 
-const app = new Hono()
+type Bindings = {
+  finest_db: D1Database;
+};
 
-app.get('/', (c) => {
-  return c.text('Hello Hono!')
-})
+const app = new Hono<{ Bindings: Bindings }>();
 
-export default app
+app.get("/", async (c) => {
+  return c.html("Hello");
+});
+
+app.get("/notes", async (c) => {
+  const db = drizzle(c.env.finest_db);
+  const result = await db.select().from(notes).all();
+  return c.json(result);
+});
+
+app.post(
+  "/note",
+  zValidator(
+    "json",
+    z.object({
+      title: z.string().min(1),
+      content: z.string().min(1),
+    })
+  ),
+  async (c) => {
+    const { title, content } = c.req.valid("json");
+    const db = drizzle(c.env.finest_db);
+
+    await db.insert(notes).values({ title, content }).run();
+
+    return c.json({
+      success: true,
+      message: `Note is successfully added`,
+    });
+  }
+);
+
+export default app;
