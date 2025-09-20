@@ -1,4 +1,3 @@
- packages:
-   - 'apps/*'
-   - 'packages/*'
-   # Add other paths if needed, e.g., - 'libs/*'
+packages:
+  - 'apps/*'
+  - 'packages/*'

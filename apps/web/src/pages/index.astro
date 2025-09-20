@@ -1,11 +1,21 @@
 ---
-import Welcome from '../components/Welcome.astro';
+import { client } from 'utils/types';
 import Layout from '../layouts/Layout.astro';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+export const prerender = false
+
+let res = await client.api.notes.$get()
+
+var notes: { id: number; content: string, title: string }[] = [];
+if (res.ok) {
+	notes = await res.json();
+}
 ---
 
 <Layout>
-	<Welcome />
+	<ul>
+		{notes.map((note) => (
+			<li>{note.title}</li>
+		))}
+	</ul>
 </Layout>

@@ -3,6 +3,9 @@
 	"name": "server",
 	"main": "src/index.ts",
 	"compatibility_date": "2025-09-19",
+	"dev": {
+		"port": 8080
+	},
 	"d1_databases": [
 		{
 			"binding": "finest_db",

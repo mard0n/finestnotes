@@ -1,14 +1,21 @@
 {
-  "name": "apps-web",
+  "name": "@finest/web",
   "type": "module",
   "version": "0.0.1",
   "scripts": {
-    "dev": "astro dev",
+    "dev": "astro dev && npx wrangler dev",
     "build": "astro build",
+    "deploy": "astro build && npx wrangler deploy",
     "preview": "astro preview",
     "astro": "astro"
   },
   "dependencies": {
-    "astro": "^5.13.8"
+    "@astrojs/cloudflare": "^12.6.8",
+    "astro": "^5.13.8",
+    "hono": "^4.9.8",
+    "@finest/utils": "workspace:^"
+  },
+  "devDependencies": {
+    "wrangler": "^4.38.0"
   }
 }

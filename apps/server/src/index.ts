@@ -9,19 +9,13 @@ type Bindings = {
   finest_db: D1Database;
 };
 
-const app = new Hono<{ Bindings: Bindings }>();
+const app = new Hono<{ Bindings: Bindings }>().basePath("/api/")
 
-app.get("/", async (c) => {
-  return c.html("Hello");
-});
-
-app.get("/notes", async (c) => {
+let route = app.get("/notes", async (c) => {
   const db = drizzle(c.env.finest_db);
   const result = await db.select().from(notes).all();
   return c.json(result);
-});
-
-app.post(
+}).post(
   "/note",
   zValidator(
     "json",
@@ -42,5 +36,7 @@ app.post(
     });
   }
 );
+
+export type route = typeof route;
 
 export default app;

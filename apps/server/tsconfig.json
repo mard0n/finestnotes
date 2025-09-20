@@ -1,4 +1,5 @@
 {
+  "extends": ["@finest/typescript-config"],
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
@@ -9,6 +10,7 @@
       "ESNext"
     ],
     "jsx": "react-jsx",
-    "jsxImportSource": "hono/jsx"
+    "jsxImportSource": "hono/jsx",
+    "baseUrl": "src"
   },
 }

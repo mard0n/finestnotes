@@ -1,6 +1,9 @@
 {
-  "name": "server",
+  "name": "@finest/server",
   "type": "module",
+  "exports": {
+    "./types": "./src/types/index.ts"
+  },
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy --minify",
@@ -15,7 +18,8 @@
     "dotenv": "^17.2.2",
     "drizzle-orm": "^0.44.5",
     "hono": "^4.9.8",
-    "zod": "^4.1.9"
+    "zod": "^4.1.9",
+    "@finest/typescript-config": "workspace:^"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250919.0",
