@@ -1,18 +1,12 @@
 {
   "name": "@finest/monorepo",
-  "private": true,
-  "version": "1.0.0",
-  "description": "",
+  "type": "module",
+  "version": "0.0.1",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "pnpm -r dev",
-    "dev:web": "run --filter 'apps/web' dev",
-    "build": "pnpm -r build",
-    "build:web": "run --filter 'apps/web' build",
-    "deploy": "pnpm -r deploy"
+    "dev": "pnpm -r --parallel dev",
+    "deploy": "pnpm -r --parallel deploy",
+    "check-types": "pnpm -r --parallel check-types"
   },
   "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "packageManager": "pnpm@10.16.1"
+  "author": "mardon"
 }

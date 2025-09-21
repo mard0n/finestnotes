@@ -1,23 +1,31 @@
 {
   "$schema": "https://json.schemastore.org/tsconfig",
   "compilerOptions": {
+    // "target": "ES2022",
+    // "module": "ESNext",
+    // "moduleDetection": "force",
+    // "moduleResolution": "bundler",
+
     "composite": true,
     "declaration": true,
     "declarationMap": true,
-    // "incremental": false,
+    
+    "incremental": true,
 
     "isolatedModules": true,
+    // "verbatimModuleSyntax": true, // or `isolatedModules`
 
-    "lib": ["ESNext"],
+    // "lib": ["ESNext"],
+
     "esModuleInterop": true,
-    "module": "ESNext",
-    "moduleDetection": "force",
-    "moduleResolution": "bundler",
+    "importHelpers": true,
+    "allowSyntheticDefaultImports": true,
     
-    "noUncheckedIndexedAccess": true,
-    "resolveJsonModule": true,
-    "skipLibCheck": true,
     "strict": true,
-    "target": "ES2022"
+    "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    
+    // "resolveJsonModule": true,
   }
 }

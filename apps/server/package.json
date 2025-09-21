@@ -1,13 +1,17 @@
 {
   "name": "@finest/server",
   "type": "module",
+  "version": "0.0.1",
   "exports": {
     "./types": "./src/types/index.ts"
   },
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy --minify",
+    "check-types": "tsc --noEmit",
+
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+
     "db:generate": "pnpm drizzle-kit generate",
     "db:migrate": "pnpm drizzle-kit migrate",
     "db:push": "pnpm drizzle-kit push"
@@ -18,14 +22,14 @@
     "dotenv": "^17.2.2",
     "drizzle-orm": "^0.44.5",
     "hono": "^4.9.8",
-    "zod": "^4.1.9",
-    "@finest/typescript-config": "workspace:^"
+    "zod": "^4.1.9"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20250919.0",
     "@types/node": "^24.5.2",
     "drizzle-kit": "^0.31.4",
     "tsx": "^4.20.5",
-    "wrangler": "^4.4.0"
+    "wrangler": "^4.4.0",
+    "@finest/typescript-config": "workspace:^"
   }
 }
