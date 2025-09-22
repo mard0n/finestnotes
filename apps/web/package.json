@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
-    "deploy": "astro build && wrangler deploy",
-    "preview": "astro build && wrangler dev",
+    "deploy-r": "astro build && wrangler deploy",
+    "preview": "astro build && wrangler dev --env=production",
     "astro": "astro",
     "check-types": "astro check"
   },

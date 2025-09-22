@@ -4,12 +4,15 @@ import { drizzle } from "drizzle-orm/d1";
 import { notes } from "./db/schema";
 import { zValidator } from "@hono/zod-validator";
 import * as z from "zod";
+import { cors } from "hono/cors";
 
 type Bindings = {
   finest_db: D1Database;
 };
 
 const app = new Hono<{ Bindings: Bindings }>().basePath("/api/")
+
+app.use(cors());
 
 let route = app.get("/notes", async (c) => {
   const db = drizzle(c.env.finest_db);

@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "scripts": {
     "dev": "pnpm -r --parallel dev",
-    "deploy": "pnpm -r --parallel deploy",
+    "deploy-r": "pnpm -r deploy-r",
     "check-types": "pnpm -r --parallel check-types"
   },
   "keywords": [],
