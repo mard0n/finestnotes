@@ -8,10 +8,10 @@
 	},
 	"d1_databases": [
 		{
-			"binding": "finest_db",
-			"database_name": "finest-db",
-			"database_id": "65766eb6-f76f-4502-bb64-11e16b9e3ac7",
-			"migrations_dir": "drizzle/migrations"
+			"binding": "finestdb",
+			"database_name": "finestdb",
+			"database_id": "a409d3f8-498d-4a22-9da6-121b113e638e",
+			"migrations_dir": "drizzle"
 		}
 	],
 	// "compatibility_flags": [
