@@ -10,6 +10,12 @@ importers:
 
   apps/extension:
     dependencies:
+      '@finest/utils':
+        specifier: workspace:^
+        version: link:../../packages/utils
+      hono:
+        specifier: ^4.9.8
+        version: 4.9.8
       solid-js:
         specifier: ^1.9.9
         version: 1.9.9

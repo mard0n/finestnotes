@@ -15,7 +15,9 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
-    "solid-js": "^1.9.9"
+    "solid-js": "^1.9.9",
+    "@finest/utils": "workspace:^",
+    "hono": "^4.9.8"
   },
   "devDependencies": {
     "@wxt-dev/module-solid": "^1.1.3",
