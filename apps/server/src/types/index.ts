@@ -1,1 +1,1 @@
-export type { route } from "../index";
+export type { RouteType } from "../index";

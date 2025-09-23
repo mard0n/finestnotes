@@ -40,6 +40,6 @@ let route = app.get("/notes", async (c) => {
   }
 );
 
-export type route = typeof route;
+export type RouteType = typeof route;
 
 export default app;
