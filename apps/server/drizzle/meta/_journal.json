@@ -15,6 +15,13 @@
       "when": 1758610423107,
       "tag": "0001_glorious_mother_askani",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1758723658309,
+      "tag": "0002_small_quasimodo",
+      "breakpoints": true
     }
   ]
 }

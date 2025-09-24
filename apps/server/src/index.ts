@@ -5,10 +5,9 @@ import { annotations, notes } from "./db/schema";
 import { zValidator } from "@hono/zod-validator";
 import * as z from "zod";
 import { cors } from "hono/cors";
-import { eq } from "drizzle-orm";
 
 type Bindings = {
-  finest_db: D1Database;
+  finestdb: D1Database;
 };
 
 const app = new Hono<{ Bindings: Bindings }>().basePath("/api/")
@@ -16,7 +15,7 @@ const app = new Hono<{ Bindings: Bindings }>().basePath("/api/")
 app.use(cors());
 
 let route = app.get("/notes", async (c) => {
-  const db = drizzle(c.env.finest_db);
+  const db = drizzle(c.env.finestdb);
   const result = await db.select().from(notes).all();
   return c.json(result);
 }).post(
@@ -30,7 +29,7 @@ let route = app.get("/notes", async (c) => {
   ),
   async (c) => {
     const { title, content } = c.req.valid("json");
-    const db = drizzle(c.env.finest_db);
+    const db = drizzle(c.env.finestdb);
 
     await db.insert(notes).values({ title, content }).run();
 
@@ -52,7 +51,7 @@ let route = app.get("/notes", async (c) => {
   ),
   async (c) => {
     const { sourceTitle, sourceLink, content, link, comment } = c.req.valid("json");
-    const db = drizzle(c.env.finest_db);
+    const db = drizzle(c.env.finestdb);
 
     await db.insert(annotations).values({ type: "highlight", sourceTitle, sourceLink, content, link, comment }).run();
 
@@ -72,7 +71,7 @@ let route = app.get("/notes", async (c) => {
   ),
   async (c) => {
     const { sourceTitle, sourceLink, comment } = c.req.valid("json");
-    const db = drizzle(c.env.finest_db);
+    const db = drizzle(c.env.finestdb);
 
     await db.insert(annotations).values({ type: "page", sourceTitle, sourceLink, comment }).run();
 
@@ -94,7 +93,7 @@ let route = app.get("/notes", async (c) => {
   ),
   async (c) => {
     const { sourceTitle, sourceLink, content, link, comment } = c.req.valid("json");
-    const db = drizzle(c.env.finest_db);
+    const db = drizzle(c.env.finestdb);
 
     await db.insert(annotations).values({ type: "image", sourceTitle, sourceLink, content, link, comment }).run();
 
@@ -103,17 +102,16 @@ let route = app.get("/notes", async (c) => {
       message: `Image is successfully saved`,
     });
   }
-);
-
-// app.get("/annotations", async (c) => {
-//   const db = drizzle(c.env.finest_db);
-//   const result = await db.select().from(annotations).all();
-//   return c.json(result);
-// });
+).get("/annotations", async (c) => {
+  console.log('/annotations', c);
+  const db = drizzle(c.env.finestdb);
+  const result = await db.select().from(annotations).all();
+  return c.json(result);
+});
 
 // app.delete("/annotation/:id", async (c) => {
 //   const id = c.req.param("id");
-//   const db = drizzle(c.env.finest_db);
+//   const db = drizzle(c.env.finestdb);
 //   await db.delete(annotations).where(eq(annotations.id, Number(id))).run();
 //   return c.json({ success: true, message: `Annotation with id ${id} is deleted` });
 // });
@@ -121,3 +119,4 @@ let route = app.get("/notes", async (c) => {
 export type RouteType = typeof route;
 
 export default app;
+

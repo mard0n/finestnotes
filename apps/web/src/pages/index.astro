@@ -1,21 +1,24 @@
 ---
 import Layout from '@layouts/Layout.astro';
 import { client } from '@utils/types';
+import type { InferResponseType } from 'hono';
 
 export const prerender = false
 
-var notes: { id: number; content: string, title: string }[] = [];
+var annotations: InferResponseType<typeof client.api.annotations.$get> = [];
 
 try {
-		let url = client.api.notes.$url() // Log the URL to verify it's correct
+		let url = client.api.annotations.$url() // Log the URL to verify it's correct
 		console.log("Fetching notes from URL:", url.toString())
-    const res = await client.api.notes.$get().then((r) => {
+    const res = await client.api.annotations.$get().then((r) => {
 			console.log("Fetched notes:", r)
 			return r
 		})
     if (res.ok) {
-        notes = await res.json();
+        annotations = await res.json();
     }
+		console.log('annotations', annotations);
+		
 } catch (error) {
     console.error('Error fetching notes:', error);
 }
@@ -23,8 +26,8 @@ try {
 
 <Layout>
 	<ul>
-		{notes.map((note) => (
-			<li>{note.title}</li>
+		{annotations.map((annotation) => (
+			<li>{annotation.sourceTitle}</li>
 		))}
 	</ul>
 </Layout>
