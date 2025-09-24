@@ -15,6 +15,7 @@ type ResponseType<T, E = string> = SuccessResponse<T> | ErrorResponse<E>;
 
 interface MessageMap {
   GET_HIGHLIGHT_DATA: { request: undefined; response: ResponseType<HighlightReqType> };
+  HIGHLIGHT_TEXT: { request: undefined; response: ResponseType<undefined> };
 }
 
 type MessageType = keyof MessageMap;
@@ -50,5 +51,7 @@ type Action<T extends keyof MessageMap> = {
 }
 
 export async function sendMessage<T extends MessageType>(tabId: number, action: Action<T>): Promise<MessageResponse<T>> {
+  console.log("tabId", tabId);
+  console.log("action.type", action.type);
   return browser.tabs.sendMessage(tabId, action);
 }

@@ -1,5 +1,6 @@
 import { generateXPathLink } from "./utils/libs/getXPath";
 import { createMessageHandler } from "./messaging";
+import { selectTextInBetween } from "./utils/libs/selectTextInBetween";
 
 console.log("Hello from the content script!");
 
@@ -18,5 +19,17 @@ createMessageHandler("GET_HIGHLIGHT_DATA", () => {
   } catch (error) {
     console.error("Error generating highlight data:", error);
     return { success: false, error: (error as Error).message };
+  }
+});
+
+
+createMessageHandler("HIGHLIGHT_TEXT", () => {
+  console.log("HIGHLIGHT_TEXT message received in content script via handler");
+  const selection = window.getSelection();
+  if (selection && !selection.isCollapsed) {
+    selectTextInBetween(selection)
+    return { success: true, data: undefined };
+  } else {
+    return { success: false, error: "No text selected" };
   }
 });

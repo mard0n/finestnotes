@@ -12,11 +12,15 @@ browser.commands.onCommand.addListener(async (command, tab) => {
     try {
       const response = await sendMessage(tab.id, { type: "GET_HIGHLIGHT_DATA" });
       console.log("response", response);
-      if (response.success) {
+      if (response?.success) {
         await client.api.highlight.$post({ json: response.data })
       } else {
         console.error("Failed to get highlight data:", response.error);
+        throw new Error("Failed to get highlight data: " + response.error)
       }
+
+      await sendMessage(tab.id, { type: "HIGHLIGHT_TEXT" });
+      
     } catch (error) {
       console.error("Error sending message to content script:", error);
     }
