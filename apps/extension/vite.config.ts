@@ -16,7 +16,8 @@ export default defineConfig({
   plugins: [
     webExtension({
       manifest: generateManifest,
-      watchFilePaths: ["package.json", "manifest.json"],
+      // watchFilePaths: ["package.json", "manifest.json"],
+      disableAutoLaunch: true
     }),
   ],
 });

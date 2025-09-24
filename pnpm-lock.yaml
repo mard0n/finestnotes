@@ -9,6 +9,16 @@ importers:
   .: {}
 
   apps/extension:
+    dependencies:
+      '@finest/utils':
+        specifier: workspace:^
+        version: link:../../packages/utils
+      get-xpath:
+        specifier: ^3.3.0
+        version: 3.3.0
+      hono:
+        specifier: ^4.9.8
+        version: 4.9.8
     devDependencies:
       '@types/webextension-polyfill':
         specifier: ^0.10.0
@@ -2163,6 +2173,9 @@ packages:
 
   get-tsconfig@4.10.1:
     resolution: {integrity: sha512-auHyJ4AgMz7vgS8Hp3N6HXSmlMdUyhSUrfBF16w153rxtLIEOE+HGqaBppczZvnHLqQJfiHotCYpNhl0lUROFQ==}
+
+  get-xpath@3.3.0:
+    resolution: {integrity: sha512-AKbHVEHSlSDS9AJDmjfSxV010xSVRFzkS4UkGCb8CaGvorp83GCuKwcmzF/64CVp3M5wjgy9tc6y1uR2V+c5Xw==}
 
   github-slugger@2.0.0:
     resolution: {integrity: sha512-IaOQ9puYtjrkq7Y0Ygl9KDZnrf/aiUJYUpVf89y8kyaxbRG7Y1SrX/jaumrv81vc61+kiMempujsM3Yw7w5qcw==}
@@ -5542,6 +5555,8 @@ snapshots:
   get-tsconfig@4.10.1:
     dependencies:
       resolve-pkg-maps: 1.0.0
+
+  get-xpath@3.3.0: {}
 
   github-slugger@2.0.0: {}
 
