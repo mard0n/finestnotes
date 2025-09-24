@@ -1,0 +1,24 @@
+{
+  "name": "Highlight",
+  "version": "0.0.1",
+  "description": "Select and highlight text on any webpage.",
+  "manifest_version": 3,
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"]
+    }
+  ],
+  "commands": {
+    "highlight": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+U",
+        "mac": "Command+Shift+U"
+      },
+      "description": "Highlight selected text"
+    }
+  }
+}
