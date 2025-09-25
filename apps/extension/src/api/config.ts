@@ -1,5 +1,5 @@
 import type { RouteType } from '@finest/utils/types'
-import { hc, InferRequestType } from 'hono/client'
+import { hc, InferRequestType, InferResponseType } from 'hono/client'
 
 const apiUrl = import.meta.env.VITE_API_URL
 if (!apiUrl) {
@@ -11,4 +11,7 @@ const client = hc<RouteType>(apiUrl)
 const $highlight = client.api.highlight.$post
 type HighlightReqType = InferRequestType<typeof $highlight>['json']
 
-export { client, type HighlightReqType };
+const $annotations = client.api.annotations.source.$get
+type AnnotationsResType = InferResponseType<typeof $annotations>
+
+export { client, type HighlightReqType, type AnnotationsResType };

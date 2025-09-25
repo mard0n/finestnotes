@@ -15,13 +15,13 @@
     "default_popup": "src/popup/popup.html"
   },
   "background": {
-    "{{chrome}}.service_worker": "src/background.ts",
-    "{{firefox}}.scripts": ["src/background.ts"]
+    "{{chrome}}.service_worker": "src/background/index.ts",
+    "{{firefox}}.scripts": ["src/background/index.ts"]
   },
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["src/content.ts"]
+      "js": ["src/content/index.ts", "src/content/highlight-on-load.ts"]
     }
   ],
   "commands": {
@@ -32,5 +32,8 @@
       },
       "description": "Highlight selected text"
     }
-  }
+  },
+  "permissions": [
+    "storage"
+  ]
 }

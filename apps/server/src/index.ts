@@ -5,6 +5,7 @@ import { annotations, notes } from "./db/schema";
 import { zValidator } from "@hono/zod-validator";
 import * as z from "zod";
 import { cors } from "hono/cors";
+import { eq } from "drizzle-orm";
 
 type Bindings = {
   finestdb: D1Database;
@@ -53,12 +54,9 @@ let route = app.get("/notes", async (c) => {
     const { sourceTitle, sourceLink, content, link, comment } = c.req.valid("json");
     const db = drizzle(c.env.finestdb);
 
-    await db.insert(annotations).values({ type: "highlight", sourceTitle, sourceLink, content, link, comment }).run();
+    const [highlight] = await db.insert(annotations).values({ type: "highlight", sourceTitle, sourceLink, content, link, comment }).returning()
 
-    return c.json({
-      success: true,
-      message: `Highlight is successfully added`,
-    });
+    return c.json(highlight);
   }
 ).post("/save-page",
   zValidator(
@@ -107,14 +105,20 @@ let route = app.get("/notes", async (c) => {
   const db = drizzle(c.env.finestdb);
   const result = await db.select().from(annotations).all();
   return c.json(result);
+}).get("/annotations/source", zValidator(
+  "query",
+  z.object({
+    url: z.url()
+  })
+), async (c) => {
+  console.log('/annotations/source', c);
+  const { url: sourceUrl } = c.req.valid("query");
+  console.log('sourceUrl', sourceUrl);
+  const db = drizzle(c.env.finestdb);
+  const result = await db.select().from(annotations).where(eq(annotations.sourceLink, sourceUrl))
+  console.log('result', result);
+  return c.json(result);
 });
-
-// app.delete("/annotation/:id", async (c) => {
-//   const id = c.req.param("id");
-//   const db = drizzle(c.env.finestdb);
-//   await db.delete(annotations).where(eq(annotations.id, Number(id))).run();
-//   return c.json({ success: true, message: `Annotation with id ${id} is deleted` });
-// });
 
 export type RouteType = typeof route;
 

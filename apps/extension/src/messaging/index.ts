@@ -1,57 +1,85 @@
 import browser from "webextension-polyfill";
-import { type HighlightReqType } from "../api/config";
+import { type AnnotationsResType, type HighlightReqType } from "../api/config";
+import { UserError, SystemError } from "../utils/errors";
 
-type SuccessResponse<T> = {
+interface MessageMap {
+  GET_HIGHLIGHT_DATA: { request: undefined; response: HighlightReqType };
+  HIGHLIGHT_TEXT: { request: { highlightId: number }; response: undefined };
+  FETCH_ANNOTATIONS: { request: { currentURL: string }; response: AnnotationsResType }
+}
+
+interface ChromeMessageRequest<T extends keyof MessageMap> {
+  type: T;
+  data?: MessageMap[T]['request'];
+}
+
+type ChromeSuccessResponse<T> = {
   success: true;
   data: T;
 };
 
-type ErrorResponse<E = string> = {
+type ChromeErrorResponse<E = string> = {
   success: false;
   error: E;
+  isUserFacing: boolean;
 };
 
-type ResponseType<T, E = string> = SuccessResponse<T> | ErrorResponse<E>;
+type ChromeResponseType<T extends keyof MessageMap, E = string> = ChromeSuccessResponse<MessageMap[T]['response']> | ChromeErrorResponse<E>;
 
-interface MessageMap {
-  GET_HIGHLIGHT_DATA: { request: undefined; response: ResponseType<HighlightReqType> };
-  HIGHLIGHT_TEXT: { request: undefined; response: ResponseType<undefined> };
-}
 
-type MessageType = keyof MessageMap;
-type MessageRequest<T extends MessageType> = MessageMap[T]['request'];
-type MessageResponse<T extends MessageType> = MessageMap[T]['response'];
+type MessageRequest<T extends keyof MessageMap> = MessageMap[T]['request'];
+type MessageResponse<T extends keyof MessageMap> = MessageMap[T]['response'];
 
-interface ChromeMessage<T extends MessageType> {
-  type: T;
-  data: MessageRequest<T>;
-}
 
-export function createMessageHandler<T extends MessageType>(
+export function createMessageHandler<T extends keyof MessageMap>(
   type: T,
   handler: (request: MessageRequest<T>) => MessageResponse<T> | Promise<MessageResponse<T>>
 ) {
-  browser.runtime.onMessage.addListener((message: ChromeMessage<T>, _, sendResponse: (response: MessageResponse<T>) => void) => {
+  browser.runtime.onMessage.addListener((message: ChromeMessageRequest<T>, _, sendResponse: (response: ChromeResponseType<T>) => void) => {
+    console.log("Message received in createMessageHandler:", message);
     if (message.type === type) {
-      const result = handler(message.data);
-      if (result instanceof Promise) {
-        result.then(sendResponse);
-        return true; // Keep channel open for async response
-      } else {
-        sendResponse(result);
+      try {
+        const result = handler(message.data)
+        if (result instanceof Promise) {
+          result
+            .then((data) => sendResponse({ success: true, data }))
+            .catch((error) => {
+              console.error("Error in message handler:", error);
+              sendResponse({ success: false, error: error.message, isUserFacing: error.isUserFacing || false });
+            });
+          return true; // Keep channel open for async response
+        } else {
+          sendResponse({ success: true, data: result })
+        }
+      } catch (error) {
+        console.error("Error in message handler:", error);
+        sendResponse({ success: false, error: (error as Error).message, isUserFacing: (error as any).isUserFacing || false });
       }
     }
     return
   });
 }
 
-type Action<T extends keyof MessageMap> = {
-  type: T,
-  data?: MessageRequest<T>
+export async function sendMessageFromContentScript<T extends keyof MessageMap>(action: ChromeMessageRequest<T>): Promise<MessageResponse<T>> {
+  const res = await browser.runtime.sendMessage(action) as ChromeResponseType<T>
+  if (!res?.success) {
+    if (res.isUserFacing) {
+      throw new UserError(res.error);
+    } else {
+      throw new SystemError(res.error);
+    }
+  }
+  return res.data;
 }
 
-export async function sendMessage<T extends MessageType>(tabId: number, action: Action<T>): Promise<MessageResponse<T>> {
-  console.log("tabId", tabId);
-  console.log("action.type", action.type);
-  return browser.tabs.sendMessage(tabId, action);
+export async function sendMessageFromServiceWorker<T extends keyof MessageMap>(tabId: number, action: ChromeMessageRequest<T>): Promise<MessageResponse<T>> {
+  const res = await browser.tabs.sendMessage(tabId, action) as ChromeResponseType<T>
+  if (!res.success) {
+    if (res.isUserFacing) {
+      throw new UserError(res.error);
+    } else {
+      throw new SystemError(res.error);
+    }
+  }
+  return res.data;
 }

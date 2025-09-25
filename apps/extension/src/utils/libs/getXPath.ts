@@ -1,8 +1,9 @@
 import getXPath from "get-xpath";
+import { SystemError } from "../errors";
 
 export function generateXPathLink(selection: Selection, baseURL: string): string {
   if (selection.rangeCount === 0) {
-    throw new Error("No selection range available");
+    throw new SystemError("No selection range available");
   }
 
   const range = selection.getRangeAt(0);
@@ -16,23 +17,23 @@ export function generateXPathLink(selection: Selection, baseURL: string): string
   const endXPath = getXPath(endContainer);
 
   if (!startXPath || !endXPath) {
-    throw new Error("Could not generate XPath for the selection");
+    throw new SystemError("Could not generate XPath for the selection");
   }
 
-  const xpathLink = `${baseURL}?xpath(start=${startXPath},startoffset=${startOffset},end=${endXPath},endoffset=${endOffset})`;
+  const xpathLink = `${baseURL}?xpath=(startnode=${startXPath},startoffset=${startOffset},endnode=${endXPath},endoffset=${endOffset})`;
   return xpathLink;
 }
 
-export function parseXPathLink(xpathLink: string): { startElement: Element; startOffset: number; endElement: Element; endOffset: number } | null {
+export function parseXPathLink(xpathLink: string): { startElement: Element; startOffset: number; endElement: Element; endOffset: number } {
   const url = new URL(xpathLink);
   const xpathParam = url.searchParams.get("xpath");
   if (!xpathParam) {
-    return null;
+    throw new SystemError("No xpath in the url");
   }
 
-  const match = xpathParam.match(/start=(.*),startoffset=(\d+),end=(.*),endoffset=(\d+)/);
+  const match = xpathParam.match(/startnode=(.*),startoffset=(\d+),endnode=(.*),endoffset=(\d+)/);
   if (!match) {
-    return null;
+    throw new SystemError("Couldn't locate startnode, startoffset, endnode, endoffet in the url");
   }
 
   const [, startXPath, startOffsetStr, endXPath, endOffsetStr] = match;
@@ -41,7 +42,7 @@ export function parseXPathLink(xpathLink: string): { startElement: Element; star
   const endElement = document.evaluate(endXPath, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 
   if (!startElement || !endElement) {
-    return null;
+    throw new SystemError("Couldn't locate startElement, endElement in the document");
   }
 
   return {
