@@ -14,8 +14,8 @@ createMessageHandler("GET_HIGHLIGHT_DATA", () => {
   const selection = window.getSelection();
   const content = selection ? selection.toString() : '';
   const link = selection ? generateXPathLink(selection, cleanUrl) : '';
-  console.log("Highlight data:", {sourceTitle, sourceLink, content, link});
-  return {sourceTitle, sourceLink, content, link};
+  console.log("Highlight data:", { sourceTitle, sourceLink, content, link });
+  return { sourceTitle, sourceLink, content, link };
 });
 
 
@@ -30,6 +30,6 @@ createMessageHandler("HIGHLIGHT_TEXT", (request) => {
   const { anchorNode: startNode, anchorOffset: startOffset, focusNode: endNode, focusOffset: endOffset } = selection
 
   highlight({ startNode: startNode!, startOffset, endNode: endNode!, endOffset, highlightId: request.highlightId });
-  
+
   return undefined
 });

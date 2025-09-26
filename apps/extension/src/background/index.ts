@@ -6,6 +6,7 @@ import { SystemError } from "../utils/errors";
 
 console.log("Hello from the background!");
 
+
 browser.commands.onCommand.addListener(async (command, tab) => {
   if (command === "highlight") {
 
@@ -22,7 +23,17 @@ browser.commands.onCommand.addListener(async (command, tab) => {
       await sendMessageFromServiceWorker(tab.id, { type: "HIGHLIGHT_TEXT", data: { highlightId: data.id } });
 
     } catch (error) {
-      console.error("Error sending message to content script:", error);
+      console.error("Error while highlighting:", error);
+      // Optionally, notify the user about the error
+      const message = (error instanceof Error ? error.message : String(error)) || "Unknown error";
+      try {
+        await sendMessageFromServiceWorker(tab.id, {
+          type: "SHOW_SNACKBAR",
+          data: { message, duration: 5000 }
+        });
+      } catch (notifyErr) {
+        console.warn("Failed to show snackbar:", notifyErr);
+      }
     }
   }
 });

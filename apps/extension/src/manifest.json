@@ -21,7 +21,7 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["src/content/index.ts", "src/content/highlight-on-load.ts"]
+      "js": ["src/content/index.ts", "src/content/highlight-on-load.ts", "src/content/snackbar.ts"]
     }
   ],
   "commands": {

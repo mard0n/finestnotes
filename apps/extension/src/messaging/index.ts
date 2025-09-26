@@ -6,6 +6,7 @@ interface MessageMap {
   GET_HIGHLIGHT_DATA: { request: undefined; response: HighlightReqType };
   HIGHLIGHT_TEXT: { request: { highlightId: number }; response: undefined };
   FETCH_ANNOTATIONS: { request: { currentURL: string }; response: AnnotationsResType }
+  SHOW_SNACKBAR: { request: { message: string; duration?: number }; response: undefined }
 }
 
 interface ChromeMessageRequest<T extends keyof MessageMap> {
