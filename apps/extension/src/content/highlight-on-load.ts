@@ -55,17 +55,17 @@ export function parseXPathLink(parseXPathLink: string): SelectionRange {
   };
 }
 
-async function loadAnnotationFromStorage(): Promise<AnnotationsResType | null> {
-  const { annotations } = await browser.storage.local.get('annotations') as Record<string, AnnotationsResType>
-  console.log("Loaded annotations from storage:", annotations);
+// async function loadAnnotationFromStorage(): Promise<AnnotationsResType | null> {
+//   const { annotations } = await browser.storage.local.get('annotations') as Record<string, AnnotationsResType>
+//   console.log("Loaded annotations from storage:", annotations);
 
-  if (!annotations || annotations.length === 0) {
-    console.log('No annotations found in storage.');
-    return null
-  }
+//   if (!annotations || annotations.length === 0) {
+//     console.log('No annotations found in storage.');
+//     return null
+//   }
 
-  return annotations
-}
+//   return annotations
+// }
 
 async function fetchAnnotationsFromAPI(): Promise<AnnotationsResType | null> {
   console.log("fetching annotations");
@@ -82,44 +82,60 @@ async function fetchAnnotationsFromAPI(): Promise<AnnotationsResType | null> {
   }
 }
 
-// Listen for storage changes and rehighlight
-browser.storage.onChanged.addListener((changes, areaName) => {
-  if (areaName === 'local' && changes.annotations) {
-    console.log('Annotations updated in storage, rehighlighting...')
-    const highlightedElements = document.querySelectorAll('mark[data-finest-highlight]');
-    const highlightedAnnotationIds = new Set<string>();
-    highlightedElements.forEach(el => {
-      const ids = el.getAttribute('data-finest-highlight');
-      if (ids) {
-        ids.split(';').forEach(id => highlightedAnnotationIds.add(id));
-      }
-    });
-    (changes.annotations.newValue as AnnotationsResType)?.forEach((annotation) => {
-      if (annotation.type === 'highlight' && annotation.link) {
-        if (highlightedAnnotationIds.has(annotation.id.toString())) {
-          // Already highlighted
-          return;
-        }
-        try {
-          const { startNode, startOffset, endNode, endOffset } = parseXPathLink(annotation.link)
-          highlight({ startNode, startOffset, endNode, endOffset }, annotation.id)
-        } catch (error) {
-          console.error("Error parsing XPath link or highlighting:", error);
-        }
-      }
-    });
-  }
-});
+// // Listen for storage changes and rehighlight
+// browser.storage.onChanged.addListener((changes, areaName) => {
+//   if (areaName === 'local' && changes.annotations) {
+//     console.log('Annotations updated in storage, rehighlighting...')
+//     const highlightedElements = document.querySelectorAll('mark[data-finest-highlight]');
+//     const highlightedAnnotationIds = new Set<string>();
+//     highlightedElements.forEach(el => {
+//       const ids = el.getAttribute('data-finest-highlight');
+//       if (ids) {
+//         ids.split(';').forEach(id => highlightedAnnotationIds.add(id));
+//       }
+//     });
+//     (changes.annotations.newValue as AnnotationsResType)?.forEach((annotation) => {
+//       if (annotation.type === 'highlight' && annotation.link) {
+//         if (highlightedAnnotationIds.has(annotation.id.toString())) {
+//           // Already highlighted
+//           return;
+//         }
+//         try {
+//           const { startNode, startOffset, endNode, endOffset } = parseXPathLink(annotation.link)
+//           highlight({ startNode, startOffset, endNode, endOffset }, annotation.id)
+//         } catch (error) {
+//           console.error("Error parsing XPath link or highlighting:", error);
+//         }
+//       }
+//     });
+//   }
+// });
 
 // Initial load and fetch
 async function initialize() {
   console.log("Initializing highlight-on-load");
 
-  const annotations = await loadAnnotationFromStorage();
-  console.log("annotations from storage", annotations);
+  // const annotations = await loadAnnotationFromStorage();
+  // console.log("annotations from storage", annotations);
 
-  if (annotations?.length) {
-    annotations.forEach((annotation) => {
+  // if (annotations?.length) {
+  //   annotations.forEach((annotation) => {
+  //     if (annotation.type === 'highlight' && annotation.link) {
+  //       try {
+  //         const { startNode, startOffset, endNode, endOffset } = parseXPathLink(annotation.link)
+  //         highlight({ startNode, startOffset, endNode, endOffset }, annotation.id)
+  //       } catch (error) {
+  //         console.error("Error parsing XPath link or highlighting:", error);
+  //       }
+  //     }
+  //   });
+  // }
+
+  const annotationsFromAPI = await fetchAnnotationsFromAPI();
+  console.log("annotations from API", annotationsFromAPI);
+
+  if (annotationsFromAPI?.length) {
+    annotationsFromAPI.forEach((annotation) => {
       if (annotation.type === 'highlight' && annotation.link) {
         try {
           const { startNode, startOffset, endNode, endOffset } = parseXPathLink(annotation.link)
@@ -131,12 +147,12 @@ async function initialize() {
     });
   }
 
-  const annotationsFromAPI = await fetchAnnotationsFromAPI();
-  console.log("annotations from API", annotationsFromAPI);
-
-  if (annotationsFromAPI?.length) {
-    await browser.storage.local.set({ annotations: annotationsFromAPI })
-  }
+  // if (annotationsFromAPI?.length) {
+  //   await browser.storage.local.set({ annotations: annotationsFromAPI })
+  // }
 }
 
-initialize();
+window.addEventListener("load", () => {
+  console.log("Page fully loaded (initial load).");
+  initialize();
+});
