@@ -62,25 +62,35 @@ export function createMessageHandler<T extends keyof MessageMap>(
 }
 
 export async function sendMessageFromContentScript<T extends keyof MessageMap>(action: ChromeMessageRequest<T>): Promise<MessageResponse<T>> {
-  const res = await browser.runtime.sendMessage(action) as ChromeResponseType<T>
-  if (!res?.success) {
-    if (res.isUserFacing) {
-      throw new UserError(res.error);
-    } else {
-      throw new SystemError(res.error);
+  try {
+    const res = await browser.runtime.sendMessage(action) as ChromeResponseType<T>
+    if (!res?.success) {
+      if (res.isUserFacing) {
+        throw new UserError(res.error);
+      } else {
+        throw new SystemError(res.error);
+      }
     }
+    return res.data;
+  } catch (error) {
+    console.error("Error sending message from content script:", error);
+    throw new SystemError((error as Error).message);
   }
-  return res.data;
 }
 
 export async function sendMessageFromServiceWorker<T extends keyof MessageMap>(tabId: number, action: ChromeMessageRequest<T>): Promise<MessageResponse<T>> {
-  const res = await browser.tabs.sendMessage(tabId, action) as ChromeResponseType<T>
-  if (!res.success) {
-    if (res.isUserFacing) {
-      throw new UserError(res.error);
-    } else {
-      throw new SystemError(res.error);
+  try {
+    const res = await browser.tabs.sendMessage(tabId, action) as ChromeResponseType<T>
+    if (!res.success) {
+      if (res.isUserFacing) {
+        throw new UserError(res.error);
+      } else {
+        throw new SystemError(res.error);
+      }
     }
+    return res.data;
+  } catch (error) {
+    console.error("Error sending message from service worker:", error);
+    throw new SystemError((error as Error).message);
   }
-  return res.data;
 }
