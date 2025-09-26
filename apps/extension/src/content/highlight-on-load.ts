@@ -1,9 +1,59 @@
 import browser from "webextension-polyfill";
 import { sendMessageFromContentScript } from "../messaging/index";
-import { highlight } from "../utils/libs/highlight";
 import { AnnotationsResType } from "../api/config";
-import { parseXPathLink } from "../utils/libs/getXPath";
 import { getCleanUrl } from "../utils/libs/getCleanURL";
+import { SystemError } from "../utils/errors";
+import { SelectionRange } from "../utils/types";
+import { highlight } from "./highlight";
+
+console.log("Hello from highlight-on-load");
+
+export function parseXPathLink(parseXPathLink: string): SelectionRange {
+  const url = new URL(parseXPathLink);
+  const xpathParam = url.searchParams.get("xpath");
+  if (!xpathParam) {
+    throw new SystemError("No xpath in the url");
+  }
+
+  const match = xpathParam.match(
+    /startnode=(.*),startoffset=(\d+),endnode=(.*),endoffset=(\d+)/,
+  );
+  if (!match) {
+    throw new SystemError(
+      "Couldn't locate startnode, startoffset, endnode, endoffet in the url",
+    );
+  }
+
+  const [, startXPath, startOffsetStr, endXPath, endOffsetStr] = match;
+
+  const startElement = document.evaluate(
+    startXPath,
+    document,
+    null,
+    XPathResult.FIRST_ORDERED_NODE_TYPE,
+    null,
+  ).singleNodeValue;
+  const endElement = document.evaluate(
+    endXPath,
+    document,
+    null,
+    XPathResult.FIRST_ORDERED_NODE_TYPE,
+    null,
+  ).singleNodeValue;
+
+  if (!startElement || !endElement) {
+    throw new SystemError(
+      "Couldn't locate startElement, endElement in the document",
+    );
+  }
+
+  return {
+    startNode: startElement,
+    startOffset: parseInt(startOffsetStr, 10),
+    endNode: endElement,
+    endOffset: parseInt(endOffsetStr, 10),
+  };
+}
 
 async function loadAnnotationFromStorage(): Promise<AnnotationsResType | null> {
   const { annotations } = await browser.storage.local.get('annotations') as Record<string, AnnotationsResType>
@@ -19,13 +69,16 @@ async function loadAnnotationFromStorage(): Promise<AnnotationsResType | null> {
 
 async function fetchAnnotationsFromAPI(): Promise<AnnotationsResType | null> {
   console.log("fetching annotations");
-  const cleanUrl = getCleanUrl(window.location.href)
+  const cleanUrl = getCleanUrl(window.location.href);
 
   try {
-    return await sendMessageFromContentScript({ type: "FETCH_ANNOTATIONS", data: { currentURL: cleanUrl } })
+    return await sendMessageFromContentScript({
+      type: "FETCH_ANNOTATIONS",
+      data: { currentURL: cleanUrl },
+    });
   } catch (error) {
     console.error("Error fetching annotations:", error);
-    return null
+    return null;
   }
 }
 
@@ -48,14 +101,13 @@ browser.storage.onChanged.addListener((changes, areaName) => {
           return;
         }
         try {
-          const {startElement: startNode, startOffset, endElement: endNode, endOffset} = parseXPathLink(annotation.link)
-          highlight({startNode, startOffset, endNode, endOffset, highlightId: annotation.id})
+          const { startNode, startOffset, endNode, endOffset } = parseXPathLink(annotation.link)
+          highlight({ startNode, startOffset, endNode, endOffset }, annotation.id)
         } catch (error) {
           console.error("Error parsing XPath link or highlighting:", error);
         }
       }
     });
-
   }
 });
 
@@ -70,8 +122,8 @@ async function initialize() {
     annotations.forEach((annotation) => {
       if (annotation.type === 'highlight' && annotation.link) {
         try {
-          const {startElement: startNode, startOffset, endElement: endNode, endOffset} = parseXPathLink(annotation.link)
-          highlight({startNode, startOffset, endNode, endOffset, highlightId: annotation.id})
+          const { startNode, startOffset, endNode, endOffset } = parseXPathLink(annotation.link)
+          highlight({ startNode, startOffset, endNode, endOffset }, annotation.id)
         } catch (error) {
           console.error("Error parsing XPath link or highlighting:", error);
         }
@@ -80,7 +132,7 @@ async function initialize() {
   }
 
   const annotationsFromAPI = await fetchAnnotationsFromAPI();
-  console.log("annotations from API", annotations);
+  console.log("annotations from API", annotationsFromAPI);
 
   if (annotationsFromAPI?.length) {
     await browser.storage.local.set({ annotations: annotationsFromAPI })

@@ -17,10 +17,12 @@ browser.commands.onCommand.addListener(async (command, tab) => {
 
       const res = await client.api.highlight.$post({ json: response });
       console.log("res", res);
-      if (!res.ok) { throw new SystemError("Failed to save highlight: " + res.statusText) }
-      const data = await res.json()
+      if (!res.ok) {
+        throw new SystemError("Failed to save highlight: " + res.statusText);
+      }
+      const data = await res.json();
 
-      await sendMessageFromServiceWorker(tab.id, { type: "HIGHLIGHT_TEXT", data: { highlightId: data.id } });
+      await sendMessageFromServiceWorker(tab.id, { type: "HIGHLIGHT_TEXT", data: { highlightId: data.id, annotationXPathLink: response.link } });
 
     } catch (error) {
       console.error("Error while highlighting:", error);

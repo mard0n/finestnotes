@@ -5,6 +5,7 @@
     "module": "ESNext",
     "lib": ["ESNext", "DOM"],
     "moduleResolution": "bundler",
+    "sourceMap": true,
     "strict": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
