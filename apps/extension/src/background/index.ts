@@ -2,7 +2,7 @@ import browser from "webextension-polyfill";
 import { client } from "../api/config";
 import { createMessageHandler, sendMessageFromServiceWorker } from "../messaging/index";
 import { getCleanUrl } from "../utils/libs/getCleanURL";
-import { SystemError } from "../utils/errors";
+import { SystemError, UserError } from "../utils/errors";
 
 console.log("Hello from the background!");
 
@@ -26,15 +26,14 @@ browser.commands.onCommand.addListener(async (command, tab) => {
 
     } catch (error) {
       console.error("Error while highlighting:", error);
-      // Optionally, notify the user about the error
-      const message = (error instanceof Error ? error.message : String(error)) || "Unknown error";
-      try {
+      if (error instanceof UserError) {
+        const message = (error.message ? error.message : String(error)) || "Unknown error";
         await sendMessageFromServiceWorker(tab.id, {
           type: "SHOW_SNACKBAR",
           data: { message, duration: 5000 }
         });
-      } catch (notifyErr) {
-        console.warn("Failed to show snackbar:", notifyErr);
+      } else {
+        console.log("Error while highlighting:", error);
       }
     }
   }
