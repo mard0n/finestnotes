@@ -35,5 +35,5 @@
       "description": "Highlight selected text"
     }
   },
-  "permissions": ["storage"]
+  "permissions": ["storage", "activeTab"]
 }

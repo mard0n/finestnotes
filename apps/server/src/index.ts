@@ -90,7 +90,19 @@ let route = app.get("/notes", async (c) => {
       message: `Page is successfully saved`,
     });
   }
-).post("/save-image",
+).delete("/page/:id", zValidator('param', z.object({
+  id: z.string()
+})), async (c) => {
+  const { id } = c.req.valid("param")
+  const db = drizzle(c.env.finestdb);
+
+  await db.delete(annotations).where(eq(annotations.id, Number(id))).run();
+
+  return c.json({
+    success: true,
+    message: `Page ${id} is successfully deleted`,
+  });
+}).post("/save-image",
   zValidator(
     "json",
     z.object({

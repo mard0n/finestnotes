@@ -14,4 +14,7 @@ type HighlightReqType = InferRequestType<typeof $highlight>['json']
 const $annotations = client.api.annotations.source.$get
 type AnnotationsResType = InferResponseType<typeof $annotations>
 
-export { client, type HighlightReqType, type AnnotationsResType };
+const $savePage = client.api['save-page'].$post
+type SavePageReqType = InferRequestType<typeof $savePage>['json']
+
+export { client, type HighlightReqType, type AnnotationsResType, type SavePageReqType };
