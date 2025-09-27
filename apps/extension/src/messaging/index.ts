@@ -8,6 +8,8 @@ interface MessageMap {
   FETCH_ANNOTATIONS: { request: { currentURL: string }; response: AnnotationsResType }
   SHOW_SNACKBAR: { request: { message: string; duration?: number }; response: undefined }
   DELETE_HIGHLIGHT: { request: { highlightId: number }; response: undefined }
+  CHECK_PAGE_SAVED: { request: { url: string }; response: boolean }
+  SAVE_PAGE: { request: { sourceTitle: string; sourceLink: string; comment?: string }; response: boolean }
 }
 
 interface ChromeMessageRequest<T extends keyof MessageMap> {

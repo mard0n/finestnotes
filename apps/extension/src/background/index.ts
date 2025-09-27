@@ -61,3 +61,36 @@ createMessageHandler("DELETE_HIGHLIGHT", async (request) => {
   }
   return undefined
 })
+
+createMessageHandler("CHECK_PAGE_SAVED", async (request) => {
+  const cleanUrl = getCleanUrl(request.url)
+  const res = await client.api.annotations.source.$get({
+    query: {
+      url: cleanUrl,
+      type: 'page'
+    }
+  })
+
+  if (!res.ok) {
+    throw new SystemError("Failed to check if page is saved: " + res.statusText)
+  }
+  
+  const data = await res.json()
+  return data.length > 0
+})
+
+createMessageHandler("SAVE_PAGE", async (request) => {
+  const res = await client.api['save-page'].$post({ 
+    json: {
+      sourceTitle: request.sourceTitle,
+      sourceLink: request.sourceLink,
+      comment: request.comment
+    }
+  })
+
+  if (!res.ok) {
+    throw new UserError("Failed to save page: " + res.statusText)
+  }
+  
+  return true
+})

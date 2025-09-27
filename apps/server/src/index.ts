@@ -5,7 +5,7 @@ import { annotations, notes } from "./db/schema";
 import { zValidator } from "@hono/zod-validator";
 import * as z from "zod";
 import { cors } from "hono/cors";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 type Bindings = {
   finestdb: D1Database;
@@ -132,13 +132,24 @@ let route = app.get("/notes", async (c) => {
 }).get("/annotations/source", zValidator(
   "query",
   z.object({
-    url: z.url()
+    url: z.url(),
+    type: z.enum(['highlight', 'image', 'page']).optional(),
   })
 ), async (c) => {
   console.log('/annotations/source', c);
-  const { url: sourceUrl } = c.req.valid("query");
+  const { url: sourceUrl, type } = c.req.valid("query");
   console.log('sourceUrl', sourceUrl);
   const db = drizzle(c.env.finestdb);
+  if (type) {
+    const result = await db.select().from(annotations).where(
+      and(
+        eq(annotations.sourceLink, sourceUrl),
+        eq(annotations.type, type)
+      )
+    )
+    console.log('result', result);
+    return c.json(result);
+  }
   const result = await db.select().from(annotations).where(eq(annotations.sourceLink, sourceUrl))
   console.log('result', result);
   return c.json(result);

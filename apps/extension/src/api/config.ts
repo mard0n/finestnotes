@@ -17,4 +17,7 @@ type AnnotationsResType = InferResponseType<typeof $annotations>
 const $savePage = client.api['save-page'].$post
 type SavePageReqType = InferRequestType<typeof $savePage>['json']
 
-export { client, type HighlightReqType, type AnnotationsResType, type SavePageReqType };
+const $annotationsSource = client.api.annotations.source.$get
+type AnnotationsSourceReqType = InferRequestType<typeof $annotationsSource>['query']
+
+export { client, type HighlightReqType, type AnnotationsResType, type SavePageReqType, type AnnotationsSourceReqType };

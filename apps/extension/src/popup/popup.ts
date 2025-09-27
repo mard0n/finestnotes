@@ -1,5 +1,5 @@
 import browser from "webextension-polyfill";
-import { client, type SavePageReqType } from "../api/config";
+import { sendMessageFromContentScript } from "../messaging/index";
 
 console.log("Hello from the popup!", { id: browser.runtime.id });
 
@@ -29,9 +29,40 @@ async function updateTabInfo() {
   }
 }
 
+// Function to check if the current page is already saved
+async function checkIfPageSaved() {
+  try {
+    const tabs = await browser.tabs.query({ active: true, currentWindow: true });
+    const currentTab = tabs[0];
+    
+    if (!currentTab?.url) {
+      return;
+    }
+
+    const saveBtn = document.getElementById('save-btn') as HTMLButtonElement;
+    if (!saveBtn) {
+      return;
+    }
+
+    const isPageSaved = await sendMessageFromContentScript({
+      type: "CHECK_PAGE_SAVED",
+      data: { url: currentTab.url }
+    });
+
+    if (isPageSaved) {
+      // Page is already saved
+      saveBtn.setAttribute('data-state', 'success');
+      saveBtn.disabled = true;
+    }
+  } catch (error) {
+    console.error('Failed to check if page is saved:', error);
+  }
+}
+
 // Update tab info when the popup loads
 document.addEventListener('DOMContentLoaded', async () => {
   await updateTabInfo();
+  await checkIfPageSaved();
 
   const saveBtn = document.getElementById('save-btn');
   if (saveBtn) {
@@ -56,15 +87,13 @@ async function handleSavePage() {
   saveBtn.disabled = true;
 
   try {
-    const data: SavePageReqType = {
-      sourceTitle,
-      sourceLink,
-    };
-    const res = await client.api['save-page'].$post({ json: data });
-
-    if (!res.ok) {
-      throw new Error('Failed to save page');
-    }
+    await sendMessageFromContentScript({
+      type: "SAVE_PAGE",
+      data: {
+        sourceTitle,
+        sourceLink,
+      }
+    });
 
     saveBtn.setAttribute('data-state', 'success');
   } catch (error) {
