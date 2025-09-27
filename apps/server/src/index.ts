@@ -58,7 +58,19 @@ let route = app.get("/notes", async (c) => {
 
     return c.json(highlight);
   }
-).post("/save-page",
+).delete("/highlight/:id", zValidator('param', z.object({
+  id: z.string()
+})), async (c) => {
+  const { id } = c.req.valid("param")
+  const db = drizzle(c.env.finestdb);
+
+  await db.delete(annotations).where(eq(annotations.id, Number(id))).run();
+
+  return c.json({
+    success: true,
+    message: `Highlight ${id} is successfully deleted`,
+  });
+}).post("/save-page",
   zValidator(
     "json",
     z.object({

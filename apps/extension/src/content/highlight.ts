@@ -1,4 +1,7 @@
+import { sendMessageFromContentScript } from "../messaging";
+import { UserError } from "../utils/errors";
 import { Point, SelectionRange } from "../utils/types";
+import { addToast } from "./snackbar";
 
 console.log("Hello from highlight");
 
@@ -140,29 +143,72 @@ function createHighlightSpan(highlightId: number, range: Range) {
 
   const parent = range.startContainer.parentNode as HTMLElement | null;
 
-  if (parent && parent.getAttribute("data-finest-highlight")) {
-    const highlightIds = parent.getAttribute("data-finest-highlight");
+  if (parent && parent.getAttribute("data-finest-highlight-ids")) {
+    const highlightIds = parent.getAttribute("data-finest-highlight-ids");
     highlightSpan.setAttribute(
-      "data-finest-highlight",
+      "data-finest-highlight-ids",
       highlightIds
         ? highlightIds + ";" + highlightId.toString()
         : highlightId.toString(),
     );
   } else {
-    highlightSpan.setAttribute("data-finest-highlight", highlightId.toString());
+    highlightSpan.setAttribute("data-finest-highlight-ids", highlightId.toString());
   }
+  highlightSpan.setAttribute("data-finest-highlight-id", highlightId.toString());
   return highlightSpan;
+}
+
+function unwrapElementAndMergeTextNodes(element: Element) {
+  const parent = element.parentNode;
+  if (!parent) return;
+
+  // Get the previous and next siblings before unwrapping
+  const prevSibling = element.previousSibling;
+  const nextSibling = element.nextSibling;
+
+  // Move all child nodes out of the element
+  while (element.firstChild) {
+    parent.insertBefore(element.firstChild, element);
+  }
+
+  // Remove the now-empty element
+  parent.removeChild(element);
+
+  // Merge adjacent text nodes
+  const nodesToCheck = [];
+  
+  // Check if we need to merge with previous sibling
+  if (prevSibling && prevSibling.nodeType === Node.TEXT_NODE) {
+    nodesToCheck.push(prevSibling);
+  }
+  
+  // Check if we need to merge with next sibling
+  if (nextSibling && nextSibling.nodeType === Node.TEXT_NODE) {
+    nodesToCheck.push(nextSibling);
+  }
+
+  // Merge consecutive text nodes
+  nodesToCheck.forEach(node => {
+    let current = node;
+    while (current && current.nextSibling && 
+           current.nodeType === Node.TEXT_NODE && 
+           current.nextSibling.nodeType === Node.TEXT_NODE) {
+      const next = current.nextSibling;
+      current.nodeValue = (current.nodeValue || '') + (next.nodeValue || '');
+      parent.removeChild(next);
+    }
+  });
 }
 
 export function setupHighlightEventListeners() {
   let activeHighlightId: string | null = null;
-  let deleteButton: HTMLButtonElement | null = null;
+  let deleteButton: HTMLDivElement | null = null;
   let hoverTimeout: number | null = null;
 
   // Create the delete button once and reuse it
   function createDeleteButton() {
     if (!deleteButton) {
-      deleteButton = document.createElement("button");
+      deleteButton = document.createElement("div");
       deleteButton.innerHTML = "&times;";
       deleteButton.className = "finest-highlight-delete-button";
       deleteButton.style.display = "none"; // Initially hidden
@@ -183,7 +229,7 @@ export function setupHighlightEventListeners() {
   document.body.addEventListener("mouseover", (e) => {
     const target = e.target as HTMLElement;
 
-    if (target.tagName !== "MARK" || !target.dataset.finestHighlight) {
+    if (target.tagName !== "MARK" || !target.dataset.finestHighlightId) {
       return;
     }
 
@@ -192,7 +238,7 @@ export function setupHighlightEventListeners() {
       hoverTimeout = null;
     }
 
-    const highlightIds = (target.dataset.finestHighlight || "").split(";");
+    const highlightIds = (target.dataset.finestHighlightIds || "").split(";");
     const highlightId = highlightIds[highlightIds.length - 1];
 
     if (activeHighlightId === highlightId) {
@@ -214,7 +260,7 @@ export function setupHighlightEventListeners() {
     // If we are moving out to something that is not part of a highlight, clear the state.
     if (
       !relatedTarget ||
-      (!relatedTarget.closest("mark[data-finest-highlight]") &&
+      (!relatedTarget.closest("mark[data-finest-highlight-ids]") &&
         !relatedTarget.closest(".finest-highlight-delete-button"))
     ) {
       hoverTimeout = window.setTimeout(() => {
@@ -230,7 +276,7 @@ export function setupHighlightEventListeners() {
     createDeleteButton();
 
     const allHighlightParts = document.querySelectorAll(
-      `mark[data-finest-highlight*="${highlightId}"]`,
+      `mark[data-finest-highlight-ids*="${highlightId}"]`,
     );
     allHighlightParts.forEach((part) => {
       part.classList.add("finest-highlight-hover");
@@ -249,7 +295,7 @@ export function setupHighlightEventListeners() {
       firstPart.insertBefore(tempElement, firstPart.firstChild);
 
       const rect = tempElement.getBoundingClientRect();
-      
+
       // Update button position and data
       deleteButton.style.left = `${window.scrollX + rect.left}px`;
       deleteButton.style.top = `${window.scrollY + rect.top}px`;
@@ -275,45 +321,51 @@ export function setupHighlightEventListeners() {
         part.classList.remove("finest-highlight-hover");
       });
     }
-    
+
     if (deleteButton) {
       deleteButton.style.display = "none"; // Hide the button
     }
-    
+
     activeHighlightId = null;
   }
 
-  function handleDelete(e: MouseEvent) {
+  async function handleDelete(e: MouseEvent) {
     const button = e.target as HTMLButtonElement;
     const highlightIdToDelete = button.dataset.highlightId;
 
     if (!highlightIdToDelete) return;
 
     const allHighlightParts = document.querySelectorAll(
-      `mark[data-finest-highlight*="${highlightIdToDelete}"]`,
+      `mark[data-finest-highlight-id="${highlightIdToDelete}"]`,
     );
 
     allHighlightParts.forEach((part) => {
       const parent = part.parentNode;
       if (!parent) return;
 
-      const currentIds = (part.getAttribute("data-finest-highlight") || "")
+      const currentIds = (part.getAttribute("data-finest-highlight-ids") || "")
         .split(";")
         .filter((id) => id);
       const newIds = currentIds.filter((id) => id !== highlightIdToDelete);
 
-      if (newIds.length > 0) {
-        part.setAttribute("data-finest-highlight", newIds.join(";"));
-      } else {
-        while (part.firstChild) {
-          parent.insertBefore(part.firstChild, part);
-        }
-        parent.removeChild(part);
-      }
+      part.setAttribute("data-finest-highlight-ids", newIds.join(";"));
+      
+      unwrapElementAndMergeTextNodes(part);
     });
 
     // TODO: Send message to background to delete annotation
     console.log(`Deleted highlight ${highlightIdToDelete}`);
+
+    try {
+      await sendMessageFromContentScript({ type: "DELETE_HIGHLIGHT", data: { highlightId: parseInt(highlightIdToDelete) } });
+    } catch (error) {
+      console.error("Error deleting highlight:", error);
+      if (error instanceof UserError) {
+        addToast({
+          message: error.message
+        });
+      }
+    }
 
     clearHoverState();
   }
@@ -321,9 +373,6 @@ export function setupHighlightEventListeners() {
   // Inject CSS
   const style = document.createElement("style");
   style.textContent = `
-    mark[data-finest-highlight] {
-        // transition: background-color 0.1s ease-in-out;
-    }
     .finest-highlight-hover {
       background-color: #ffc107 !important;
       cursor: pointer;
@@ -345,7 +394,6 @@ export function setupHighlightEventListeners() {
       display: flex;
       align-items: center;
       justify-content: center;
-      padding-top: 2px;
       transform: translate(-50%, -50%);
     }
   `;

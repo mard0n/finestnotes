@@ -7,6 +7,7 @@ interface MessageMap {
   HIGHLIGHT_TEXT: { request: { highlightId: number, annotationXPathLink: string }; response: undefined };
   FETCH_ANNOTATIONS: { request: { currentURL: string }; response: AnnotationsResType }
   SHOW_SNACKBAR: { request: { message: string; duration?: number }; response: undefined }
+  DELETE_HIGHLIGHT: { request: { highlightId: number }; response: undefined }
 }
 
 interface ChromeMessageRequest<T extends keyof MessageMap> {

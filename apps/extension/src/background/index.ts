@@ -53,3 +53,11 @@ createMessageHandler("FETCH_ANNOTATIONS", async (request) => {
   const data = await res.json()
   return data
 })
+
+createMessageHandler("DELETE_HIGHLIGHT", async (request) => {
+  const res = await client.api.highlight[":id"].$delete({ param: { id: request.highlightId.toString() } })
+  if (!res.ok) {
+    throw new UserError("Failed to delete highlight: " + res.statusText)
+  }
+  return undefined
+})
