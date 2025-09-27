@@ -1,5 +1,4 @@
 import getXPath from "get-xpath";
-import { createMessageHandler } from "../messaging/index";
 import { SystemError } from "../utils/errors";
 import { Point } from "../utils/types";
 
@@ -61,7 +60,7 @@ function isBefore(pointA: Point, pointB: Point): boolean {
   return !!(pos & Node.DOCUMENT_POSITION_FOLLOWING);
 }
 
-function generateXPathLink(selection: Selection, baseURL: string): string {
+export function generateXPathLink(selection: Selection, baseURL: string): string {
   if (selection.rangeCount === 0) {
     throw new SystemError("No selection range available");
   }
@@ -95,14 +94,3 @@ function generateXPathLink(selection: Selection, baseURL: string): string {
   return xpathLink;
 }
 
-createMessageHandler("GET_HIGHLIGHT_DATA", () => {
-  const url = window.location.href;
-  const cleanUrl = new URL(url).origin + new URL(url).pathname;
-  const sourceTitle = document.title;
-  const sourceLink = cleanUrl;
-  const selection = window.getSelection();
-  const content = selection ? selection.toString() : "";
-  const link = selection ? generateXPathLink(selection, cleanUrl) : "";
-  console.log("Highlight data:", { sourceTitle, sourceLink, content, link });
-  return { sourceTitle, sourceLink, content, link };
-});

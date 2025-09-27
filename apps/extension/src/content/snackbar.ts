@@ -1,5 +1,3 @@
-import { createMessageHandler } from "../messaging";
-
 // Lightweight in-page snackbar/toast system (top-right, accumulating)
 function ensureToastContainer(): HTMLElement {
   const id = "finest-toast-container";
@@ -21,7 +19,7 @@ function ensureToastContainer(): HTMLElement {
   return el;
 }
 
-function addToast(opts: { message: string; duration?: number }) {
+export function addToast(opts: { message: string; duration?: number }) {
   const { message, duration = 4000 } = opts;
   const container = ensureToastContainer();
   const toast = document.createElement('div');
@@ -192,12 +190,3 @@ function addToast(opts: { message: string; duration?: number }) {
   container.addEventListener('mouseenter', () => pauseTick());
   container.addEventListener('mouseleave', () => startTick());
 }
-
-// Show in-page snackbar notifications from background/content
-createMessageHandler("SHOW_SNACKBAR", (request) => {
-  addToast({
-    message: request.message,
-    duration: request.duration ?? 4000,
-  });
-  return undefined;
-});

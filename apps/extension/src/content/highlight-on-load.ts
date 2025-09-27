@@ -1,10 +1,8 @@
-import browser from "webextension-polyfill";
 import { sendMessageFromContentScript } from "../messaging/index";
 import { AnnotationsResType } from "../api/config";
 import { getCleanUrl } from "../utils/libs/getCleanURL";
 import { SystemError } from "../utils/errors";
 import { SelectionRange } from "../utils/types";
-import { highlight } from "./highlight";
 
 console.log("Hello from highlight-on-load");
 
@@ -67,7 +65,7 @@ export function parseXPathLink(parseXPathLink: string): SelectionRange {
 //   return annotations
 // }
 
-async function fetchAnnotationsFromAPI(): Promise<AnnotationsResType | null> {
+export async function fetchAnnotationsFromAPI(): Promise<AnnotationsResType | null> {
   console.log("fetching annotations");
   const cleanUrl = getCleanUrl(window.location.href);
 
@@ -110,49 +108,3 @@ async function fetchAnnotationsFromAPI(): Promise<AnnotationsResType | null> {
 //     });
 //   }
 // });
-
-// Initial load and fetch
-async function initialize() {
-  console.log("Initializing highlight-on-load");
-
-  // const annotations = await loadAnnotationFromStorage();
-  // console.log("annotations from storage", annotations);
-
-  // if (annotations?.length) {
-  //   annotations.forEach((annotation) => {
-  //     if (annotation.type === 'highlight' && annotation.link) {
-  //       try {
-  //         const { startNode, startOffset, endNode, endOffset } = parseXPathLink(annotation.link)
-  //         highlight({ startNode, startOffset, endNode, endOffset }, annotation.id)
-  //       } catch (error) {
-  //         console.error("Error parsing XPath link or highlighting:", error);
-  //       }
-  //     }
-  //   });
-  // }
-
-  const annotationsFromAPI = await fetchAnnotationsFromAPI();
-  console.log("annotations from API", annotationsFromAPI);
-
-  if (annotationsFromAPI?.length) {
-    annotationsFromAPI.forEach((annotation) => {
-      if (annotation.type === 'highlight' && annotation.link) {
-        try {
-          const { startNode, startOffset, endNode, endOffset } = parseXPathLink(annotation.link)
-          highlight({ startNode, startOffset, endNode, endOffset }, annotation.id)
-        } catch (error) {
-          console.error("Error parsing XPath link or highlighting:", error);
-        }
-      }
-    });
-  }
-
-  // if (annotationsFromAPI?.length) {
-  //   await browser.storage.local.set({ annotations: annotationsFromAPI })
-  // }
-}
-
-window.addEventListener("load", () => {
-  console.log("Page fully loaded (initial load).");
-  initialize();
-});

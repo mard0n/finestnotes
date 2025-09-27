@@ -1,6 +1,4 @@
-import { createMessageHandler } from "../messaging";
 import { Point, SelectionRange } from "../utils/types";
-import { parseXPathLink } from "./highlight-on-load";
 
 console.log("Hello from highlight");
 
@@ -155,18 +153,3 @@ function createHighlightSpan(highlightId: number, range: Range) {
   }
   return highlightSpan;
 }
-
-createMessageHandler("HIGHLIGHT_TEXT", (request) => {
-  console.log("Content script: HIGHLIGHT_TEXT");
-
-  const { startNode, startOffset, endNode, endOffset } = parseXPathLink(
-    request.annotationXPathLink,
-  );
-
-  highlight(
-    { startNode: startNode!, startOffset, endNode: endNode!, endOffset },
-    request.highlightId,
-  );
-
-  return undefined;
-});

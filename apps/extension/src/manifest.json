@@ -22,10 +22,7 @@
     {
       "matches": ["<all_urls>"],
       "js": [
-        "src/content/highlight.ts",
-        "src/content/highlight-on-load.ts",
-        "src/content/parse-selection.ts",
-        "src/content/snackbar.ts"
+        "src/content/index.ts"
       ]
     }
   ],
