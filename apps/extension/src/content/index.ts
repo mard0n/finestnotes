@@ -1,5 +1,5 @@
 import { createMessageHandler } from "../messaging";
-import { highlight } from "./highlight";
+import { highlight, setupHighlightEventListeners } from "./highlight";
 import { fetchAnnotationsFromAPI, parseXPathLink } from "./highlight-on-load";
 import { generateXPathLink } from "./parse-selection";
 import { addToast } from "./snackbar";
@@ -40,6 +40,7 @@ async function initialize() {
     });
   }
 
+  setupHighlightEventListeners();
   // if (annotationsFromAPI?.length) {
   //   await browser.storage.local.set({ annotations: annotationsFromAPI })
   // }
