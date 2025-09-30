@@ -77,11 +77,18 @@ createMessageHandler("GET_HIGHLIGHT_DATA", async () => {
   return { sourceTitle, sourceLink, content, link };
 });
 
+createMessageHandler("GET_PAGE_DATA", async () => {
+  const { title, url } = await getTabInfo();
+  
+  return { title, url };
+});
+
 // Show in-page snackbar notifications from background/content
 createMessageHandler("SHOW_SNACKBAR", (request) => {
   addToast({
     message: request.message,
     duration: request.duration ?? 4000,
+    type: request.type ?? 'error',
   });
   return undefined;
 });

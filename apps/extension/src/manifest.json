@@ -33,7 +33,14 @@
         "mac": "Command+Shift+Y"
       },
       "description": "Highlight selected text"
+    },
+    "save-page": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+U",
+        "mac": "Command+Shift+U"
+      },
+      "description": "Toggle save/unsave current page"
     }
   },
-  "permissions": ["storage", "activeTab", "scripting"]
+  "permissions": ["storage", "activeTab"]
 }

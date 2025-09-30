@@ -35,6 +35,73 @@ browser.commands.onCommand.addListener(async (command, tab) => {
         console.log("Error while highlighting:", error);
       }
     }
+  } else if (command === "save-page") {
+
+    if (!tab?.id) { return }
+
+    try {
+      const response = await sendMessageFromServiceWorker(tab.id, { type: "GET_PAGE_DATA" })
+
+      // Check if page is already saved using the API directly
+      const checkRes = await client.api.annotations.source.$get({
+        query: {
+          url: response.url,
+          type: 'page'
+        }
+      });
+
+      if (!checkRes.ok) {
+        throw new SystemError("Failed to check if page is saved: " + checkRes.statusText);
+      }
+      
+      const checkData = await checkRes.json();
+      const isPageSaved = checkData.length > 0;
+
+      if (isPageSaved) {
+        // Page is already saved, so delete it
+        const pageId = checkData[0].id;
+        const deleteRes = await client.api.page[":id"].$delete({ param: { id: pageId.toString() } });
+        
+        if (!deleteRes.ok) {
+          throw new UserError("Failed to delete saved page: " + deleteRes.statusText);
+        }
+
+        await sendMessageFromServiceWorker(tab.id, {
+          type: "SHOW_SNACKBAR",
+          data: { message: "Page removed from saved pages!", duration: 3000, type: "success" }
+        });
+      } else {
+        // Page is not saved, so save it
+        const saveRes = await client.api['save-page'].$post({ 
+          json: {
+            sourceTitle: response.title,
+            sourceLink: response.url,
+            comment: ""
+          }
+        });
+
+        if (!saveRes.ok) {
+          throw new UserError("Failed to save page: " + saveRes.statusText);
+        }
+
+        await sendMessageFromServiceWorker(tab.id, {
+          type: "SHOW_SNACKBAR",
+          data: { message: "Page saved successfully!", duration: 3000, type: "success" }
+        });
+      }
+
+    } catch (error) {
+      console.error("Error while toggling page save:", error);
+      if (error instanceof UserError) {
+        const message = (error.message ? error.message : String(error)) || "Unknown error";
+        await sendMessageFromServiceWorker(tab.id, {
+          type: "SHOW_SNACKBAR",
+          data: { message, duration: 5000 }
+        });
+      } else {
+        console.log("Error while toggling page save:", error);
+      }
+    }
   }
 });
 

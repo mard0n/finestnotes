@@ -19,12 +19,20 @@ function ensureToastContainer(): HTMLElement {
   return el;
 }
 
-export function addToast(opts: { message: string; duration?: number }) {
-  const { message, duration = 4000 } = opts;
+export function addToast(opts: { message: string; duration?: number; type?: 'error' | 'success' }) {
+  const { message, duration = 4000, type = 'error' } = opts;
   const container = ensureToastContainer();
   const toast = document.createElement('div');
   
-  // Apply your exact styling
+  // Define styling based on type
+  const isError = type === 'error';
+  const borderColor = isError ? '#fb8181' : '#e5e7eb';
+  const backgroundColor = isError ? '#ffffff' : '#1f2937';
+  const textColor = isError ? '#C2231F' : '#ffffff';
+  const iconColor = isError ? '#C2231F' : '#ffffff';
+  const progressColor = isError ? '#F47F7D' : '#6b7280';
+  
+  // Apply styling
   Object.assign(toast.style, {
     position: 'relative',
     overflow: 'hidden',
@@ -33,10 +41,10 @@ export function addToast(opts: { message: string; duration?: number }) {
     alignItems: 'flex-start',
     gap: '8px',
     padding: '12px',
-    border: `1.5px solid #fb8181`,
+    border: `1.5px solid ${borderColor}`,
     borderRadius: '8px',
-    background: '#ffffff',
-    color: '#C2231F',
+    background: backgroundColor,
+    color: textColor,
     fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif',
     fontSize: '14px',
     fontWeight: '500',
@@ -55,24 +63,31 @@ export function addToast(opts: { message: string; duration?: number }) {
     gap: '8px',
   } as CSSStyleDeclaration);
 
-  // Icon SVG (info circle)
+  // Icon SVG (info circle for error, checkmark for success)
   const iconSvg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
   iconSvg.setAttribute('fill', 'none');
   iconSvg.setAttribute('viewBox', '0 0 24 24');
   iconSvg.setAttribute('stroke-width', '2');
   iconSvg.setAttribute('stroke', 'currentColor');
   Object.assign(iconSvg.style, {
-    marginTop: '4px',
     height: '16px',
     width: '16px',
-    color: '#C2231F',
+    color: iconColor,
     flexShrink: '0',
   } as CSSStyleDeclaration);
   
   const iconPath = document.createElementNS('http://www.w3.org/2000/svg', 'path');
   iconPath.setAttribute('stroke-linecap', 'round');
   iconPath.setAttribute('stroke-linejoin', 'round');
-  iconPath.setAttribute('d', 'm11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z');
+  
+  if (type === 'success') {
+    // Checkmark icon
+    iconPath.setAttribute('d', 'M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z');
+  } else {
+    // Info circle icon (error)
+    iconPath.setAttribute('d', 'm11.25 11.25.041-.02a.75.75 0 0 1 1.063.852l-.708 2.836a.75.75 0 0 0 1.063.853l.041-.021M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9-3.75h.008v.008H12V8.25Z');
+  }
+  
   iconSvg.appendChild(iconPath);
   contentDiv.appendChild(iconSvg);
 
@@ -93,10 +108,9 @@ export function addToast(opts: { message: string; duration?: number }) {
   closeSvg.setAttribute('stroke-width', '2');
   closeSvg.setAttribute('stroke', 'currentColor');
   Object.assign(closeSvg.style, {
-    marginTop: '4px',
     height: '16px',
     width: '16px',
-    color: '#C2231F',
+    color: iconColor,
     cursor: 'pointer',
     flexShrink: '0',
   } as CSSStyleDeclaration);
@@ -123,7 +137,7 @@ export function addToast(opts: { message: string; duration?: number }) {
     left: '0',
     height: '2px',
     width: '100%',
-    background: '#F47F7D',
+    background: progressColor,
   } as CSSStyleDeclaration);
   toast.appendChild(progress);
 

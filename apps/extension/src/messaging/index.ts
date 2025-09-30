@@ -4,9 +4,10 @@ import { UserError, SystemError } from "../utils/errors";
 
 interface MessageMap {
   GET_HIGHLIGHT_DATA: { request: undefined; response: HighlightReqType };
+  GET_PAGE_DATA: { request: undefined; response: { title: string; url: string } };
   HIGHLIGHT_TEXT: { request: { highlightId: number, annotationXPathLink: string }; response: undefined };
   FETCH_ANNOTATIONS: { request: { url: string }; response: AnnotationsResType }
-  SHOW_SNACKBAR: { request: { message: string; duration?: number }; response: undefined }
+  SHOW_SNACKBAR: { request: { message: string; duration?: number; type?: 'error' | 'success' }; response: undefined }
   DELETE_HIGHLIGHT: { request: { highlightId: number }; response: undefined }
   CHECK_PAGE_SAVED: { request: { url: string }; response: { saved: boolean; pageId?: number } }
   SAVE_PAGE: { request: { sourceTitle: string; sourceLink: string; comment?: string }; response: boolean }
