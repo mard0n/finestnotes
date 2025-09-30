@@ -1,4 +1,5 @@
 import { createMessageHandler } from "../messaging";
+import { getTabInfo } from "../utils/libs/getTabInfo";
 import { highlight, setupHighlightEventListeners } from "./highlight";
 import { fetchAnnotationsFromAPI, parseXPathLink } from "./highlight-on-load";
 import { generateXPathLink } from "./parse-selection";
@@ -67,15 +68,12 @@ createMessageHandler("HIGHLIGHT_TEXT", (request) => {
   return undefined;
 });
 
-createMessageHandler("GET_HIGHLIGHT_DATA", () => {
-  const url = window.location.href;
-  const cleanUrl = new URL(url).origin + new URL(url).pathname;
-  const sourceTitle = document.title;
-  const sourceLink = cleanUrl;
+createMessageHandler("GET_HIGHLIGHT_DATA", async () => {
+  const { title: sourceTitle, url: sourceLink } = await getTabInfo();
   const selection = window.getSelection();
   const content = selection ? selection.toString() : "";
-  const link = selection ? generateXPathLink(selection, cleanUrl) : "";
-  console.log("Highlight data:", { sourceTitle, sourceLink, content, link });
+  const link = selection ? generateXPathLink(selection, sourceLink) : "";
+  
   return { sourceTitle, sourceLink, content, link };
 });
 

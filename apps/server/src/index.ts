@@ -125,7 +125,6 @@ let route = app.get("/notes", async (c) => {
     });
   }
 ).get("/annotations", async (c) => {
-  console.log('/annotations', c);
   const db = drizzle(c.env.finestdb);
   const result = await db.select().from(annotations).all();
   return c.json(result);
@@ -136,7 +135,6 @@ let route = app.get("/notes", async (c) => {
     type: z.enum(['highlight', 'image', 'page']).optional(),
   })
 ), async (c) => {
-  console.log('/annotations/source', c);
   const { url: sourceUrl, type } = c.req.valid("query");
   console.log('sourceUrl', sourceUrl);
   const db = drizzle(c.env.finestdb);

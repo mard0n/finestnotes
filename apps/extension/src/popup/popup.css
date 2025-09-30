@@ -105,7 +105,8 @@ button#screenshot-btn {
 
 #save-btn .state-default,
 #save-btn .state-pending,
-#save-btn .state-success {
+#save-btn .state-success,
+#save-btn .state-deleting {
     display: none;
     align-items: center;
     justify-content: center;
@@ -121,6 +122,10 @@ button#screenshot-btn {
 }
 
 #save-btn[data-state="success"] .state-success {
+    display: flex;
+}
+
+#save-btn[data-state="deleting"] .state-deleting {
     display: flex;
 }
 

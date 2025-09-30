@@ -1,8 +1,8 @@
 import { sendMessageFromContentScript } from "../messaging/index";
 import { AnnotationsResType } from "../api/config";
-import { getCleanUrl } from "../utils/libs/getCleanURL";
 import { SystemError } from "../utils/errors";
 import { SelectionRange } from "../utils/types";
+import { getTabInfo } from "../utils/libs/getTabInfo";
 
 console.log("Hello from highlight-on-load");
 
@@ -67,12 +67,12 @@ export function parseXPathLink(parseXPathLink: string): SelectionRange {
 
 export async function fetchAnnotationsFromAPI(): Promise<AnnotationsResType | null> {
   console.log("fetching annotations");
-  const cleanUrl = getCleanUrl(window.location.href);
+  const { url } = await getTabInfo();
 
   try {
     return await sendMessageFromContentScript({
       type: "FETCH_ANNOTATIONS",
-      data: { currentURL: cleanUrl },
+      data: { url },
     });
   } catch (error) {
     console.error("Error fetching annotations:", error);

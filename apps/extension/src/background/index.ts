@@ -1,7 +1,6 @@
 import browser from "webextension-polyfill";
 import { client } from "../api/config";
 import { createMessageHandler, sendMessageFromServiceWorker } from "../messaging/index";
-import { getCleanUrl } from "../utils/libs/getCleanURL";
 import { SystemError, UserError } from "../utils/errors";
 
 console.log("Hello from the background!");
@@ -40,10 +39,9 @@ browser.commands.onCommand.addListener(async (command, tab) => {
 });
 
 createMessageHandler("FETCH_ANNOTATIONS", async (request) => {
-  const cleanUrl = getCleanUrl(request.currentURL)
   const res = await client.api.annotations.source.$get({
     query: {
-      url: cleanUrl
+      url: request.url
     }
   })
 
@@ -63,10 +61,9 @@ createMessageHandler("DELETE_HIGHLIGHT", async (request) => {
 })
 
 createMessageHandler("CHECK_PAGE_SAVED", async (request) => {
-  const cleanUrl = getCleanUrl(request.url)
   const res = await client.api.annotations.source.$get({
     query: {
-      url: cleanUrl,
+      url: request.url,
       type: 'page'
     }
   })
@@ -76,7 +73,10 @@ createMessageHandler("CHECK_PAGE_SAVED", async (request) => {
   }
   
   const data = await res.json()
-  return data.length > 0
+  if (data.length > 0) {
+    return { saved: true, pageId: data[0].id }
+  }
+  return { saved: false }
 })
 
 createMessageHandler("SAVE_PAGE", async (request) => {
@@ -90,6 +90,16 @@ createMessageHandler("SAVE_PAGE", async (request) => {
 
   if (!res.ok) {
     throw new UserError("Failed to save page: " + res.statusText)
+  }
+  
+  return true
+})
+
+createMessageHandler("DELETE_SAVED_PAGE", async (request) => {
+  const res = await client.api.page[":id"].$delete({ param: { id: request.pageId.toString() } })
+  
+  if (!res.ok) {
+    throw new UserError("Failed to delete saved page: " + res.statusText)
   }
   
   return true

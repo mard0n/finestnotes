@@ -5,11 +5,12 @@ import { UserError, SystemError } from "../utils/errors";
 interface MessageMap {
   GET_HIGHLIGHT_DATA: { request: undefined; response: HighlightReqType };
   HIGHLIGHT_TEXT: { request: { highlightId: number, annotationXPathLink: string }; response: undefined };
-  FETCH_ANNOTATIONS: { request: { currentURL: string }; response: AnnotationsResType }
+  FETCH_ANNOTATIONS: { request: { url: string }; response: AnnotationsResType }
   SHOW_SNACKBAR: { request: { message: string; duration?: number }; response: undefined }
   DELETE_HIGHLIGHT: { request: { highlightId: number }; response: undefined }
-  CHECK_PAGE_SAVED: { request: { url: string }; response: boolean }
+  CHECK_PAGE_SAVED: { request: { url: string }; response: { saved: boolean; pageId?: number } }
   SAVE_PAGE: { request: { sourceTitle: string; sourceLink: string; comment?: string }; response: boolean }
+  DELETE_SAVED_PAGE: { request: { pageId: number }; response: boolean }
 }
 
 interface ChromeMessageRequest<T extends keyof MessageMap> {
