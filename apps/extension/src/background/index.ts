@@ -2,6 +2,7 @@ import browser from "webextension-polyfill";
 import { client } from "../api/config";
 import { createMessageHandler, sendMessageFromServiceWorker } from "../messaging/index";
 import { SystemError, UserError } from "../utils/errors";
+import { getTabInfo } from "../utils/libs/getTabInfo";
 
 console.log("Hello from the background!");
 
@@ -40,7 +41,7 @@ browser.commands.onCommand.addListener(async (command, tab) => {
     if (!tab?.id) { return }
 
     try {
-      const response = await sendMessageFromServiceWorker(tab.id, { type: "GET_PAGE_DATA" })
+      const response = await getTabInfo()
 
       // Check if page is already saved using the API directly
       const checkRes = await client.api.annotations.source.$get({
@@ -141,9 +142,9 @@ createMessageHandler("CHECK_PAGE_SAVED", async (request) => {
   
   const data = await res.json()
   if (data.length > 0) {
-    return { saved: true, pageId: data[0].id }
+    return data[0].id
   }
-  return { saved: false }
+  return undefined
 })
 
 createMessageHandler("SAVE_PAGE", async (request) => {

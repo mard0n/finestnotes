@@ -9,7 +9,7 @@ interface MessageMap {
   FETCH_ANNOTATIONS: { request: { url: string }; response: AnnotationsResType }
   SHOW_SNACKBAR: { request: { message: string; duration?: number; type?: 'error' | 'success' }; response: undefined }
   DELETE_HIGHLIGHT: { request: { highlightId: number }; response: undefined }
-  CHECK_PAGE_SAVED: { request: { url: string }; response: { saved: boolean; pageId?: number } }
+  CHECK_PAGE_SAVED: { request: { url: string }; response?: number }
   SAVE_PAGE: { request: { sourceTitle: string; sourceLink: string; comment?: string }; response: boolean }
   DELETE_SAVED_PAGE: { request: { pageId: number }; response: boolean }
 }

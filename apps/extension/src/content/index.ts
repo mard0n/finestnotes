@@ -73,14 +73,18 @@ createMessageHandler("GET_HIGHLIGHT_DATA", async () => {
   const selection = window.getSelection();
   const content = selection ? selection.toString() : "";
   const link = selection ? generateXPathLink(selection, sourceLink) : "";
-  
+
   return { sourceTitle, sourceLink, content, link };
 });
 
 createMessageHandler("GET_PAGE_DATA", async () => {
-  const { title, url } = await getTabInfo();
+  const url = window.location.href;
+  const cleanUrl = new URL(url).origin + new URL(url).pathname;
   
-  return { title, url };
+  return {
+    title: document.title,
+    url: cleanUrl
+  };
 });
 
 // Show in-page snackbar notifications from background/content

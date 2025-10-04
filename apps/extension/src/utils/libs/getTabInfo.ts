@@ -1,4 +1,5 @@
 import browser from "webextension-polyfill";
+import { sendMessageFromServiceWorker } from "../../messaging";
 
 export interface TabInfo {
   title: string;
@@ -28,26 +29,12 @@ export const getTabInfo = async (): Promise<TabInfo> => {
     }
 
     try {
-      const result = await browser.scripting.executeScript({
-        target: { tabId: tab.id },
-        func: () => {
-          const url = window.location.href;
-          const cleanUrl = new URL(url).origin + new URL(url).pathname;
-          return {
-            title: document.title,
-            url: cleanUrl
-          };
-        }
-      });
+      const result = await sendMessageFromServiceWorker(tab.id, { type: "GET_PAGE_DATA" });
 
-
-      return result[0].result;
+      return result
     } catch (error) {
       console.error("Error executing script to get tab info:", error);
-      return {
-        title: tab.title || '',
-        url: tab.url || ''
-      };
+      throw new Error('Unable to get tab info from content script');
     }
   }
 
