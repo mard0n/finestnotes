@@ -5,9 +5,20 @@ import cloudflare from '@astrojs/cloudflare';
 
 import solidJs from '@astrojs/solid-js';
 
+import tailwindcss from '@tailwindcss/vite';
+
 // https://astro.build/config
 export default defineConfig({
   site: import.meta.env.CF_WEB_URL,
   adapter: cloudflare(),
-  integrations: [solidJs()]
+
+  // prefetch: {
+  //   defaultStrategy: 'viewport',
+  //   prefetchAll: true
+  // }
+  integrations: [solidJs()],
+
+  vite: {
+    plugins: [tailwindcss()]
+  }
 });

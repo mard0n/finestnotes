@@ -102,6 +102,9 @@ importers:
       '@finest/utils':
         specifier: workspace:^
         version: link:../../packages/utils
+      '@tailwindcss/vite':
+        specifier: ^4.1.14
+        version: 4.1.14(vite@6.3.6(@types/node@24.5.2)(jiti@2.6.0)(less@4.4.1)(lightningcss@1.30.1)(sass@1.93.0)(tsx@4.20.5)(yaml@2.8.1))
       astro:
         specifier: ^5.13.8
         version: 5.13.8(@types/node@24.5.2)(jiti@2.6.0)(less@4.4.1)(lightningcss@1.30.1)(rollup@4.50.2)(sass@1.93.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.1)
@@ -111,6 +114,9 @@ importers:
       solid-js:
         specifier: ^1.9.9
         version: 1.9.9
+      tailwindcss:
+        specifier: ^4.1.14
+        version: 4.1.14
       typescript:
         specifier: ^5.9.2
         version: 5.9.2
@@ -5328,6 +5334,13 @@ snapshots:
       '@tailwindcss/oxide': 4.1.14
       tailwindcss: 4.1.14
       vite: 5.4.20(@types/node@24.5.2)(less@4.4.1)(lightningcss@1.30.1)(sass@1.93.0)
+
+  '@tailwindcss/vite@4.1.14(vite@6.3.6(@types/node@24.5.2)(jiti@2.6.0)(less@4.4.1)(lightningcss@1.30.1)(sass@1.93.0)(tsx@4.20.5)(yaml@2.8.1))':
+    dependencies:
+      '@tailwindcss/node': 4.1.14
+      '@tailwindcss/oxide': 4.1.14
+      tailwindcss: 4.1.14
+      vite: 6.3.6(@types/node@24.5.2)(jiti@2.6.0)(less@4.4.1)(lightningcss@1.30.1)(sass@1.93.0)(tsx@4.20.5)(yaml@2.8.1)
 
   '@types/babel__core@7.20.5':
     dependencies:
