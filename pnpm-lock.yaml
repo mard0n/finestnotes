@@ -96,6 +96,9 @@ importers:
       '@astrojs/cloudflare':
         specifier: ^12.6.8
         version: 12.6.8(@types/node@24.5.2)(astro@5.13.8(@types/node@24.5.2)(jiti@2.6.0)(less@4.4.1)(lightningcss@1.30.1)(rollup@4.50.2)(sass@1.93.0)(tsx@4.20.5)(typescript@5.9.2)(yaml@2.8.1))(jiti@2.6.0)(less@4.4.1)(lightningcss@1.30.1)(sass@1.93.0)(tsx@4.20.5)(yaml@2.8.1)
+      '@astrojs/solid-js':
+        specifier: ^5.1.1
+        version: 5.1.1(@types/node@24.5.2)(jiti@2.6.0)(less@4.4.1)(lightningcss@1.30.1)(sass@1.93.0)(solid-js@1.9.9)(tsx@4.20.5)(yaml@2.8.1)
       '@finest/utils':
         specifier: workspace:^
         version: link:../../packages/utils
@@ -105,6 +108,9 @@ importers:
       hono:
         specifier: ^4.9.8
         version: 4.9.8
+      solid-js:
+        specifier: ^1.9.9
+        version: 1.9.9
       typescript:
         specifier: ^5.9.2
         version: 5.9.2
@@ -165,6 +171,16 @@ packages:
   '@astrojs/prism@3.3.0':
     resolution: {integrity: sha512-q8VwfU/fDZNoDOf+r7jUnMC2//H2l0TuQ6FkGJL8vD8nw/q5KiL3DS1KKBI3QhI9UQhpJ5dc7AtqfbXWuOgLCQ==}
     engines: {node: 18.20.8 || ^20.3.0 || >=22.0.0}
+
+  '@astrojs/solid-js@5.1.1':
+    resolution: {integrity: sha512-8HoB5d58N9UYHWIkg523BF6pc/SFgri3UxNg2faH/PzTWHncJrUujprjuW7atpiZSP8cFFOId/dPE7F2/ydFKg==}
+    engines: {node: 18.20.8 || ^20.3.0 || >=22.0.0}
+    peerDependencies:
+      solid-devtools: ^0.30.1
+      solid-js: ^1.8.5
+    peerDependenciesMeta:
+      solid-devtools:
+        optional: true
 
   '@astrojs/telemetry@3.3.0':
     resolution: {integrity: sha512-UFBgfeldP06qu6khs/yY+q1cDAaArM2/7AEIqQ9Cuvf7B1hNLq0xDrZkct+QoIGyjq56y8IaE2I3CTvG99mlhQ==}
@@ -4215,6 +4231,26 @@ snapshots:
     dependencies:
       prismjs: 1.30.0
 
+  '@astrojs/solid-js@5.1.1(@types/node@24.5.2)(jiti@2.6.0)(less@4.4.1)(lightningcss@1.30.1)(sass@1.93.0)(solid-js@1.9.9)(tsx@4.20.5)(yaml@2.8.1)':
+    dependencies:
+      solid-js: 1.9.9
+      vite: 6.3.6(@types/node@24.5.2)(jiti@2.6.0)(less@4.4.1)(lightningcss@1.30.1)(sass@1.93.0)(tsx@4.20.5)(yaml@2.8.1)
+      vite-plugin-solid: 2.11.9(solid-js@1.9.9)(vite@6.3.6(@types/node@24.5.2)(jiti@2.6.0)(less@4.4.1)(lightningcss@1.30.1)(sass@1.93.0)(tsx@4.20.5)(yaml@2.8.1))
+    transitivePeerDependencies:
+      - '@testing-library/jest-dom'
+      - '@types/node'
+      - jiti
+      - less
+      - lightningcss
+      - sass
+      - sass-embedded
+      - stylus
+      - sugarss
+      - supports-color
+      - terser
+      - tsx
+      - yaml
+
   '@astrojs/telemetry@3.3.0':
     dependencies:
       ci-info: 4.3.0
@@ -7739,6 +7775,19 @@ snapshots:
       solid-refresh: 0.6.3(solid-js@1.9.9)
       vite: 5.4.20(@types/node@24.5.2)(less@4.4.1)(lightningcss@1.30.1)(sass@1.93.0)
       vitefu: 1.1.1(vite@5.4.20(@types/node@24.5.2)(less@4.4.1)(lightningcss@1.30.1)(sass@1.93.0))
+    transitivePeerDependencies:
+      - supports-color
+
+  vite-plugin-solid@2.11.9(solid-js@1.9.9)(vite@6.3.6(@types/node@24.5.2)(jiti@2.6.0)(less@4.4.1)(lightningcss@1.30.1)(sass@1.93.0)(tsx@4.20.5)(yaml@2.8.1)):
+    dependencies:
+      '@babel/core': 7.28.4
+      '@types/babel__core': 7.20.5
+      babel-preset-solid: 1.9.9(@babel/core@7.28.4)(solid-js@1.9.9)
+      merge-anything: 5.1.7
+      solid-js: 1.9.9
+      solid-refresh: 0.6.3(solid-js@1.9.9)
+      vite: 6.3.6(@types/node@24.5.2)(jiti@2.6.0)(less@4.4.1)(lightningcss@1.30.1)(sass@1.93.0)(tsx@4.20.5)(yaml@2.8.1)
+      vitefu: 1.1.1(vite@6.3.6(@types/node@24.5.2)(jiti@2.6.0)(less@4.4.1)(lightningcss@1.30.1)(sass@1.93.0)(tsx@4.20.5)(yaml@2.8.1))
     transitivePeerDependencies:
       - supports-color
 

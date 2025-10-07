@@ -14,9 +14,11 @@
   "dependencies": {
     "@astrojs/check": "^0.9.4",
     "@astrojs/cloudflare": "^12.6.8",
+    "@astrojs/solid-js": "^5.1.1",
     "@finest/utils": "workspace:^",
     "astro": "^5.13.8",
     "hono": "^4.9.8",
+    "solid-js": "^1.9.9",
     "typescript": "^5.9.2"
   },
   "devDependencies": {
