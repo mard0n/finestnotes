@@ -4,14 +4,21 @@ import { cors } from "hono/cors";
 import image from "./routes/image";
 import page from "./routes/page";
 import highlight from "./routes/highlight";
+import { auth } from "./utils/auth";
 
 export type Bindings = {
   finestdb: D1Database;
+  BETTER_AUTH_SECRET: string;
+  BETTER_AUTH_URL: string;
 };
 
 const app = new Hono<{ Bindings: Bindings }>().basePath("/api")
 
 app.use(cors());
+app.on(['GET', 'POST'], '/*', (c) => {
+  console.log('Request:', c.req.method, c.req.url);
+  return auth(c.env).handler(c.req.raw);
+});
 
 const routes = app
   .route("/highlight", highlight)

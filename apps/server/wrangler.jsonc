@@ -14,9 +14,9 @@
 			"migrations_dir": "drizzle"
 		}
 	],
-	// "compatibility_flags": [
-	//   "nodejs_compat"
-	// ],
+	"compatibility_flags": [
+		"nodejs_compat"
+	]
 	// "vars": {
 	//   "DATABASE_URL": "my-variable"
 	// },
