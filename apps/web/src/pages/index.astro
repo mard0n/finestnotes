@@ -5,29 +5,27 @@ import type { InferResponseType } from 'hono';
 
 export const prerender = false
 
-var annotations: InferResponseType<typeof client.api.annotations.$get> = [];
+// var annotations: InferResponseType<typeof client.api.annotations.$get> = [];
 
-try {
-		let url = client.api.annotations.$url() // Log the URL to verify it's correct
-		console.log("Fetching notes from URL:", url.toString())
-    const res = await client.api.annotations.$get().then((r) => {
-			console.log("Fetched notes:", r)
-			return r
-		})
-    if (res.ok) {
-        annotations = await res.json();
-    }
-		console.log('annotations', annotations);
+// try {
+// 		let url = client.api.annotations.$url() // Log the URL to verify it's correct
+// 		console.log("Fetching notes from URL:", url.toString())
+//     const res = await client.api.annotations.$get().then((r) => {
+// 			console.log("Fetched notes:", r)
+// 			return r
+// 		})
+//     if (res.ok) {
+//         annotations = await res.json();
+//     }
+// 		console.log('annotations', annotations);
 		
-} catch (error) {
-    console.error('Error fetching notes:', error);
-}
+// } catch (error) {
+//     console.error('Error fetching notes:', error);
+// }
 ---
 
 <Layout>
 	<ul>
-		{annotations.map((annotation) => (
-			<li>{annotation.sourceTitle}</li>
-		))}
+		<li>Annotations</li>
 	</ul>
 </Layout>

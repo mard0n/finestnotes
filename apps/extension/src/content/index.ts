@@ -1,7 +1,7 @@
 import { createMessageHandler } from "../messaging";
 import { getTabInfo } from "../utils/libs/getTabInfo";
 import { highlight, setupHighlightEventListeners } from "./highlight";
-import { fetchAnnotationsFromAPI, parseXPathLink } from "./highlight-on-load";
+import { fetchHighlightsFromAPI, parseXPathLink } from "./highlight-on-load";
 import { generateXPathLink } from "./parse-selection";
 import { addToast } from "./snackbar";
 
@@ -9,15 +9,15 @@ import { addToast } from "./snackbar";
 async function initialize() {
   console.log("Initializing highlight-on-load");
 
-  // const annotations = await loadAnnotationFromStorage();
-  // console.log("annotations from storage", annotations);
+  // const highlights = await loadHighlightFromStorage();
+  // console.log("highlights from storage", highlights);
 
-  // if (annotations?.length) {
-  //   annotations.forEach((annotation) => {
-  //     if (annotation.type === 'highlight' && annotation.link) {
+  // if (highlights?.length) {
+  //   highlights.forEach((highlight) => {
+  //     if (highlight.type === 'highlight' && highlight.link) {
   //       try {
-  //         const { startNode, startOffset, endNode, endOffset } = parseXPathLink(annotation.link)
-  //         highlight({ startNode, startOffset, endNode, endOffset }, annotation.id)
+  //         const { startNode, startOffset, endNode, endOffset } = parseXPathLink(highlight.link)
+  //         highlight({ startNode, startOffset, endNode, endOffset }, highlight.id)
   //       } catch (error) {
   //         console.error("Error parsing XPath link or highlighting:", error);
   //       }
@@ -25,15 +25,15 @@ async function initialize() {
   //   });
   // }
 
-  const annotationsFromAPI = await fetchAnnotationsFromAPI();
-  console.log("annotations from API", annotationsFromAPI);
+  const highlightsFromAPI = await fetchHighlightsFromAPI();
+  console.log("highlights from API", highlightsFromAPI);
 
-  if (annotationsFromAPI?.length) {
-    annotationsFromAPI.forEach((annotation) => {
-      if (annotation.type === 'highlight' && annotation.link) {
+  if (highlightsFromAPI?.length) {
+    highlightsFromAPI.forEach((hl) => {
+      if (hl.type === 'highlight' && hl.link) {
         try {
-          const { startNode, startOffset, endNode, endOffset } = parseXPathLink(annotation.link)
-          highlight({ startNode, startOffset, endNode, endOffset }, annotation.id)
+          const { startNode, startOffset, endNode, endOffset } = parseXPathLink(hl.link)
+          highlight({ startNode, startOffset, endNode, endOffset }, hl.id)
         } catch (error) {
           console.error("Error parsing XPath link or highlighting:", error);
         }
@@ -42,8 +42,8 @@ async function initialize() {
   }
 
   setupHighlightEventListeners();
-  // if (annotationsFromAPI?.length) {
-  //   await browser.storage.local.set({ annotations: annotationsFromAPI })
+  // if (highlightsFromAPI?.length) {
+  //   await browser.storage.local.set({ highlights: highlightsFromAPI })
   // }
 }
 

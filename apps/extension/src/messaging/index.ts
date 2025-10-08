@@ -1,17 +1,20 @@
 import browser from "webextension-polyfill";
-import { type AnnotationsResType, type HighlightReqType } from "../api/config";
+import { type HighlightResType, type HighlightReqType } from "../api/config";
 import { UserError, SystemError } from "../utils/errors";
 
 interface MessageMap {
-  GET_HIGHLIGHT_DATA: { request: undefined; response: HighlightReqType };
   GET_PAGE_DATA: { request: undefined; response: { title: string; url: string } };
+  
   HIGHLIGHT_TEXT: { request: { highlightId: number, annotationXPathLink: string }; response: undefined };
-  FETCH_ANNOTATIONS: { request: { url: string }; response: AnnotationsResType }
-  SHOW_SNACKBAR: { request: { message: string; duration?: number; type?: 'error' | 'success' }; response: undefined }
+  GET_HIGHLIGHT_DATA: { request: undefined; response: HighlightReqType };
+  FETCH_HIGHLIGHTS: { request: { url: string }; response: HighlightResType }
   DELETE_HIGHLIGHT: { request: { highlightId: number }; response: undefined }
-  CHECK_PAGE_SAVED: { request: { url: string }; response?: number }
+
   SAVE_PAGE: { request: { sourceTitle: string; sourceLink: string; comment?: string }; response: boolean }
+  CHECK_PAGE_SAVED: { request: { url: string }; response?: number }
   DELETE_SAVED_PAGE: { request: { pageId: number }; response: boolean }
+
+  SHOW_SNACKBAR: { request: { message: string; duration?: number; type?: 'error' | 'success' }; response: undefined }
 }
 
 interface ChromeMessageRequest<T extends keyof MessageMap> {

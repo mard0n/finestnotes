@@ -44,17 +44,16 @@ browser.commands.onCommand.addListener(async (command, tab) => {
       const response = await getTabInfo()
 
       // Check if page is already saved using the API directly
-      const checkRes = await client.api.annotations.source.$get({
+      const checkRes = await client.api.page.$get({
         query: {
-          url: response.url,
-          type: 'page'
+          url: response.url
         }
       });
 
       if (!checkRes.ok) {
         throw new SystemError("Failed to check if page is saved: " + checkRes.statusText);
       }
-      
+
       const checkData = await checkRes.json();
       const isPageSaved = checkData.length > 0;
 
@@ -62,7 +61,7 @@ browser.commands.onCommand.addListener(async (command, tab) => {
         // Page is already saved, so delete it
         const pageId = checkData[0].id;
         const deleteRes = await client.api.page[":id"].$delete({ param: { id: pageId.toString() } });
-        
+
         if (!deleteRes.ok) {
           throw new UserError("Failed to delete saved page: " + deleteRes.statusText);
         }
@@ -73,7 +72,7 @@ browser.commands.onCommand.addListener(async (command, tab) => {
         });
       } else {
         // Page is not saved, so save it
-        const saveRes = await client.api['save-page'].$post({ 
+        const saveRes = await client.api.page.$post({
           json: {
             sourceTitle: response.title,
             sourceLink: response.url,
@@ -106,15 +105,15 @@ browser.commands.onCommand.addListener(async (command, tab) => {
   }
 });
 
-createMessageHandler("FETCH_ANNOTATIONS", async (request) => {
-  const res = await client.api.annotations.source.$get({
+createMessageHandler("FETCH_HIGHLIGHTS", async (request) => {
+  const res = await client.api.highlight.$get({
     query: {
       url: request.url
     }
   })
 
   if (!res.ok) {
-    throw new SystemError("Failed to fetch annotations: " + res.statusText)
+    throw new SystemError("Failed to fetch highlights: " + res.statusText)
   }
   const data = await res.json()
   return data
@@ -129,17 +128,16 @@ createMessageHandler("DELETE_HIGHLIGHT", async (request) => {
 })
 
 createMessageHandler("CHECK_PAGE_SAVED", async (request) => {
-  const res = await client.api.annotations.source.$get({
+  const res = await client.api.page.$get({
     query: {
-      url: request.url,
-      type: 'page'
+      url: request.url
     }
   })
 
   if (!res.ok) {
     throw new SystemError("Failed to check if page is saved: " + res.statusText)
   }
-  
+
   const data = await res.json()
   if (data.length > 0) {
     return data[0].id
@@ -148,7 +146,7 @@ createMessageHandler("CHECK_PAGE_SAVED", async (request) => {
 })
 
 createMessageHandler("SAVE_PAGE", async (request) => {
-  const res = await client.api['save-page'].$post({ 
+  const res = await client.api.page.$post({
     json: {
       sourceTitle: request.sourceTitle,
       sourceLink: request.sourceLink,
@@ -159,16 +157,16 @@ createMessageHandler("SAVE_PAGE", async (request) => {
   if (!res.ok) {
     throw new UserError("Failed to save page: " + res.statusText)
   }
-  
+
   return true
 })
 
 createMessageHandler("DELETE_SAVED_PAGE", async (request) => {
   const res = await client.api.page[":id"].$delete({ param: { id: request.pageId.toString() } })
-  
+
   if (!res.ok) {
     throw new UserError("Failed to delete saved page: " + res.statusText)
   }
-  
+
   return true
 })

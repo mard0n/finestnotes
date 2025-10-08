@@ -1,5 +1,5 @@
 import { sendMessageFromContentScript } from "../messaging/index";
-import { AnnotationsResType } from "../api/config";
+import { HighlightResType } from "../api/config";
 import { SystemError } from "../utils/errors";
 import { SelectionRange } from "../utils/types";
 import { getTabInfo } from "../utils/libs/getTabInfo";
@@ -53,37 +53,37 @@ export function parseXPathLink(parseXPathLink: string): SelectionRange {
   };
 }
 
-// async function loadAnnotationFromStorage(): Promise<AnnotationsResType | null> {
-//   const { annotations } = await browser.storage.local.get('annotations') as Record<string, AnnotationsResType>
-//   console.log("Loaded annotations from storage:", annotations);
-
-//   if (!annotations || annotations.length === 0) {
-//     console.log('No annotations found in storage.');
+// async function loadHighlightFromStorage(): Promise<HighlightResType | null> {
+//   const { highlights } = await browser.storage.local.get('highlights') as Record<string, HighlightResType>
+//   console.log("Loaded highlights from storage:", highlights);
+//
+//   if (!highlights || highlights.length === 0) {
+//     console.log('No highlights found in storage.');
 //     return null
 //   }
 
-//   return annotations
+//   return highlights
 // }
 
-export async function fetchAnnotationsFromAPI(): Promise<AnnotationsResType | null> {
-  console.log("fetching annotations");
+export async function fetchHighlightsFromAPI(): Promise<HighlightResType | null> {
+  console.log("fetching highlights");
   const { url } = await getTabInfo();
 
   try {
     return await sendMessageFromContentScript({
-      type: "FETCH_ANNOTATIONS",
+      type: "FETCH_HIGHLIGHTS",
       data: { url },
     });
   } catch (error) {
-    console.error("Error fetching annotations:", error);
+    console.error("Error fetching highlights:", error);
     return null;
   }
 }
 
 // // Listen for storage changes and rehighlight
 // browser.storage.onChanged.addListener((changes, areaName) => {
-//   if (areaName === 'local' && changes.annotations) {
-//     console.log('Annotations updated in storage, rehighlighting...')
+//   if (areaName === 'local' && changes.highlights) {
+//     console.log('Highlights updated in storage, rehighlighting...')
 //     const highlightedElements = document.querySelectorAll('mark[data-finest-highlight]');
 //     const highlightedAnnotationIds = new Set<string>();
 //     highlightedElements.forEach(el => {
@@ -92,15 +92,15 @@ export async function fetchAnnotationsFromAPI(): Promise<AnnotationsResType | nu
 //         ids.split(';').forEach(id => highlightedAnnotationIds.add(id));
 //       }
 //     });
-//     (changes.annotations.newValue as AnnotationsResType)?.forEach((annotation) => {
-//       if (annotation.type === 'highlight' && annotation.link) {
-//         if (highlightedAnnotationIds.has(annotation.id.toString())) {
+//     (changes.highlights.newValue as HighlightResType)?.forEach((highlight) => {
+//       if (highlight.type === 'highlight' && highlight.link) {
+//         if (highlightedAnnotationIds.has(highlight.id.toString())) {
 //           // Already highlighted
 //           return;
 //         }
 //         try {
-//           const { startNode, startOffset, endNode, endOffset } = parseXPathLink(annotation.link)
-//           highlight({ startNode, startOffset, endNode, endOffset }, annotation.id)
+//           const { startNode, startOffset, endNode, endOffset } = parseXPathLink(highlight.link)
+//           highlight({ startNode, startOffset, endNode, endOffset }, highlight.id)
 //         } catch (error) {
 //           console.error("Error parsing XPath link or highlighting:", error);
 //         }

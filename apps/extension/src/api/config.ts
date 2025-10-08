@@ -11,13 +11,10 @@ const client = hc<RouteType>(apiUrl)
 const $highlight = client.api.highlight.$post
 type HighlightReqType = InferRequestType<typeof $highlight>['json']
 
-const $annotations = client.api.annotations.source.$get
-type AnnotationsResType = InferResponseType<typeof $annotations>
+const $highlightGet = client.api.highlight.$get
+type HighlightResType = InferResponseType<typeof $highlightGet>
 
-const $savePage = client.api['save-page'].$post
+const $savePage = client.api.page.$post
 type SavePageReqType = InferRequestType<typeof $savePage>['json']
 
-const $annotationsSource = client.api.annotations.source.$get
-type AnnotationsSourceReqType = InferRequestType<typeof $annotationsSource>['query']
-
-export { client, type HighlightReqType, type AnnotationsResType, type SavePageReqType, type AnnotationsSourceReqType };
+export { client, type HighlightReqType, type HighlightResType, type SavePageReqType };
