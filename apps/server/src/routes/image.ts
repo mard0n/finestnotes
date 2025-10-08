@@ -3,7 +3,7 @@ import { annotations } from "../db/schema";
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
-import { Bindings } from "../index";
+import type { Bindings } from "../index";
 import z from "zod";
 
 const image = new Hono<{ Bindings: Bindings }>()
