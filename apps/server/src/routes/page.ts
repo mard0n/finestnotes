@@ -1,5 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
-import { annotations } from "../db/schema";
+import { pages } from "../db/schema";
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -14,27 +14,23 @@ const page = new Hono<{ Bindings: Bindings }>()
   })), async (c) => {
     const { url } = c.req.valid("query");
     const db = drizzle(c.env.finestdb);
-    const result = await db.select().from(annotations).where(
-      and(
-        eq(annotations.sourceLink, url),
-        eq(annotations.type, "page")
-      )
-    ).all();
+    const result = await db.select().from(pages).where(eq(pages.url, url)).all();
     return c.json(result);
   })
 
   // Save a page
   .post("/", zValidator("json", z.object({
-    sourceTitle: z.string().min(1),
-    sourceLink: z.url(),
+    title: z.string().min(1),
+    url: z.url(),
+    description: z.string().min(1),
     comment: z.string().optional(),
   })), async (c) => {
-    const { sourceTitle, sourceLink, comment } = c.req.valid("json");
+    const { title, url, description, comment } = c.req.valid("json");
     const db = drizzle(c.env.finestdb);
-    await db.insert(annotations).values({
-      type: "page",
-      sourceTitle,
-      sourceLink,
+    await db.insert(pages).values({
+      title,
+      url,
+      description,
       comment
     }).run();
     return c.json({
@@ -49,11 +45,8 @@ const page = new Hono<{ Bindings: Bindings }>()
   })), async (c) => {
     const { id } = c.req.valid("param");
     const db = drizzle(c.env.finestdb);
-    await db.delete(annotations).where(
-      and(
-        eq(annotations.id, Number(id)),
-        eq(annotations.type, "page")
-      )
+    await db.delete(pages).where(
+      eq(pages.id, Number(id))
     ).run();
     return c.json({
       success: true,

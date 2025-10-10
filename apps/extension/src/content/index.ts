@@ -30,14 +30,13 @@ async function initialize() {
 
   if (highlightsFromAPI?.length) {
     highlightsFromAPI.forEach((hl) => {
-      if (hl.type === 'highlight' && hl.link) {
+
         try {
-          const { startNode, startOffset, endNode, endOffset } = parseXPathLink(hl.link)
+          const { startNode, startOffset, endNode, endOffset } = parseXPathLink(hl.position)
           highlight({ startNode, startOffset, endNode, endOffset }, hl.id)
         } catch (error) {
           console.error("Error parsing XPath link or highlighting:", error);
         }
-      }
     });
   }
 
@@ -69,21 +68,23 @@ createMessageHandler("HIGHLIGHT_TEXT", (request) => {
 });
 
 createMessageHandler("GET_HIGHLIGHT_DATA", async () => {
-  const { title: sourceTitle, url: sourceLink } = await getTabInfo();
+  const { title, url, description } = await getTabInfo();
   const selection = window.getSelection();
   const content = selection ? selection.toString() : "";
-  const link = selection ? generateXPathLink(selection, sourceLink) : "";
+  const link = selection ? generateXPathLink(selection, url) : "";
 
-  return { sourceTitle, sourceLink, content, link };
+  return { pageTitle: title, pageURL: url, pageDescription: description, text: content, position: link};
 });
 
 createMessageHandler("GET_PAGE_DATA", async () => {
   const url = window.location.href;
   const cleanUrl = new URL(url).origin + new URL(url).pathname;
+  const description = document.querySelector('meta[name="description"]')?.getAttribute('content') || "";
   
   return {
     title: document.title,
-    url: cleanUrl
+    url: cleanUrl,
+    description
   };
 });
 

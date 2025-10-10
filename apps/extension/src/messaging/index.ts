@@ -3,14 +3,14 @@ import { type HighlightResType, type HighlightReqType } from "../api/config";
 import { UserError, SystemError } from "../utils/errors";
 
 interface MessageMap {
-  GET_PAGE_DATA: { request: undefined; response: { title: string; url: string } };
+  GET_PAGE_DATA: { request: undefined; response: { title: string; url: string, description: string } };
   
   HIGHLIGHT_TEXT: { request: { highlightId: number, annotationXPathLink: string }; response: undefined };
   GET_HIGHLIGHT_DATA: { request: undefined; response: HighlightReqType };
   FETCH_HIGHLIGHTS: { request: { url: string }; response: HighlightResType }
   DELETE_HIGHLIGHT: { request: { highlightId: number }; response: undefined }
 
-  SAVE_PAGE: { request: { sourceTitle: string; sourceLink: string; comment?: string }; response: boolean }
+  SAVE_PAGE: { request: { title: string; url: string; comment?: string; description: string }; response: boolean }
   CHECK_PAGE_SAVED: { request: { url: string }; response?: number }
   DELETE_SAVED_PAGE: { request: { pageId: number }; response: boolean }
 

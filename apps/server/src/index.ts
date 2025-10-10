@@ -4,6 +4,7 @@ import { cors } from "hono/cors";
 import image from "./routes/image";
 import page from "./routes/page";
 import highlight from "./routes/highlight";
+import articles from "./routes/articles";
 import { auth } from "./utils/auth";
 
 export type Bindings = {
@@ -15,15 +16,17 @@ export type Bindings = {
 const app = new Hono<{ Bindings: Bindings }>().basePath("/api")
 
 app.use(cors());
-app.on(['GET', 'POST'], '/*', (c) => {
-  console.log('Request:', c.req.method, c.req.url);
-  return auth(c.env).handler(c.req.raw);
-});
+
+// app.on(['GET', 'POST'], '/*', (c) => {
+//   console.log('Request:', c.req.method, c.req.url);
+//   return auth(c.env).handler(c.req.raw);
+// });
 
 const routes = app
-  .route("/highlight", highlight)
+  .route("/articles", articles)
   .route("/page", page)
-  .route("/image", image);
+  .route("/highlight", highlight)
+  .route("/image", image)
 
 export type RouteType = typeof routes
 

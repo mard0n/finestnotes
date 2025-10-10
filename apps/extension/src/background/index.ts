@@ -22,7 +22,7 @@ browser.commands.onCommand.addListener(async (command, tab) => {
       }
       const data = await res.json();
 
-      await sendMessageFromServiceWorker(tab.id, { type: "HIGHLIGHT_TEXT", data: { highlightId: data.id, annotationXPathLink: response.link } });
+      await sendMessageFromServiceWorker(tab.id, { type: "HIGHLIGHT_TEXT", data: { highlightId: data.id, annotationXPathLink: response.position } });
 
     } catch (error) {
       console.error("Error while highlighting:", error);
@@ -74,8 +74,9 @@ browser.commands.onCommand.addListener(async (command, tab) => {
         // Page is not saved, so save it
         const saveRes = await client.api.page.$post({
           json: {
-            sourceTitle: response.title,
-            sourceLink: response.url,
+            title: response.title,
+            url: response.url,
+            description: response.description,
             comment: ""
           }
         });
@@ -108,7 +109,7 @@ browser.commands.onCommand.addListener(async (command, tab) => {
 createMessageHandler("FETCH_HIGHLIGHTS", async (request) => {
   const res = await client.api.highlight.$get({
     query: {
-      url: request.url
+      page_url: request.url
     }
   })
 
@@ -148,9 +149,10 @@ createMessageHandler("CHECK_PAGE_SAVED", async (request) => {
 createMessageHandler("SAVE_PAGE", async (request) => {
   const res = await client.api.page.$post({
     json: {
-      sourceTitle: request.sourceTitle,
-      sourceLink: request.sourceLink,
-      comment: request.comment
+      title: request.title,
+      url: request.url,
+      comment: request.comment,
+      description: request.description
     }
   })
 

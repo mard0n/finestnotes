@@ -1,6 +1,5 @@
 
 import { createResource, createSignal, Show } from 'solid-js';
-import browser from "webextension-polyfill";
 import { sendMessageFromContentScript } from "../messaging/index";
 import { getTabInfo } from "../utils/libs/getTabInfo";
 
@@ -35,8 +34,9 @@ function App() {
       await sendMessageFromContentScript({
         type: "SAVE_PAGE",
         data: {
-          sourceTitle: tabInfo()!.title,
-          sourceLink: tabInfo()!.url,
+          title: tabInfo()!.title,
+          url: tabInfo()!.url,
+          description: tabInfo()!.description,
         }
       }).finally(() => {
         refetch();

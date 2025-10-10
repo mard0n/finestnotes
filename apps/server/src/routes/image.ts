@@ -1,5 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
-import { annotations } from "../db/schema";
+import { images, pages } from "../db/schema";
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -8,38 +8,52 @@ import z from "zod";
 
 const image = new Hono<{ Bindings: Bindings }>()
 
-  // Get all saved images for a url
+  // Get all saved images for a page url
   .get("/", zValidator("query", z.object({
-    url: z.url(),
+    page_url: z.url(),
   })), async (c) => {
-    const { url } = c.req.valid("query");
+    const { page_url } = c.req.valid("query");
     const db = drizzle(c.env.finestdb);
-    const result = await db.select().from(annotations).where(
-      and(
-        eq(annotations.sourceLink, url),
-        eq(annotations.type, "image")
-      )
-    ).all();
+
+    const result = await db
+      .select({
+        id: images.id,
+        imageUrl: images.imageUrl,
+        caption: images.caption,
+        createdAt: images.createdAt,
+      })
+      .from(images)
+      .innerJoin(pages, eq(images.pageId, pages.id))
+      .where(eq(pages.url, page_url));
+
     return c.json(result);
   })
 
   // Save an image
   .post("/", zValidator("json", z.object({
-    sourceTitle: z.string().min(1),
-    sourceLink: z.url(),
-    link: z.url(),
-    content: z.string().optional(),
-    comment: z.string().optional(),
+    pageURL: z.string().min(1),
+    pageTitle: z.string().min(1),
+    pageDescription: z.string().min(1),
+    imageUrl: z.url(),
+    caption: z.string().optional(),
   })), async (c) => {
-    const { sourceTitle, sourceLink, content, link, comment } = c.req.valid("json");
+    const { pageURL, pageTitle, pageDescription, imageUrl, caption } = c.req.valid("json");
     const db = drizzle(c.env.finestdb);
-    await db.insert(annotations).values({
-      type: "image",
-      sourceTitle,
-      sourceLink,
-      content,
-      link,
-      comment
+
+    let page = await db.select().from(pages).where(eq(pages.url, pageURL)).get();
+
+    if (!page) {
+      page = await db.insert(pages).values({
+        url: pageURL,
+        title: pageTitle,
+        description: pageDescription,
+      }).returning().get();
+    }
+
+    await db.insert(images).values({
+      pageId: page.id,
+      imageUrl,
+      caption
     }).run();
     return c.json({
       success: true,
@@ -53,11 +67,8 @@ const image = new Hono<{ Bindings: Bindings }>()
   })), async (c) => {
     const { id } = c.req.valid("param");
     const db = drizzle(c.env.finestdb);
-    await db.delete(annotations).where(
-      and(
-        eq(annotations.id, Number(id)),
-        eq(annotations.type, "image")
-      )
+    await db.delete(images).where(
+      eq(images.id, Number(id))
     ).run();
     return c.json({
       success: true,

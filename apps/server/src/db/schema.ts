@@ -1,47 +1,69 @@
-import { sql } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 
+
 export const notes = sqliteTable("notes", {
-  id: integer().primaryKey({ autoIncrement: true }),
-  title: text().notNull(),
-  content: text().notNull()
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  title: text("title").notNull(),
+  content: text("content"),
+  createdAt: text("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull()
 });
 
-export const annotations = sqliteTable("annotations", {
-  id: integer().primaryKey({ autoIncrement: true }),
-  type: text({enum: ["highlight", "page", "image"]}).notNull(),
-  sourceTitle: text().notNull(),
-  sourceLink: text().notNull(),
-  content: text(),
-  link: text(),
-  comment: text()
+export const pages = sqliteTable("pages", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  url: text("url").notNull(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  comment: text("comment"),
+  createdAt: text("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
 });
-/* 
-// {
-//   "type": "highlight",
-//   "sourceTitle": "Page Title",
-//   "sourceLink": "https://example.com/page",
-//   "content": "Highlighted text",
-//   "comment": "User's comment on the highlight",
-//   "link": "https://example.com/page#highlight-id"
-// }
-// {  
-//   "type": "page",
-//   "sourceTitle": "Page Title",
-//   "sourceLink": "https://example.com/page",
-//   "content": "",
-//   "comment": "User's comment on the page",
-//   "link": ""
-// }
-// {
-//   "type": "image",
-//   "sourceTitle": "Image Title",
-//   "sourceLink": "https://example.com/page",
-//   "content": "Image description or note",
-//   "comment": "User's comment on the image",
-//   "link": "https://example.com/asset/image-id.png"
-// }
-*/
+
+
+export const highlights = sqliteTable("highlights", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  pageId: integer("page_id")
+    .notNull()
+    .references(() => pages.id, { onDelete: "cascade" }),
+  text: text("text").notNull(),
+  position: text("position").notNull(),
+  createdAt: text("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+});
+
+
+export const images = sqliteTable("images", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  pageId: integer("page_id")
+    .notNull()
+    .references(() => pages.id, { onDelete: "cascade" }),
+  imageUrl: text("image_url").notNull(),
+  caption: text("caption"),
+  createdAt: text("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+});
+
+export const pagesRelations = relations(pages, ({ one, many }) => ({
+  // user: one(users, {
+  //   fields: [pages.userId],
+  //   references: [users.id],
+  // }),
+  highlights: many(highlights),
+  images: many(images)
+}));
+
+// export const usersRelations = relations(users, ({ many }) => ({
+//   pages: many(pages),
+//   highlights: many(highlights),
+//   images: many(images),
+//   notes: many(notes),
+// }));
+
 
 export const user = sqliteTable("user", {
   id: text("id").primaryKey(),

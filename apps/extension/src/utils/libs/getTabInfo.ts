@@ -4,6 +4,7 @@ import { sendMessageFromServiceWorker } from "../../messaging";
 export interface TabInfo {
   title: string;
   url: string;
+  description: string
 }
 
 export const getTabInfo = async (): Promise<TabInfo> => {
@@ -13,7 +14,8 @@ export const getTabInfo = async (): Promise<TabInfo> => {
     const cleanUrl = new URL(url).origin + new URL(url).pathname;
     return {
       title: document.title,
-      url: cleanUrl
+      url: cleanUrl,
+      description: document.querySelector('meta[name="description"]')?.getAttribute('content') || ""
     };
   }
 
