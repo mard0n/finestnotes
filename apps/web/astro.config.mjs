@@ -11,7 +11,6 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   site: import.meta.env.CF_WEB_URL,
   adapter: cloudflare(),
-
   // prefetch: {
   //   defaultStrategy: 'viewport',
   //   prefetchAll: true
@@ -19,6 +18,11 @@ export default defineConfig({
   integrations: [solidJs()],
 
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    server: {
+      proxy: {
+        '/api': import.meta.env.VITE_API_URL,
+      },
+    }
   }
 });

@@ -23,7 +23,7 @@
     "@libsql/client": "^0.15.15",
     "better-auth": "^1.3.27",
     "dotenv": "^17.2.2",
-    "drizzle-orm": "^0.44.5",
+    "drizzle-orm": "^0.44.6",
     "hono": "^4.9.8",
     "zod": "^4.1.9"
   },
