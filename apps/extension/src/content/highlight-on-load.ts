@@ -1,8 +1,5 @@
-import { sendMessageFromContentScript } from "../messaging/index";
-import { HighlightResType } from "../api/config";
 import { SystemError } from "../utils/errors";
 import { SelectionRange } from "../utils/types";
-import { getTabInfo } from "../utils/libs/getTabInfo";
 
 console.log("Hello from highlight-on-load");
 
@@ -51,33 +48,6 @@ export function parseXPathLink(parseXPathLink: string): SelectionRange {
     endNode: endElement,
     endOffset: parseInt(endOffsetStr, 10),
   };
-}
-
-// async function loadHighlightFromStorage(): Promise<HighlightResType | null> {
-//   const { highlights } = await browser.storage.local.get('highlights') as Record<string, HighlightResType>
-//   console.log("Loaded highlights from storage:", highlights);
-//
-//   if (!highlights || highlights.length === 0) {
-//     console.log('No highlights found in storage.');
-//     return null
-//   }
-
-//   return highlights
-// }
-
-export async function fetchHighlightsFromAPI(): Promise<HighlightResType | null> {
-  console.log("fetching highlights");
-  const { url } = await getTabInfo();
-
-  try {
-    return await sendMessageFromContentScript({
-      type: "FETCH_HIGHLIGHTS",
-      data: { url },
-    });
-  } catch (error) {
-    console.error("Error fetching highlights:", error);
-    return null;
-  }
 }
 
 // // Listen for storage changes and rehighlight

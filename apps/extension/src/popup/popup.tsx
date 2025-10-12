@@ -1,7 +1,7 @@
 
 import { createResource, createSignal, Show } from 'solid-js';
-import { sendMessageFromContentScript } from "../messaging/index";
 import { getTabInfo } from "../utils/libs/getTabInfo";
+import { sendMessage } from '../messaging';
 
 
 function checkIfPageSaved(url: string) {
@@ -10,10 +10,7 @@ function checkIfPageSaved(url: string) {
     return Promise.resolve(undefined);
   }
 
-  return sendMessageFromContentScript({
-    type: "CHECK_PAGE_SAVED",
-    data: { url: url }
-  })
+  return sendMessage("getPage", { url });
 }
 
 
@@ -31,16 +28,12 @@ function App() {
     }
 
     try {
-      await sendMessageFromContentScript({
-        type: "SAVE_PAGE",
-        data: {
-          title: tabInfo()!.title,
-          url: tabInfo()!.url,
-          description: tabInfo()!.description,
-        }
-      }).finally(() => {
-        refetch();
-      });
+      sendMessage("savePage", {
+        title: tabInfo()!.title,
+        url: tabInfo()!.url,
+        description: tabInfo()!.description,
+        comment: note()
+      }).finally(refetch);
 
     } catch (error) {
       console.error('Error saving page:', error);
@@ -54,14 +47,7 @@ function App() {
     }
 
     try {
-      await sendMessageFromContentScript({
-        type: "DELETE_SAVED_PAGE",
-        data: {
-          pageId: pageId()!
-        }
-      }).finally(() => {
-        refetch();
-      });
+      await sendMessage("deletePage", { pageId: pageId()! }).finally(refetch);
 
     } catch (error) {
       console.error('Error deleting saved page:', error);

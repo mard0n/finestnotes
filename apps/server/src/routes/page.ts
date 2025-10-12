@@ -14,7 +14,7 @@ const page = new Hono<{ Bindings: Bindings }>()
   })), async (c) => {
     const { url } = c.req.valid("query");
     const db = drizzle(c.env.finestdb);
-    const result = await db.select().from(pages).where(eq(pages.url, url)).all();
+    const result = await db.select().from(pages).where(eq(pages.url, url)).get();
     return c.json(result);
   })
 

@@ -1,5 +1,5 @@
 import browser from "webextension-polyfill";
-import { sendMessageFromServiceWorker } from "../../messaging";
+import { sendMessage } from "../../messaging";
 
 export interface TabInfo {
   title: string;
@@ -31,9 +31,9 @@ export const getTabInfo = async (): Promise<TabInfo> => {
     }
 
     try {
-      const result = await sendMessageFromServiceWorker(tab.id, { type: "GET_PAGE_DATA" });
+      const tabInfo = await sendMessage("getTabInfo", undefined, tab.id);
 
-      return result
+      return tabInfo;
     } catch (error) {
       console.error("Error executing script to get tab info:", error);
       throw new Error('Unable to get tab info from content script');

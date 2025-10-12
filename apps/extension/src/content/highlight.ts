@@ -1,4 +1,4 @@
-import { sendMessageFromContentScript } from "../messaging";
+import { sendMessage } from "../messaging";
 import { UserError } from "../utils/errors";
 import { Point, SelectionRange } from "../utils/types";
 import { addToast } from "./snackbar";
@@ -176,12 +176,12 @@ function unwrapElementAndMergeTextNodes(element: Element) {
 
   // Merge adjacent text nodes
   const nodesToCheck = [];
-  
+
   // Check if we need to merge with previous sibling
   if (prevSibling && prevSibling.nodeType === Node.TEXT_NODE) {
     nodesToCheck.push(prevSibling);
   }
-  
+
   // Check if we need to merge with next sibling
   if (nextSibling && nextSibling.nodeType === Node.TEXT_NODE) {
     nodesToCheck.push(nextSibling);
@@ -190,9 +190,9 @@ function unwrapElementAndMergeTextNodes(element: Element) {
   // Merge consecutive text nodes
   nodesToCheck.forEach(node => {
     let current = node;
-    while (current && current.nextSibling && 
-           current.nodeType === Node.TEXT_NODE && 
-           current.nextSibling.nodeType === Node.TEXT_NODE) {
+    while (current && current.nextSibling &&
+      current.nodeType === Node.TEXT_NODE &&
+      current.nextSibling.nodeType === Node.TEXT_NODE) {
       const next = current.nextSibling;
       current.nodeValue = (current.nodeValue || '') + (next.nodeValue || '');
       parent.removeChild(next);
@@ -349,7 +349,7 @@ export function setupHighlightEventListeners() {
       const newIds = currentIds.filter((id) => id !== highlightIdToDelete);
 
       part.setAttribute("data-finest-highlight-ids", newIds.join(";"));
-      
+
       unwrapElementAndMergeTextNodes(part);
     });
 
@@ -357,7 +357,7 @@ export function setupHighlightEventListeners() {
     console.log(`Deleted highlight ${highlightIdToDelete}`);
 
     try {
-      await sendMessageFromContentScript({ type: "DELETE_HIGHLIGHT", data: { highlightId: parseInt(highlightIdToDelete) } });
+      await sendMessage("deleteHighlight", { highlightId: parseInt(highlightIdToDelete) });
     } catch (error) {
       console.error("Error deleting highlight:", error);
       if (error instanceof UserError) {
