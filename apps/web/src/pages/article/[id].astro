@@ -1,0 +1,26 @@
+---
+import Layout from "@layouts/Layout.astro";
+import { server } from "@utils/api";
+
+export const prerender = false;
+
+const { id } = Astro.params;
+
+if (!id) {
+  throw new Error("Article ID is required");
+}
+
+const response = await server.api.articles[":id"].$get({ param: { id } });
+console.log("Fetched article:", response);
+
+const article = await response.json();
+
+if (!article) {
+  throw new Error("Article not found");
+}
+---
+
+<Layout>
+  <h1>{article.title}</h1>
+  <p>{article.createdAt}</p>
+</Layout>

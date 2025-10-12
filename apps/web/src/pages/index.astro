@@ -1,40 +1,52 @@
 ---
 import Layout from "@layouts/Layout.astro";
-import { client } from "@utils/types";
+import { server } from "@utils/api";
 import type { InferResponseType } from "hono";
 
-export const prerender = false;
-
-var articles: InferResponseType<typeof client.api.articles.$get> = [];
+var articles: InferResponseType<typeof server.api.articles.$get> = [];
 
 try {
-	let url = client.api.articles.$url(); // Log the URL to verify it's correct
+	let url = server.api.articles.$url(); // Log the URL to verify it's correct
 	console.log("Fetching notes from URL:", url.toString());
-	const res = await client.api.articles.$get().then((r) => {
+	const res = await server.api.articles.$get().then((r) => {
 		console.log("Fetched notes:", r);
 		return r;
 	});
 	if (res.ok) {
 		articles = await res.json();
 	}
-	console.log("articles", articles);
 } catch (error) {
 	console.error("Error fetching notes:", error);
 }
+
+Astro.locals.user?.name
 ---
 
 <Layout>
-	<ul>
-		{
-			articles.map((article) => (
-				<li>
-					<a href={article.link} target="_blank" rel="noopener noreferrer">
-						{article.title}
-					</a>
-					<p>{article.description}</p>
-				</li>
-			))
-		}
-		{articles.length === 0 && <li>No articles found.</li>}
-	</ul>
+	<div>
+		<div role="tablist">
+			<a role="tab" href="/" id="tab-newest" aria-selected="true" aria-controls="panel-newest">
+				Newest
+			</a>
+			<a role="tab" href="/following" id="tab-following" aria-selected="false" aria-controls="panel-following">
+				Following
+			</a>
+		</div>
+
+		<div id="panel-newest" role="tabpanel" aria-labelledby="tab-newest">
+			<ul>
+				{
+					articles.map((article) => (
+						<li>
+							<a href={`/article/${article.id}`} target="_blank" rel="noopener noreferrer">
+								{article.title}
+							</a>
+							<p>{article.description}</p>
+						</li>
+					))
+				}
+				{articles.length === 0 && <li>No articles found.</li>}
+			</ul>
+		</div>
+	</div>
 </Layout>

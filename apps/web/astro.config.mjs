@@ -11,6 +11,7 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   site: import.meta.env.CF_WEB_URL,
   adapter: cloudflare(),
+  output: 'server',
   // prefetch: {
   //   defaultStrategy: 'viewport',
   //   prefetchAll: true

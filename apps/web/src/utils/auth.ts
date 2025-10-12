@@ -1,7 +1,7 @@
 import { createAuthClient } from "better-auth/client"
 
 export const authClient = createAuthClient({
-  baseURL: "", // Uses the current origin. Will Proxy through Astro dev server in development. In production, the API will be on the same origin.
+  baseURL: import.meta.env.VITE_API_URL, // Use the API URL from env
   fetchOptions: {
     credentials: import.meta.env.PROD ? 'same-origin' : 'include', // Required for sending cookies cross-origin
   }

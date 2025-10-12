@@ -25,6 +25,7 @@ export const pages = sqliteTable("pages", {
 
 export const highlights = sqliteTable("highlights", {
   id: integer("id").primaryKey({ autoIncrement: true }),
+  type: text("type", { enum: ["highlight"] }).notNull().default("highlight"),
   pageId: integer("page_id")
     .notNull()
     .references(() => pages.id, { onDelete: "cascade" }),
@@ -38,6 +39,7 @@ export const highlights = sqliteTable("highlights", {
 
 export const images = sqliteTable("images", {
   id: integer("id").primaryKey({ autoIncrement: true }),
+  type: text("type", { enum: ["image"] }).notNull().default("image"),
   pageId: integer("page_id")
     .notNull()
     .references(() => pages.id, { onDelete: "cascade" }),
@@ -55,6 +57,20 @@ export const pagesRelations = relations(pages, ({ one, many }) => ({
   // }),
   highlights: many(highlights),
   images: many(images)
+}));
+
+export const highlightsRelations = relations(highlights, ({ one }) => ({
+  page: one(pages, {
+    fields: [highlights.pageId],
+    references: [pages.id],
+  }),
+}));
+
+export const imagesRelations = relations(images, ({ one }) => ({
+  page: one(pages, {
+    fields: [images.pageId],
+    references: [pages.id],
+  }),
 }));
 
 // export const usersRelations = relations(users, ({ many }) => ({
