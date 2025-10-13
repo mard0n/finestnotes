@@ -15,7 +15,17 @@ const page = new Hono<{ Bindings: Bindings }>()
     const { url } = c.req.valid("query");
     const db = drizzle(c.env.finestdb);
     const result = await db.select().from(pages).where(eq(pages.url, url)).get();
-    return c.json(result);
+
+    if (!result) {
+      return c.json(
+        {
+          success: false,
+          message: `Page with url ${url} not found.`
+        }
+      )
+    }
+
+    return c.json({ success: true, data: result });
   })
 
   // Save a page

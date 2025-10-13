@@ -1,3 +1,4 @@
+import { DetailedError, parseResponse } from "hono/client";
 import { onMessage, sendMessage } from "../messaging";
 import { getTabInfo } from "../utils/libs/getTabInfo";
 import { highlight, setupHighlightEventListeners } from "./highlight";
@@ -10,11 +11,13 @@ async function initialize() {
   console.log("Initializing highlight-on-load");
 
   const tabInfo = await getTabInfo();
-  const highlightsFromAPI = await sendMessage("fetchHighlights", { url: tabInfo.url });
-  console.log("highlights from API", highlightsFromAPI);
+  const highlightsRes = await sendMessage("fetchHighlights", { url: tabInfo.url });
+  const highlights = await parseResponse(highlightsRes).catch((e: DetailedError) => {
+    console.error("DetailedError", e);
+  });
 
-  if (highlightsFromAPI?.length) {
-    highlightsFromAPI.forEach((hl) => {
+  if (highlights?.length) {
+    highlights.forEach((hl) => {
 
       try {
         const { startNode, startOffset, endNode, endOffset } = parseXPathLink(hl.position)
@@ -23,9 +26,9 @@ async function initialize() {
         console.error("Error parsing XPath link or highlighting:", error);
       }
     });
-  }
 
-  setupHighlightEventListeners();
+    setupHighlightEventListeners();
+  }
 }
 
 window.addEventListener("load", () => {

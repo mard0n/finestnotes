@@ -2,15 +2,23 @@
 import { createResource, createSignal, Show } from 'solid-js';
 import { getTabInfo } from "../utils/libs/getTabInfo";
 import { sendMessage } from '../messaging';
+import { DetailedError, parseResponse } from 'hono/client';
 
 
-function checkIfPageSaved(url: string) {
+async function checkIfPageSaved(url: string) {
   console.log('Checking if page is saved for url:', url);
   if (!url) {
     return Promise.resolve(undefined);
   }
 
-  return sendMessage("getPage", { url });
+  const getPageRes = await sendMessage("getPage", { url });
+  const page = await parseResponse(getPageRes).catch((e: DetailedError) => {
+    console.error("DetailedError", e);
+  });
+
+  if (page?.success) {
+    return page.data
+  }
 }
 
 
@@ -47,7 +55,7 @@ function App() {
     }
 
     try {
-      await sendMessage("deletePage", { pageId: pageId()! }).finally(refetch);
+      await sendMessage("deletePage", { pageId: pageId()!.id }).finally(refetch);
 
     } catch (error) {
       console.error('Error deleting saved page:', error);
