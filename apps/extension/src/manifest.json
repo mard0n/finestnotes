@@ -52,12 +52,12 @@
   ],
   "{{chrome}}.externally_connectable": {
     "matches": [
-      "__VITE_WEB_URL__/*"
+      "http://localhost:*/*"
     ]
   },
   "{{safari}}.externally_connectable": {
     "matches": [
-      "__VITE_WEB_URL__/*"
+      "http://localhost:*/*"
     ]
   }
 }

@@ -12,7 +12,11 @@ export const auth = (env: Bindings) => {
     trustedOrigins: async (request: Request) => {
       const isProd = env.NODE_ENV === 'production';
 
-      return !isProd ? ['http://localhost:*', "chrome-extension://*"] : [];
+      return !isProd ? ['http://localhost:*', "chrome-extension://*"] : []; // TODO: change to more specific
+    },
+    session: {
+      expiresIn: 60 * 60 * 24 * 30, // 30 days
+      updateAge: 60 * 60 // 1 hour
     },
     emailAndPassword: {
       enabled: true
