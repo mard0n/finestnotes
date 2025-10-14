@@ -8,7 +8,6 @@ import articles from "./routes/articles";
 import { auth } from "./utils/auth";
 import { logger } from "hono/logger";
 import type { Session, User } from "better-auth";
-import { createMiddleware } from "hono/factory";
 
 export type Bindings = {
   finestdb: D1Database;

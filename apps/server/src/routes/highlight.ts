@@ -1,9 +1,9 @@
 import { zValidator } from "@hono/zod-validator";
-import { highlights, pages, user } from "../db/schema";
+import { highlights, pages } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
-import { loggerr, type Bindings } from "../index";
+import { type Bindings } from "../index";
 import z from "zod";
 
 const highlight = new Hono<{ Bindings: Bindings }>()
