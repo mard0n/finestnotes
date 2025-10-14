@@ -41,6 +41,14 @@ function App() {
 
   const [note, setNote] = createSignal('');
 
+  createEffect(() => {
+    if (pageId()?.comment) {
+      setNote(pageId()!.comment || '');
+    } else {
+      setNote('');
+    }
+  });
+
   async function handleSavePage() {
     if (tabInfo()?.title === undefined || tabInfo()?.url === undefined) {
       console.error('No tab info to save');
@@ -95,10 +103,17 @@ function App() {
     }
   }
 
-
+  async function handleLogout() {
+    try {
+      await authClientSolid.signOut();
+      window.location.reload();
+    } catch (error) {
+      console.error('Error during logout:', error);
+    }
+  }
   return (
     <div class="flex flex-col border border-gray-300 w-[280px] p-4 m-0 bg-white font-sans">
-      <nav class="mb-4">
+      <nav class="mb-4 flex justify-between items-center">
         <div class="flex gap-1 items-center">
           <span class="font-serif text-sm italic">
             Finest
@@ -115,10 +130,27 @@ function App() {
             </svg>
           </button>
         </div>
+        <Show when={session()?.data?.user}>
+          <div>
+            <button class='cursor-pointer' onClick={handleLogout}>Logout</button>
+          </div>
+        </Show>
       </nav>
-      {session()?.data?.user ?
+      <Show when={session()?.data?.user} fallback={
         <main>
-          <div class="mb-4">
+          <p>Please log in.</p>
+          <button
+            class={`flex-1 p-2 text-sm font-medium border-none rounded cursor-pointer bg-black text-white hover:opacity-90 flex items-center justify-center gap-1`}
+            onClick={handleLogin}
+          >
+            <span class={`flex items-center justify-center gap-1`}>
+              <span>Login</span>
+            </span>
+          </button>
+        </main>
+      }>
+        <main>
+          <div class='mb-4'>
             <h1 class="font-bold text-base m-0 mb-1 p-0">{tabInfo()?.title}</h1>
             <p class="italic text-xs m-0 truncate" title={tabInfo()?.url}>{tabInfo()?.url}</p>
           </div>
@@ -172,19 +204,8 @@ function App() {
             </Show>
           </div>
         </main>
-        :
-        <main>
-          <p>Please log in.</p>
-          <button
-            class={`flex-1 p-2 text-sm font-medium border-none rounded cursor-pointer bg-black text-white hover:opacity-90 flex items-center justify-center gap-1`}
-            onClick={handleLogin}
-          >
-            <span class={`flex items-center justify-center gap-1`}>
-              <span>Login</span>
-            </span>
-          </button>
-        </main>
-      }
+      </Show>
+
     </div>
   );
 }
