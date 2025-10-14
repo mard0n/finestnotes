@@ -15,6 +15,9 @@ function generateManifest() {
 }
 
 export default defineConfig({
+  define: {
+    __VITE_WEB_URL__: process.env.VITE_WEB_URL || "http://localhost:4321",
+  },
   plugins: [
     solidPlugin(),
     tailwindcss(),

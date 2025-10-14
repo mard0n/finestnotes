@@ -1,4 +1,3 @@
-import { DetailedError, parseResponse } from "hono/client";
 import { sendMessage } from "../messaging";
 import { Point, SelectionRange } from "../utils/types";
 
@@ -355,10 +354,7 @@ export function setupHighlightEventListeners() {
     // TODO: Send message to background to delete annotation
     console.log(`Deleted highlight ${highlightIdToDelete}`);
 
-    const deleteRes = await sendMessage("deleteHighlight", { highlightId: parseInt(highlightIdToDelete) });
-    const deleteData = parseResponse(deleteRes).catch((e: DetailedError) => {
-      console.error("DetailedError", e);
-    });
+    await sendMessage("deleteHighlight", { highlightId: parseInt(highlightIdToDelete) });
 
 
     clearHoverState();

@@ -4,6 +4,7 @@ import { drizzle } from "drizzle-orm/d1";
 import type { Bindings } from "index";
 
 import * as schema from "../db/schema";
+import { bearer } from "better-auth/plugins";
 
 export const auth = (env: Bindings) => {
   return betterAuth({
@@ -18,10 +19,18 @@ export const auth = (env: Bindings) => {
     },
     advanced: {
       crossSubDomainCookies: {
-        enabled: env.NODE_ENV === 'production' ? false : true,
+        enabled: false // set to true if you want to share cookies across subdomains but localhost won't work with this
+      },
+      defaultCookieAttributes: {
+        sameSite: env.NODE_ENV === 'production' ? 'lax' : 'none',
+        httpOnly: env.NODE_ENV === 'production' ? true : false,
+        secure: true // required cuz sameSite none
       }
     },
     baseURL: env.BETTER_AUTH_URL,
     secret: env.BETTER_AUTH_SECRET,
+    plugins: [
+      bearer()
+    ]
   });
 };

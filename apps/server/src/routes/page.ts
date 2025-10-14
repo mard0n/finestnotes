@@ -30,14 +30,16 @@ const page = new Hono<{ Bindings: Bindings }>()
 
   // Save a page
   .post("/", zValidator("json", z.object({
+    userId: z.string().min(1),
     title: z.string().min(1),
     url: z.url(),
     description: z.string().min(1),
     comment: z.string().optional(),
   })), async (c) => {
-    const { title, url, description, comment } = c.req.valid("json");
+    const { userId, title, url, description, comment } = c.req.valid("json");
     const db = drizzle(c.env.finestdb);
     await db.insert(pages).values({
+      userId,
       title,
       url,
       description,

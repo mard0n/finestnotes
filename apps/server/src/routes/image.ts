@@ -34,16 +34,18 @@ const image = new Hono<{ Bindings: Bindings }>()
     pageURL: z.string().min(1),
     pageTitle: z.string().min(1),
     pageDescription: z.string().min(1),
+    userId: z.string().min(1),
     imageUrl: z.url(),
     caption: z.string().optional(),
   })), async (c) => {
-    const { pageURL, pageTitle, pageDescription, imageUrl, caption } = c.req.valid("json");
+    const { pageURL, pageTitle, pageDescription, userId, imageUrl, caption } = c.req.valid("json");
     const db = drizzle(c.env.finestdb);
 
     let page = await db.select().from(pages).where(eq(pages.url, pageURL)).get();
 
     if (!page) {
       page = await db.insert(pages).values({
+        userId,
         url: pageURL,
         title: pageTitle,
         description: pageDescription,
@@ -51,6 +53,7 @@ const image = new Hono<{ Bindings: Bindings }>()
     }
 
     await db.insert(images).values({
+      userId,
       pageId: page.id,
       imageUrl,
       caption

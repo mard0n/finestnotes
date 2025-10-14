@@ -1,9 +1,9 @@
 import { zValidator } from "@hono/zod-validator";
-import { highlights, pages } from "../db/schema";
+import { highlights, pages, user } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
-import type { Bindings } from "../index";
+import { loggerr, type Bindings } from "../index";
 import z from "zod";
 
 const highlight = new Hono<{ Bindings: Bindings }>()
@@ -34,16 +34,18 @@ const highlight = new Hono<{ Bindings: Bindings }>()
     pageURL: z.string().min(1),
     pageTitle: z.string().min(1),
     pageDescription: z.string().min(1),
+    userId: z.string().min(1),
     text: z.string().min(1),
     position: z.string(),
   })), async (c) => {
-    const { pageURL, pageTitle, pageDescription, text, position } = c.req.valid("json");
+    const { pageURL, pageTitle, pageDescription, userId, text, position } = c.req.valid("json");
     const db = drizzle(c.env.finestdb);
 
     let page = await db.select().from(pages).where(eq(pages.url, pageURL)).get();
 
     if (!page) {
       page = await db.insert(pages).values({
+        userId,
         url: pageURL,
         title: pageTitle,
         description: pageDescription,
@@ -51,6 +53,7 @@ const highlight = new Hono<{ Bindings: Bindings }>()
     }
 
     const [highlight] = await db.insert(highlights).values({
+      userId,
       pageId: page.id,
       text,
       position

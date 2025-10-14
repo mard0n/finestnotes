@@ -4,7 +4,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   try {
     // Convert Headers to plain object and get cookie header
     const cookieHeader = context.request.headers.get('cookie');
-    
+
     console.log('Cookie header:', cookieHeader);
 
     const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/get-session`, {
@@ -12,7 +12,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
         'cookie': cookieHeader || '',
         'content-type': 'application/json',
       },
-      credentials: 'include',
+      credentials: import.meta.env.PROD ? 'same-origin' : 'include',
     });
 
     console.log('Response status:', response.status);
@@ -20,7 +20,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
     if (response.ok) {
       const data = await response.json();
       console.log('Session data:', data);
-      
+
       if (data && data.user) {
         context.locals.user = data.user;
         context.locals.session = data.session;

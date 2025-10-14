@@ -1,4 +1,3 @@
-import { DetailedError, parseResponse } from "hono/client";
 import { onMessage, sendMessage } from "../messaging";
 import { getTabInfo } from "../utils/libs/getTabInfo";
 import { highlight, setupHighlightEventListeners } from "./highlight";
@@ -11,10 +10,8 @@ async function initialize() {
   console.log("Initializing highlight-on-load");
 
   const tabInfo = await getTabInfo();
-  const highlightsRes = await sendMessage("fetchHighlights", { url: tabInfo.url });
-  const highlights = await parseResponse(highlightsRes).catch((e: DetailedError) => {
-    console.error("DetailedError", e);
-  });
+  const highlights = await sendMessage("fetchHighlights", { url: tabInfo.url });
+  
 
   if (highlights?.length) {
     highlights.forEach((hl) => {

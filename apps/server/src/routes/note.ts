@@ -17,12 +17,14 @@ const note = new Hono<{ Bindings: Bindings }>()
 
   // Save a note
   .post("/", zValidator("json", z.object({
+    userId: z.string().min(1),
     title: z.string().min(1),
     content: z.string().min(1),
   })), async (c) => {
-    const { title, content } = c.req.valid("json");
+    const { userId, title, content } = c.req.valid("json");
     const db = drizzle(c.env.finestdb);
     await db.insert(notes).values({
+      userId,
       title,
       content
     }).run();

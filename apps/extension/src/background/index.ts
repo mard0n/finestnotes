@@ -3,14 +3,22 @@ import { client } from "../api/config";
 import { getTabInfo } from "../utils/libs/getTabInfo";
 import { onMessage, sendMessage } from "../messaging";
 import { DetailedError, parseResponse } from "hono/client";
+import { authClient } from "../auth/auth-client";
 
 browser.commands.onCommand.addListener(async (command, tab) => {
+  const session = await authClient.getSession()
+  console.log('session', session);
+  if (!(session.data?.user)) {
+    await sendMessage("showSnackbar", { message: "You need to be logged in to use this feature", duration: 5000 }, tab?.id);
+    return
+  }
+
   if (command === "highlight") {
     if (!tab?.id) { return }
 
     const selectionData = await sendMessage("getSelectionData", undefined, tab.id);
 
-    const highlightRes = await client.api.highlight.$post({ json: selectionData });
+    const highlightRes = await client.api.highlight.$post({ json: { ...selectionData, userId: session.data.user.id } });
     const highlightData = await parseResponse(highlightRes).catch(
       (e: DetailedError) => {
         console.error("DetailedError", e)
@@ -57,7 +65,8 @@ browser.commands.onCommand.addListener(async (command, tab) => {
           title: tabInfo.title,
           url: tabInfo.url,
           description: tabInfo.description,
-          comment: ""
+          comment: "",
+          userId: session.data.user.id
         }
       });
       const saveData = await parseResponse(saveRes).catch(
@@ -78,12 +87,13 @@ onMessage("fetchHighlights", async (request) => {
       page_url: request.data.url
     }
   })
-  return res
+
+  return await parseResponse(res).catch((e: DetailedError) => { console.error("DetailedError calling fetchHighlights", e) })
 });
 
 onMessage("deleteHighlight", async (request) => {
   const res = await client.api.highlight[":id"].$delete({ param: { id: request.data.highlightId.toString() } })
-  return res
+  return await parseResponse(res).catch((e: DetailedError) => { console.error("DetailedError calling deleteHighlight", e) })
 });
 
 onMessage("getPage", async (request) => {
@@ -92,17 +102,38 @@ onMessage("getPage", async (request) => {
       url: request.data.url
     }
   })
-  return res
+  return await parseResponse(res).catch((e: DetailedError) => { console.error("DetailedError calling getPage", e) })
 })
 
 onMessage("savePage", async (request) => {
   const res = await client.api.page.$post({
     json: request.data
   })
-  return res
+  return await parseResponse(res).catch((e: DetailedError) => { console.error("DetailedError calling savePage", e) })
 })
 
 onMessage("deletePage", async (request) => {
   const res = await client.api.page[":id"].$delete({ param: { id: request.data.pageId.toString() } })
-  return res
+  return await parseResponse(res).catch((e: DetailedError) => { console.error("DetailedError calling deletePage", e) })
 })
+
+
+browser.runtime.onMessageExternal.addListener((message: any, sender: any, sendResponse: any) => {
+  console.log("External message received:", message, "from:", sender);
+
+  if (message.type === "authToken" && message.token) {
+    browser.storage.local.set({ authToken: message.token })
+      .then(() => {
+        console.log("✅ Auth token saved successfully");
+        sendResponse({ success: true });
+      })
+      .catch((error) => {
+        console.error("Error saving auth token:", error);
+        sendResponse({ success: false, error: error.message });
+      });
+
+    return true;
+  }
+
+  return;
+});

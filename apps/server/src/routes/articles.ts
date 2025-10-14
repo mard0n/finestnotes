@@ -3,36 +3,38 @@ import { notes, pages } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
-import type { Bindings } from "../index";
+import { type Bindings } from "../index";
 import z from "zod";
 import * as schema from "../db/schema";
-
-interface Article {
-  id: number;
-  title: string;
-  link: string;
-  description?: string;
-  createdAt: string;
-}
 
 const articles = new Hono<{ Bindings: Bindings }>()
   // Get all articles
   .get("/", async (c) => {
-    const db = drizzle(c.env.finestdb);
+    const db = drizzle(c.env.finestdb, { schema: schema });
+
 
     const [noteData, pageData] = await Promise.all([
-      db.select().from(notes).all(),
-      db.select().from(pages).all(),
+      db.query.notes.findMany({
+        with: {
+          user: true
+        }
+      }),
+      db.query.pages.findMany({
+        with: {
+          user: true
+        }
+      }),
     ]);
 
     // merge noteData and pageData sort by createdAt
-    const articles: Article[] = [
+    const articles = [
       ...pageData.map(page => ({
         id: page.id,
         title: page.title,
         link: "",
         description: page.comment ?? page.description,
         createdAt: page.createdAt,
+        user: page.user,
       })),
       ...noteData.map(note => ({
         id: note.id,
@@ -40,6 +42,7 @@ const articles = new Hono<{ Bindings: Bindings }>()
         link: "",
         description: note.content ?? "",
         createdAt: note.createdAt,
+        user: note.user,
       })),
     ];
 

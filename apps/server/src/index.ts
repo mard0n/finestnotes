@@ -8,6 +8,7 @@ import articles from "./routes/articles";
 import { auth } from "./utils/auth";
 import { logger } from "hono/logger";
 import type { Session, User } from "better-auth";
+import { createMiddleware } from "hono/factory";
 
 export type Bindings = {
   finestdb: D1Database;
@@ -49,14 +50,14 @@ app.use(
   }),
 );
 
-app.on(['GET', 'POST'], '/api/auth/*', (c) => {
-  console.log('Request:', c.req.method, c.req.url);
-  // console.log('Request:', c.req);
-
-  return auth(c.env).handler(c.req.raw);
+app.on(['GET', 'POST'], '/api/auth/*', async (c) => {  
+  console.log('Request:', c.req);
+  const res = await auth(c.env).handler(c.req.raw);
+  console.log('/api/auth res', res);
+  return res;
 });
 
-app.use("*", async (c, next) => {
+app.use("/api/*", async (c, next) => {
   const session = await auth(c.env).api.getSession({ headers: c.req.raw.headers });
   console.log('Auth session:', session);
   if (!session) {

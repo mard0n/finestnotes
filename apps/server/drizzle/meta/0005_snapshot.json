@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "3d2f57e1-df1f-4b71-8e7b-b70f6a3d2f64",
+  "id": "3f1b695a-f602-4d78-aeaa-122d1318aaa4",
   "prevId": "eb67cb23-15ec-49ac-aee3-f2b4648f4236",
   "tables": {
     "account": {
@@ -130,13 +130,12 @@
           "notNull": true,
           "autoincrement": true
         },
-        "type": {
-          "name": "type",
+        "user_id": {
+          "name": "user_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "'highlight'"
+          "autoincrement": false
         },
         "page_id": {
           "name": "page_id",
@@ -144,6 +143,14 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'highlight'"
         },
         "text": {
           "name": "text",
@@ -170,6 +177,19 @@
       },
       "indexes": {},
       "foreignKeys": {
+        "highlights_user_id_user_id_fk": {
+          "name": "highlights_user_id_user_id_fk",
+          "tableFrom": "highlights",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
         "highlights_page_id_pages_id_fk": {
           "name": "highlights_page_id_pages_id_fk",
           "tableFrom": "highlights",
@@ -198,13 +218,12 @@
           "notNull": true,
           "autoincrement": true
         },
-        "type": {
-          "name": "type",
+        "user_id": {
+          "name": "user_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "'image'"
+          "autoincrement": false
         },
         "page_id": {
           "name": "page_id",
@@ -212,6 +231,14 @@
           "primaryKey": false,
           "notNull": true,
           "autoincrement": false
+        },
+        "type": {
+          "name": "type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": "'image'"
         },
         "image_url": {
           "name": "image_url",
@@ -238,6 +265,19 @@
       },
       "indexes": {},
       "foreignKeys": {
+        "images_user_id_user_id_fk": {
+          "name": "images_user_id_user_id_fk",
+          "tableFrom": "images",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
         "images_page_id_pages_id_fk": {
           "name": "images_page_id_pages_id_fk",
           "tableFrom": "images",
@@ -266,6 +306,13 @@
           "notNull": true,
           "autoincrement": true
         },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
         "title": {
           "name": "title",
           "type": "text",
@@ -290,7 +337,21 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "notes_user_id_user_id_fk": {
+          "name": "notes_user_id_user_id_fk",
+          "tableFrom": "notes",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
@@ -304,6 +365,13 @@
           "primaryKey": true,
           "notNull": true,
           "autoincrement": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
         },
         "url": {
           "name": "url",
@@ -343,7 +411,21 @@
         }
       },
       "indexes": {},
-      "foreignKeys": {},
+      "foreignKeys": {
+        "pages_user_id_user_id_fk": {
+          "name": "pages_user_id_user_id_fk",
+          "tableFrom": "pages",
+          "tableTo": "user",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "checkConstraints": {}
