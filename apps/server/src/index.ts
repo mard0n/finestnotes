@@ -49,7 +49,7 @@ app.use(
   }),
 );
 
-app.on(['GET', 'POST'], '/api/auth/*', async (c) => {  
+app.on(['GET', 'POST'], '/api/auth/*', async (c) => {
   console.log('Request:', c.req);
   const res = await auth(c.env).handler(c.req.raw);
   console.log('/api/auth res', res);

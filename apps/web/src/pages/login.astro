@@ -113,17 +113,16 @@ const isLoggedIn = !!Astro.locals.user;
 		const token = session.data.session.token;
 
 		console.log("Already logged in with token:", token);
-		if (token) {
-			try {
-				const response = await sendAuthToExtension(
-					token,
-					"gnoknopednpdpmkemfmhanmpgmfnfhho",
-				);
-				console.log("Auth sent:", response);
-			} catch (error) {
-				console.error("Failed to send auth:", error);
-			}
+		try {
+			const response = await sendAuthToExtension(
+				token,
+				"gnoknopednpdpmkemfmhanmpgmfnfhho",
+			);
+			console.log("Auth sent:", response);
+		} catch (error) {
+			console.error("Failed to send auth:", error);
 		}
+		window.location.href = "/";
 	} else {
 		const form = document.getElementById("login-form") as HTMLFormElement;
 		const errorDiv = document.getElementById("error-message") as HTMLDivElement;
@@ -148,6 +147,10 @@ const isLoggedIn = !!Astro.locals.user;
 				});
 
 				if (error) {
+					if (error.code === "403") {
+						showError("Please verify your email before logging in.");
+						return;
+					}
 					showError(error.message || "Login failed. Please try again.");
 					return;
 				}
@@ -157,21 +160,6 @@ const isLoggedIn = !!Astro.locals.user;
 					return;
 				}
 
-				// const url = new URL(window.location.href);
-				// const redirectParam = url.searchParams.get("redirect");
-				// const token = data.token;
-				// console.log("URL", url);
-				// console.log("Redirect param", redirectParam);
-				// console.log("Token", token);
-				// // add token
-				// if (redirectParam && token) {
-				// 	const redirectUrl = new URL(redirectParam);
-				// 	redirectUrl.searchParams.set("token", token);
-				// 	console.log("Redirecting to:", redirectUrl.toString());
-
-				// 	// window.location.href = redirectUrl
-				// 	// return Astro.redirect(redirectUrl.toString());
-				// }
 				console.log("Login response:", data);
 				try {
 					const response = await sendAuthToExtension(
@@ -182,7 +170,7 @@ const isLoggedIn = !!Astro.locals.user;
 				} catch (error) {
 					console.error("Failed to send auth:", error);
 				}
-				// window.location.href = "/";
+				window.location.href = "/";
 			} catch (error) {
 				console.error("Login error:", error);
 				showError("An unexpected error occurred. Please try again.");

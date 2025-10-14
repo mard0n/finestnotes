@@ -180,7 +180,7 @@ if (Astro.locals.user) {
 				fetchOptions: {
 					onSuccess: () => {
 						// Redirect on success
-						window.location.href = '/';
+						window.location.href = '/verify';
 					},
 					onError: (ctx) => {
 						showError(ctx.error.message || 'Signup failed. Please try again.');

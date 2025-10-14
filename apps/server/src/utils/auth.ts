@@ -5,6 +5,7 @@ import type { Bindings } from "index";
 
 import * as schema from "../db/schema";
 import { bearer } from "better-auth/plugins";
+import { resend } from "./email";
 
 export const auth = (env: Bindings) => {
   return betterAuth({
@@ -14,12 +15,23 @@ export const auth = (env: Bindings) => {
 
       return !isProd ? ['http://localhost:*', "chrome-extension://*"] : []; // TODO: change to more specific
     },
-    session: {
-      expiresIn: 60 * 60 * 24 * 30, // 30 days
-      updateAge: 60 * 60 // 1 hour
-    },
     emailAndPassword: {
-      enabled: true
+      enabled: true,
+      requireEmailVerification: true
+    },
+    emailVerification: {
+      sendOnSignUp: true,
+      autoSignInAfterVerification: true,
+      sendVerificationEmail: async ({ user, url, token }, request) => {
+        console.log('sendVerificationEmail url', url);
+        // const res = await resend.emails.send({
+        //   from: 'verify@finestnotes.com',
+        //   to: user.email,
+        //   subject: 'Verify your email address',
+        //   html: `<p>Click <a href="${url}">here</a> to verify your email address.</p>`
+        // })
+        // console.log('sendVerificationEmail res', res);
+      }
     },
     advanced: {
       crossSubDomainCookies: {
