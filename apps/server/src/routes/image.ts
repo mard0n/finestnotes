@@ -5,47 +5,58 @@ import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import type { Bindings } from "../index";
 import z from "zod";
+import { protect } from "middlewares/auth.middleware";
+import type { Session, User } from "better-auth";
 
-const image = new Hono<{ Bindings: Bindings }>()
+const image = new Hono<{ Bindings: Bindings, Variables: { user: User; session: Session } }>()
 
   // Get all saved images for a page url
-  .get("/", zValidator("query", z.object({
+  .get("/", protect, zValidator("query", z.object({
     page_url: z.url(),
   })), async (c) => {
     const { page_url } = c.req.valid("query");
     const db = drizzle(c.env.finestdb);
 
+    const page = await db.select().from(pages).where(eq(pages.url, page_url)).get();
+
+    if (!page) {
+      return c.json([]);
+    }
+
     const result = await db
-      .select({
-        id: images.id,
-        imageUrl: images.imageUrl,
-        caption: images.caption,
-        createdAt: images.createdAt,
-      })
+      .select()
       .from(images)
-      .innerJoin(pages, eq(images.pageId, pages.id))
-      .where(eq(pages.url, page_url));
+      .where(
+        and(
+          eq(images.pageId, page.id),
+          eq(images.userId, c.var.user.id),
+        )
+      );
 
     return c.json(result);
   })
 
   // Save an image
-  .post("/", zValidator("json", z.object({
+  .post("/", protect, zValidator("json", z.object({
     pageURL: z.string().min(1),
     pageTitle: z.string().min(1),
     pageDescription: z.string().min(1),
-    userId: z.string().min(1),
     imageUrl: z.url(),
     caption: z.string().optional(),
   })), async (c) => {
-    const { pageURL, pageTitle, pageDescription, userId, imageUrl, caption } = c.req.valid("json");
+    const { pageURL, pageTitle, pageDescription, imageUrl, caption } = c.req.valid("json");
     const db = drizzle(c.env.finestdb);
 
-    let page = await db.select().from(pages).where(eq(pages.url, pageURL)).get();
+    let page = await db.select().from(pages).where(
+      and(
+        eq(pages.url, pageURL),
+        eq(pages.userId, c.var.user.id)
+      )
+    ).get();
 
     if (!page) {
       page = await db.insert(pages).values({
-        userId,
+        userId: c.var.user.id,
         url: pageURL,
         title: pageTitle,
         description: pageDescription,
@@ -53,11 +64,12 @@ const image = new Hono<{ Bindings: Bindings }>()
     }
 
     await db.insert(images).values({
-      userId,
+      userId: c.var.user.id,
       pageId: page.id,
       imageUrl,
       caption
     }).run();
+
     return c.json({
       success: true,
       message: `Image is successfully saved`,
@@ -65,14 +77,26 @@ const image = new Hono<{ Bindings: Bindings }>()
   })
 
   // Delete a saved image
-  .delete("/:id", zValidator("param", z.object({
+  .delete("/:id", protect, zValidator("param", z.object({
     id: z.string().min(1),
   })), async (c) => {
     const { id } = c.req.valid("param");
     const db = drizzle(c.env.finestdb);
-    await db.delete(images).where(
-      eq(images.id, Number(id))
+
+    const res = await db.delete(images).where(
+      and(
+        eq(images.id, Number(id)),
+        eq(images.userId, c.var.user.id),
+      )
     ).run();
+
+    if (res.changes === 0) {
+      return c.json({
+        success: false,
+        message: `Note ${id} not found or you don't have permission to delete it`
+      }, 404)
+    }
+
     return c.json({
       success: true,
       message: `Image ${id} is successfully deleted`,

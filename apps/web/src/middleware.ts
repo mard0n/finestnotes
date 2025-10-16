@@ -5,8 +5,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
     // Convert Headers to plain object and get cookie header
     const cookieHeader = context.request.headers.get('cookie');
 
-    console.log('Cookie header:', cookieHeader);
-
     const response = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/get-session`, {
       headers: {
         'cookie': cookieHeader || '',
@@ -15,16 +13,14 @@ export const onRequest = defineMiddleware(async (context, next) => {
       credentials: import.meta.env.PROD ? 'same-origin' : 'include',
     });
 
-    console.log('Response status:', response.status);
+    console.log('Astro Middleware Response:', response);
 
     if (response.ok) {
       const data = await response.json();
-      console.log('Session data:', data);
 
       if (data && data.user) {
         context.locals.user = data.user;
         context.locals.session = data.session;
-        console.log('Session set successfully:', { userId: data.user.id });
       } else {
         context.locals.user = null;
         context.locals.session = null;

@@ -6,8 +6,8 @@ import page from "./routes/page";
 import highlight from "./routes/highlight";
 import articles from "./routes/articles";
 import { auth } from "./utils/auth";
+import collections from "./routes/collections";
 import { logger } from "hono/logger";
-import type { Session, User } from "better-auth";
 
 export type Bindings = {
   finestdb: D1Database;
@@ -17,10 +17,7 @@ export type Bindings = {
 };
 
 const app = new Hono<{
-  Bindings: Bindings, Variables: {
-    user: User | null;
-    session: Session | null;
-  }
+  Bindings: Bindings
 }>()
 
 app.use(logger())
@@ -50,27 +47,15 @@ app.use(
 );
 
 app.on(['GET', 'POST'], '/api/auth/*', async (c) => {
-  console.log('Request:', c.req);
+  console.log('/api/auth/* req:', c.req);
   const res = await auth(c.env).handler(c.req.raw);
-  console.log('/api/auth res', res);
+  console.log('/api/auth/* res:', res);
   return res;
-});
-
-app.use("/api/*", async (c, next) => {
-  const session = await auth(c.env).api.getSession({ headers: c.req.raw.headers });
-  console.log('Auth session:', session);
-  if (!session) {
-    c.set("user", null);
-    c.set("session", null);
-    return next();
-  }
-  c.set("user", session.user);
-  c.set("session", session.session);
-  return next();
 });
 
 const routes = app
   .route("/api/articles", articles)
+  .route("/api/collections", collections)
   .route("/api/page", page)
   .route("/api/highlight", highlight)
   .route("/api/image", image)

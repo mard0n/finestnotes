@@ -18,7 +18,7 @@ browser.commands.onCommand.addListener(async (command, tab) => {
 
     const selectionData = await sendMessage("getSelectionData", undefined, tab.id);
 
-    const highlightRes = await client.api.highlight.$post({ json: { ...selectionData, userId: session.data.user.id } });
+    const highlightRes = await client.api.highlight.$post({ json: selectionData });
     const highlightData = await parseResponse(highlightRes).catch(
       (e: DetailedError) => {
         console.error("DetailedError", e)
@@ -65,8 +65,7 @@ browser.commands.onCommand.addListener(async (command, tab) => {
           title: tabInfo.title,
           url: tabInfo.url,
           description: tabInfo.description,
-          comment: "",
-          userId: session.data.user.id
+          comment: ""
         }
       });
       const saveData = await parseResponse(saveRes).catch(
