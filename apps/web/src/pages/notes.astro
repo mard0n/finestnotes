@@ -1,146 +1,20 @@
 ---
 import Layout from "@layouts/Layout.astro";
+import NotesComponent from "@components/Notes.jsx";
+import { createServerClient } from "@utils/api";
+import { parseResponse } from "hono/client";
 
-export const prerender = false;
-
-// Demo notes data
-const demoNotes = [
-	{
-		id: 1,
-		title: "Getting Started with Finest",
-		content: "Finest is a powerful tool for highlighting and saving important content from the web. You can create notes, save pages, and organize your highlights efficiently.",
-		createdAt: "2024-10-01T10:30:00Z",
-	},
-	{
-		id: 2,
-		title: "TypeScript Best Practices",
-		content: "Always use strict mode, leverage type inference, avoid `any` type, use interfaces for object shapes, and prefer composition over inheritance.",
-		createdAt: "2024-10-03T14:20:00Z",
-	},
-	{
-		id: 3,
-		title: "Astro Framework Notes",
-		content: "Astro is a modern web framework that ships zero JavaScript by default. It supports multiple UI frameworks and provides excellent performance through partial hydration.",
-		createdAt: "2024-10-05T09:15:00Z",
-	},
-	{
-		id: 4,
-		title: "Web Extension Development",
-		content: "Browser extensions consist of background scripts, content scripts, and popup pages. Use manifest.json to configure permissions and define extension behavior.",
-		createdAt: "2024-10-07T16:45:00Z",
-	},
-	{
-		id: 5,
-		title: "CSS Grid Layout Tips",
-		content: "Grid is perfect for 2D layouts. Use `grid-template-areas` for intuitive layouts, `auto-fit` and `auto-fill` for responsive grids, and `gap` for spacing.",
-		createdAt: "2024-10-09T11:30:00Z",
-	},
-];
-
-function formatDate(dateString: string) {
-	const date = new Date(dateString);
-	return date.toLocaleDateString("en-US", {
-		year: "numeric",
-		month: "long",
-		day: "numeric",
-	});
+if (!Astro.locals.user) {
+  return Astro.redirect("/login");
 }
+
+const res = await createServerClient(
+  Astro.request.headers,
+).api.collections.$get();
+
+const collections = await parseResponse(res);
 ---
 
 <Layout>
-	<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-		<div class="mb-8 flex justify-between items-center">
-			<div>
-				<h1 class="text-3xl font-bold text-gray-900">My Notes</h1>
-				<p class="mt-2 text-sm text-gray-600">
-					{demoNotes.length} {demoNotes.length === 1 ? "note" : "notes"} saved
-				</p>
-			</div>
-			<button
-				class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-			>
-				<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-					<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-				</svg>
-				New Note
-			</button>
-		</div>
-
-		<div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-			{
-				demoNotes.map((note) => (
-					<div class="bg-white overflow-hidden shadow rounded-lg hover:shadow-md transition-shadow duration-200">
-						<div class="p-5">
-							<div class="flex items-center justify-between mb-3">
-								<h3 class="text-lg font-medium text-gray-900 truncate">
-									{note.title}
-								</h3>
-								<button class="text-gray-400 hover:text-gray-600">
-									<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z"></path>
-									</svg>
-								</button>
-							</div>
-							<p class="text-sm text-gray-600 line-clamp-3 mb-4">
-								{note.content}
-							</p>
-							<div class="flex items-center justify-between">
-								<span class="text-xs text-gray-500">
-									{formatDate(note.createdAt)}
-								</span>
-								<a
-									href={`/notes/${note.id}`}
-									class="text-sm font-medium text-blue-600 hover:text-blue-500"
-								>
-									Read more →
-								</a>
-							</div>
-						</div>
-					</div>
-				))
-			}
-		</div>
-
-		{
-			demoNotes.length === 0 && (
-				<div class="text-center py-12">
-					<svg
-						class="mx-auto h-12 w-12 text-gray-400"
-						fill="none"
-						stroke="currentColor"
-						viewBox="0 0 24 24"
-					>
-						<path
-							stroke-linecap="round"
-							stroke-linejoin="round"
-							stroke-width="2"
-							d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-						/>
-					</svg>
-					<h3 class="mt-2 text-sm font-medium text-gray-900">No notes</h3>
-					<p class="mt-1 text-sm text-gray-500">Get started by creating a new note.</p>
-					<div class="mt-6">
-						<button
-							type="button"
-							class="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-						>
-							<svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-							</svg>
-							New Note
-						</button>
-					</div>
-				</div>
-			)
-		}
-	</div>
+  <NotesComponent client:load collections={collections} />
 </Layout>
-
-<style>
-	.line-clamp-3 {
-		display: -webkit-box;
-		-webkit-line-clamp: 3;
-		-webkit-box-orient: vertical;
-		overflow: hidden;
-	}
-</style>

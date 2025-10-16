@@ -1,52 +1,190 @@
 ---
 import Layout from "@layouts/Layout.astro";
-import { server } from "@utils/api";
-import type { InferResponseType } from "hono";
+import FinestSymbol from "@assets/finest-symbol.svg";
+import { createServerClient } from "@utils/api";
+import { parseResponse } from "hono/client";
 
-var articles: InferResponseType<typeof server.api.articles.$get> = [];
-
-try {
-	let url = server.api.articles.$url(); // Log the URL to verify it's correct
-	console.log("Fetching notes from URL:", url.toString());
-	const res = await server.api.articles.$get().then((r) => {
-		console.log("Fetched notes:", r);
-		return r;
-	});
-	if (res.ok) {
-		articles = await res.json();
-	}
-} catch (error) {
-	console.error("Error fetching notes:", error);
-}
-
-Astro.locals.user?.name
+const client = createServerClient(Astro.request.headers);
+const page = Astro.url.searchParams.get('page') || '1'
+const res = await client.api.articles.$get({query: {
+	page
+}})
+const data = await parseResponse(res);
+const articles = data.articles;
+const hasMore = data.hasMore;
 ---
 
 <Layout>
-	<div>
-		<div role="tablist">
-			<a role="tab" href="/" id="tab-newest" aria-selected="true" aria-controls="panel-newest">
-				Newest
-			</a>
-			<a role="tab" href="/following" id="tab-following" aria-selected="false" aria-controls="panel-following">
-				Following
-			</a>
+	<div class="ml-24 mt-16 max-w-3xl">
+		<ul class="list rounded-box">
+			<div role="tablist" class="tabs tabs-border gap-4">
+				<a href="/" role="tab" class="tab tab-active font-bold before:border-base-300 before:w-full before:left-0 before:bg-base-300 p-0">Newest</a>
+				<a href="/following" role="tab" class="tab before:w-full before:left-0 p-0">Following</a>
+			</div>
+			{
+				articles.map((article) => (
+					<li class="list-row px-0 py-7 after:inset-x-[0px]">
+						<div>
+							<FinestSymbol class="absolute left-0 -ml-8 mt-1"/>
+							<a href={`/article/${article.id}`}>
+								<div class="mb-1 text-lg font-serif text-black">{article.title}</div>
+							</a>
+							{article.description ? 
+								<a href={`/article/${article.id}`}>
+									<div class="mb-2.5 text-base truncate font-medium text-[#777]" title={article.description} >
+										{article.description}
+									</div>
+								</a> : <></>}
+							<div class="text-sm text-[#777]">
+								<span><a href="/user/:id">{article.user.name}</a></span>
+								<span>{article.createdAt}</span>
+								<span><a>200 comments</a></span>
+							</div>
+						</div>
+					</li>
+				))
+			}
+		</ul>
+		{hasMore ? <button id="load-more">Load more</button> : <></>}
+	</div>
+	<!-- <label class="input input-ghost !outline-offset-0">
+		<svg
+			class="h-[1em] opacity-50"
+			xmlns="http://www.w3.org/2000/svg"
+			viewBox="0 0 24 24"
+		>
+			<g
+				stroke-linejoin="round"
+				stroke-linecap="round"
+				stroke-width="2.5"
+				fill="none"
+				stroke="currentColor"
+			>
+				<circle cx="11" cy="11" r="8"></circle>
+				<path d="m21 21-4.3-4.3"></path>
+			</g>
+		</svg>
+		<input type="search" name="search" class="grow" placeholder="Search" />
+	</label>
+
+	<ul class="list rounded-box">
+		<div role="tablist" class="tabs tabs-border">
+			<a role="tab" class="tab tab-active">Newest</a>
+			<a role="tab" class="tab">Following</a>
 		</div>
 
-		<div id="panel-newest" role="tabpanel" aria-labelledby="tab-newest">
-			<ul>
-				{
-					articles.map((article) => (
-						<li>
-							<a href={`/article/${article.id}`} target="_blank" rel="noopener noreferrer">
-								{article.title}
-							</a>
-							<p>{article.description}</p>
-						</li>
-					))
-				}
-				{articles.length === 0 && <li>No articles found.</li>}
+		<li class="list-row">
+			<div>
+				<img
+					class="size-10 rounded-box"
+					src="https://img.daisyui.com/images/profile/demo/1@94.webp"
+				/>
+			</div>
+			<div>
+				<div>Dio Lupa</div>
+				<div class="text-xs uppercase font-semibold opacity-60">
+					Remaining Reason
+				</div>
+			</div>
+		</li>
+
+		<li class="list-row">
+			<div>
+				<img
+					class="size-10 rounded-box"
+					src="https://img.daisyui.com/images/profile/demo/4@94.webp"
+				/>
+			</div>
+			<div>
+				<div>Ellie Beilish</div>
+				<div class="text-xs uppercase font-semibold opacity-60">
+					Bears of a fever
+				</div>
+			</div>
+		</li>
+
+		<li class="list-row">
+			<div>
+				<img
+					class="size-10 rounded-box"
+					src="https://img.daisyui.com/images/profile/demo/3@94.webp"
+				/>
+			</div>
+			<div>
+				<div>Sabrino Gardener</div>
+				<div class="text-xs uppercase font-semibold opacity-60">Cappuccino</div>
+			</div>
+		</li>
+	</ul>
+
+	<div class="flex w-full flex-col">
+		<div class="card rounded-box grid h-20 place-items-center">
+			content
+		</div>
+		<div class="divider">OR</div>
+		<div class="card rounded-box grid h-20 place-items-center">
+			content
+		</div>
+	</div>
+
+	<div class="flex justify-center">
+		<div class="dropdown dropdown-hover dropdown-end">
+			<span tabindex="0" role="link" class="m-1">Hover</span>
+			<ul
+				tabindex="-1"
+				class="dropdown-content menu bg-base-100 rounded-box z-1 w-52 p-2 shadow-sm"
+			>
+				<li><a>Item 1</a></li>
+				<li><a>Item 2</a></li>
 			</ul>
 		</div>
 	</div>
+
+	<button class="btn ">
+		<svg
+			xmlns="http://www.w3.org/2000/svg"
+			fill="none"
+			viewBox="0 0 24 24"
+			stroke-width="2.5"
+			stroke="currentColor"
+			class="size-[1.2em]"
+			><path
+				stroke-linecap="round"
+				stroke-linejoin="round"
+				d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12Z"
+			></path></svg
+		>
+		Like
+	</button>
+
+	<fieldset
+		class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4"
+	>
+		<legend class="fieldset-legend">Login</legend>
+
+		<label class="label">Email</label>
+		<input type="email" class="input" placeholder="Email" />
+
+		<label class="label">Password</label>
+		<input type="password" class="input" placeholder="Password" />
+
+		<button class="btn btn-neutral mt-4">Login</button>
+	</fieldset>
+
+	<fieldset class="fieldset">
+		<label class="floating-label">
+			<span>Extra Small</span>
+			<textarea class="textarea h-24" placeholder="Extra Small"></textarea>
+		</label>
+	</fieldset> -->
 </Layout>
+
+
+<script>
+	document.getElementById("load-more")?.addEventListener("click", () => {
+		const url = new URL(window.location.href);
+		const currentPage = parseInt(url.searchParams.get('page') || '1', 10);
+		url.searchParams.set('page', (currentPage + 1).toString());
+		window.location.href = url.toString();
+	});
+</script>

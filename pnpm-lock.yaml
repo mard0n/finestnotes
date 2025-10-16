@@ -114,6 +114,12 @@ importers:
       '@finest/utils':
         specifier: workspace:^
         version: link:../../packages/utils
+      '@fontsource/libre-baskerville':
+        specifier: ^5.2.8
+        version: 5.2.8
+      '@fontsource/libre-franklin':
+        specifier: ^5.2.8
+        version: 5.2.8
       '@tailwindcss/vite':
         specifier: ^4.1.14
         version: 4.1.14(vite@6.3.6(@types/node@24.5.2)(jiti@2.6.0)(less@4.4.1)(lightningcss@1.30.1)(sass@1.93.0)(tsx@4.20.5)(yaml@2.8.1))
@@ -139,6 +145,9 @@ importers:
       '@finest/typescript-config':
         specifier: workspace:^
         version: link:../../packages/typescript-config
+      daisyui:
+        specifier: ^5.3.2
+        version: 5.3.2
       wrangler:
         specifier: ^4.38.0
         version: 4.38.0(@cloudflare/workers-types@4.20250919.0)
@@ -1022,6 +1031,12 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@fontsource/libre-baskerville@5.2.8':
+    resolution: {integrity: sha512-jE+bedLb020OK2KDBZWJ2Wos4maagvnMcTwsxRjpMNxANW4GiD8lZF8Yezc8e+GDGG9UfJzJPbWfYun55JIWoA==}
+
+  '@fontsource/libre-franklin@5.2.8':
+    resolution: {integrity: sha512-1n4FW4CbAql7G+aZIUmcX4M8R8bkpzbTXSS4ZYZwKd2rrq+bHzymF+PCC69FVIn7W9VFngGa8humDHvyFuLJwA==}
 
   '@hexagon/base64@1.1.28':
     resolution: {integrity: sha512-lhqDEAvWixy3bZ+UOYbPwUbBkwBq5C1LAJ/xPC8Oi+lL54oyakv/npbA0aU2hgCsx/1NUd4IBvV03+aUBWxerw==}
@@ -2172,6 +2187,9 @@ packages:
 
   csstype@3.1.3:
     resolution: {integrity: sha512-M1uQkMl8rQK/szD0LNhtqxIPLpimGm8sOBwU7lLnCpSbTyY3yeU1Vc7l4KT5zT4s/yOxHH5O7tIuuLOCnLADRw==}
+
+  daisyui@5.3.2:
+    resolution: {integrity: sha512-hw6NmQvFHdZI1Zb94EX+vA0DhuXGfqwQInDQ6XNZ5dgkoDy+e01P4OkJ8umAQAAzVSKGwm6QDMXOw6eJV63OEQ==}
 
   data-uri-to-buffer@4.0.1:
     resolution: {integrity: sha512-0R9ikRb668HB7QDxT1vkpuUBtqc53YyAwMwGeUFKRojY/NWKvdZ+9UYtRfGmhqNbRkTSVpMbmyhXipFFv2cb/A==}
@@ -4976,6 +4994,10 @@ snapshots:
   '@esbuild/win32-x64@0.25.4':
     optional: true
 
+  '@fontsource/libre-baskerville@5.2.8': {}
+
+  '@fontsource/libre-franklin@5.2.8': {}
+
   '@hexagon/base64@1.1.28': {}
 
   '@hono/zod-validator@0.7.3(hono@4.9.8)(zod@4.1.9)':
@@ -6159,6 +6181,8 @@ snapshots:
   cssom@0.5.0: {}
 
   csstype@3.1.3: {}
+
+  daisyui@5.3.2: {}
 
   data-uri-to-buffer@4.0.1: {}
 

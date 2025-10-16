@@ -9,9 +9,16 @@ import * as schema from "../db/schema";
 
 const articles = new Hono<{ Bindings: Bindings }>()
   // Get all articles
-  .get("/", async (c) => {
-    const db = drizzle(c.env.finestdb, { schema: schema });
+  .get("/", zValidator("query", z.object({
+    page: z.string().optional().default("1"),
+    limit: z.string().optional().default("20"),
+  })), async (c) => {
+    const { page, limit } = c.req.valid("query");
+    const pageNum = parseInt(page);
+    const limitNum = parseInt(limit);
+    const offset = (pageNum - 1) * limitNum;
 
+    const db = drizzle(c.env.finestdb, { schema: schema });
 
     const [noteData, pageData] = await Promise.all([
       db.query.notes.findMany({
@@ -27,7 +34,7 @@ const articles = new Hono<{ Bindings: Bindings }>()
     ]);
 
     // merge noteData and pageData sort by createdAt
-    const articles = [
+    const allArticles = [
       ...pageData.map(page => ({
         id: page.id,
         title: page.title,
@@ -46,9 +53,19 @@ const articles = new Hono<{ Bindings: Bindings }>()
       })),
     ];
 
-    articles.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    allArticles.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
-    return c.json(articles);
+    // Apply pagination
+    const articles = allArticles.slice(offset, offset + limitNum);
+    const hasMore = offset + limitNum < allArticles.length;
+
+    return c.json({
+      articles,
+      hasMore,
+      total: allArticles.length,
+      page: pageNum,
+      limit: limitNum,
+    });
   })
   .get("/:id", zValidator("param", z.object({
     id: z.string().min(1),

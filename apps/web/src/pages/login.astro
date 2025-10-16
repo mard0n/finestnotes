@@ -170,6 +170,8 @@ const isLoggedIn = !!Astro.locals.user;
 				} catch (error) {
 					console.error("Failed to send auth:", error);
 				}
+				console.log("Redirect to /");
+
 				window.location.href = "/";
 			} catch (error) {
 				console.error("Login error:", error);

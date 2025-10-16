@@ -8,11 +8,28 @@ export const authClient = createAuthClient({
 })
 
 export function sendAuthToExtension(token: string, extensionId: string): Promise<any> {
+  console.log('Sending Auth To Extension');
+  
   return new Promise((resolve, reject) => {
     if (!token || !extensionId) {
       reject(new Error("Missing token or extensionId"));
       return;
     }
+
+    // Set up timeout
+    const timeoutId = setTimeout(() => {
+      reject(new Error(`Extension communication timeout after 2000ms`));
+    }, 2000);
+
+    const clearTimeoutAndResolve = (response: any) => {
+      clearTimeout(timeoutId);
+      resolve(response);
+    };
+
+    const clearTimeoutAndReject = (error: any) => {
+      clearTimeout(timeoutId);
+      reject(error);
+    };
 
     // console.log("Sending token to extension:", extensionId);
 
@@ -29,17 +46,18 @@ export function sendAuthToExtension(token: string, extensionId: string): Promise
             // @ts-ignore
             console.error("Chrome sendMessage error:", chrome.runtime.lastError);
             // @ts-ignore
-            reject(new Error(chrome.runtime.lastError.message));
+            clearTimeoutAndReject(new Error(chrome.runtime.lastError.message));
           } else {
             // console.log("Token sent successfully via Chrome API:", response);
-            resolve(response);
+            clearTimeoutAndResolve(response);
           }
         });
         return
       }
     } catch (e) {
       console.warn("Could not send directly to extension:", e);
-      reject(e);
+      clearTimeoutAndReject(e);
+      return;
     }
 
 
@@ -54,20 +72,21 @@ export function sendAuthToExtension(token: string, extensionId: string): Promise
         })
           .then((response: any) => {
             // console.log("Token sent successfully via browser API:", response);
-            resolve(response);
+            clearTimeoutAndResolve(response);
           })
           .catch((error: any) => {
             console.error("Browser sendMessage error:", error);
-            reject(error);
+            clearTimeoutAndReject(error);
           });
         return;
       }
     } catch (e) {
       console.warn("Could not send directly to extension:", e);
-      reject(e);
+      clearTimeoutAndReject(e);
+      return;
     }
 
     // TODO: Fallback to using some other method to communicate with the extension
-
+    clearTimeoutAndReject(new Error("No browser messaging API available"));
   });
 }

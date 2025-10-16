@@ -3,20 +3,61 @@ const user = Astro.locals.user;
 const isLoggedIn = !!user;
 ---
 
-<nav class="flex justify-between items-center p-6">
-  <div class="flex gap-10 items-center">
+<nav
+  class="flex justify-between items-center px-8 py-4 border-b border-neutral-200"
+>
+  <div class="flex gap-20 items-center">
     <a href="/" class="">Finest</a>
-    <input type="search" name="search" placeholder="Search" class="input" />
+    <label class="input input-ghost !outline-offset-0 w-md">
+      <svg
+        class="h-[1em] opacity-50"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+      >
+        <g
+          stroke-linejoin="round"
+          stroke-linecap="round"
+          stroke-width="2.5"
+          fill="none"
+          stroke="currentColor"
+        >
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.3-4.3"></path>
+        </g>
+      </svg>
+      <input type="search" name="search" class="grow" placeholder="Search" />
+    </label>
   </div>
-  <div class="flex gap-6">
+  <div class="flex gap-10 items-center">
     {
       isLoggedIn ? (
         <>
           <a href="/notes">my notes</a>
-          <span>Hello, {user.name}</span>
-          <a id="logout" href="/logout">
-            Logout
-          </a>
+          <div class="dropdown dropdown-hover dropdown-end">
+            <span tabindex="0" role="link" class="m-1">
+              {user.name}
+            </span>
+            <div class="dropdown-content menu  z-1 w-52 p-2">
+              <ul class="bg-base-100 p-2 shadow-sm" tabindex="-1">
+                <li>
+                  <a href="/notes">My notes</a>
+                </li>
+                <li>
+                  <a href="https://chromewebstore.google.com/">
+                    Browser Extension
+                  </a>
+                </li>
+                <li>
+                  <a href="/settings">Settings</a>
+                </li>
+                <li>
+                  <a id="signout">
+                    Sign out
+                  </a>
+                </li>
+              </ul>
+            </div>
+          </div>
         </>
       ) : (
         <>
@@ -29,7 +70,7 @@ const isLoggedIn = !!user;
 
 <script>
   import { authClient } from "../utils/auth";
-  document.getElementById("logout")?.addEventListener("click", async (e) => {
+  document.getElementById("signout")?.addEventListener("click", async (e) => {
     e.preventDefault();
     await authClient.signOut().then(() => {
       window.location.href = "/";
