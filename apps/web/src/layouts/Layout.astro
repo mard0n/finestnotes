@@ -31,7 +31,9 @@ import Navbar from "@components/Navbar.astro";
 		/>
 	</head>
 	<body class="bg-base-200">
-		<Navbar />
+		<slot name="navbar">
+			<Navbar />
+		</slot>
 		<slot />
 	</body>
 </html>

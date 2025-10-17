@@ -1,8 +1,8 @@
 ---
-import Layout from "@layouts/Layout.astro";
-import NotesComponent from "@components/Notes.jsx";
 import { createServerClient } from "@utils/api";
 import { parseResponse } from "hono/client";
+import NotesComponent from "@components/Notes.tsx";
+import Layout from "@layouts/Layout.astro";
 
 if (!Astro.locals.user) {
   return Astro.redirect("/login");
@@ -16,5 +16,13 @@ const collections = await parseResponse(res);
 ---
 
 <Layout>
-  <NotesComponent client:load collections={collections} />
+  <Fragment slot="navbar"></Fragment>
+  <NotesComponent client:load collections={collections} user={Astro.locals.user} />
+  <style>
+    body {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+  </style>
 </Layout>

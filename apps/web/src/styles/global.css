@@ -40,6 +40,10 @@
   --noise: 0;
 }
 
+@theme {
+  --color-gray-content: #757270;
+}
+
 /* https://daisyui.com/theme-generator/#theme=eJyNkf1ugyAUxV-FmCzZkkoARXRvQ_XaklowoFm3Ze8-_GiLtWn8T-75cTzn8htpeYboM6qVBtdFuyiOraxU72IHDZSdsV4kFs6hVCtoqifzvbkMU8yvc6d-YGGE2VK7OQXC3tgKBpq2l3FQQdsdB2g8aaMczKfSNMbGrjzCWKJRh-PUYRL20kFMCfGSOTXl8d1_vyGCyMcjxAKI4EKQAhFMSMqRyHGywpMAF9xbYponiHNcJOkKLo3uQHd3_1UEDX1nZRMkSHIymKYUsYJi-gRe2T7rpnRtbkA6BmUpYkJgwhatXF-W4NyN5XRgSZEhmmc4KRYJvqTVSh_uG8imDeRI-Dt5iIK148PPIBnBwrdimNHsMeqmTnPUTeycdMUyMdYTAqUcZwlfRV7f4NNCGGIZJikLb7RWnaX9vrP5W_B4JC8W8cFbV5tx6cuGMV6xc45tW7zG2ERPKV6iFdSyb7xWy8bBLmot1GCd_8Vpnv39A29XRWQ */
 
 /* libre-franklin-latin-400-normal */
@@ -49,6 +53,16 @@
   font-display: swap;
   font-weight: 400;
   src: url(@fontsource/libre-franklin/files/libre-franklin-latin-400-normal.woff2) format('woff2'), url(@fontsource/libre-franklin/files/libre-franklin-latin-400-normal.woff) format('woff');
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+/* libre-franklin-latin-500-normal */
+@font-face {
+  font-family: 'Libre Franklin';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 500;
+  src: url(@fontsource/libre-franklin/files/libre-franklin-latin-500-normal.woff2) format('woff2'), url(@fontsource/libre-franklin/files/libre-franklin-latin-500-normal.woff) format('woff');
   unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
 }
 

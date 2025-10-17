@@ -14,11 +14,15 @@ const collections = new Hono<{ Bindings: Bindings, Variables: { user: User; sess
 
     const [noteData, pageData] = await Promise.all([
       db.query.notes.findMany({
-        where: eq(notes.userId, c.var.user.id)
+        where: eq(notes.userId, c.var.user.id),
+        with: {
+          user: true
+        }
       }),
       db.query.pages.findMany({
         where: eq(notes.userId, c.var.user.id),
         with: {
+          user: true,
           highlights: true,
           images: true,
         }

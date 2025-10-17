@@ -31,13 +31,13 @@ const hasMore = data.hasMore;
 							</a>
 							{article.description ? 
 								<a href={`/article/${article.id}`}>
-									<div class="mb-2.5 text-base truncate font-medium text-[#777]" title={article.description} >
+									<div class="mb-2 text-base truncate text-gray-content " title={article.description} >
 										{article.description}
 									</div>
 								</a> : <></>}
 							<div class="text-sm text-[#777]">
-								<span><a href="/user/:id">{article.user.name}</a></span>
-								<span>{article.createdAt}</span>
+								<span><a href="/user/:id">{article.user.name}</a></span> · 
+								<span>{article.createdAt}</span> · 
 								<span><a>200 comments</a></span>
 							</div>
 						</div>

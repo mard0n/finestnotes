@@ -3,14 +3,18 @@ const user = Astro.locals.user;
 const isLoggedIn = !!user;
 ---
 
-<nav
-  class="flex justify-between items-center px-8 py-4 border-b border-neutral-200"
->
-  <div class="flex gap-20 items-center">
+<nav class="flex items-stretch border-b border-neutral-200">
+  <div
+    class="w-xs pl-8 pr-6 py-4 flex items-center"
+  >
     <a href="/" class="">Finest</a>
-    <label class="input input-ghost !outline-offset-0 w-md">
+  </div>
+  <div
+    class="w-xs grow px-6 py-4 flex gap-3 items-center justify-between"
+  >
+    <label class="input input-ghost !outline-offset-0 w-full">
       <svg
-        class="h-[1em] opacity-50"
+        class="h-[1.2em] opacity-50"
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
       >
@@ -28,7 +32,7 @@ const isLoggedIn = !!user;
       <input type="search" name="search" class="grow" placeholder="Search" />
     </label>
   </div>
-  <div class="flex gap-10 items-center">
+  <div class="flex grow gap-10 items-center justify-end px-8 py-4">
     {
       isLoggedIn ? (
         <>
@@ -51,9 +55,7 @@ const isLoggedIn = !!user;
                   <a href="/settings">Settings</a>
                 </li>
                 <li>
-                  <a id="signout">
-                    Sign out
-                  </a>
+                  <a id="signout">Sign out</a>
                 </li>
               </ul>
             </div>
