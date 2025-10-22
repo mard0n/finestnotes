@@ -1,12 +1,13 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { D1Database } from "@cloudflare/workers-types";
-import image from "./routes/image";
-import page from "./routes/page";
-import highlight from "./routes/highlight";
 import articles from "./routes/articles";
-import { auth } from "./utils/auth";
 import collections from "./routes/collections";
+import note from "./routes/note";
+import page from "./routes/page";
+import image from "./routes/image";
+import highlight from "./routes/highlight";
+import { auth } from "./utils/auth";
 import { logger } from "hono/logger";
 
 export type Bindings = {
@@ -56,6 +57,7 @@ app.on(['GET', 'POST'], '/api/auth/*', async (c) => {
 const routes = app
   .route("/api/articles", articles)
   .route("/api/collections", collections)
+  .route("/api/note", note)
   .route("/api/page", page)
   .route("/api/highlight", highlight)
   .route("/api/image", image)

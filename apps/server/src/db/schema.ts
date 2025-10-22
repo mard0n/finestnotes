@@ -4,11 +4,13 @@ import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 
 export const notes = sqliteTable("notes", {
   id: integer("id").primaryKey({ autoIncrement: true }),
+  type: text("type", { enum: ["note"] }).notNull().default("note"),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   content: text("content"),
+  contentDescription: text("content_description"),
   createdAt: text("created_at")
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull()
@@ -16,6 +18,7 @@ export const notes = sqliteTable("notes", {
 
 export const pages = sqliteTable("pages", {
   id: integer("id").primaryKey({ autoIncrement: true }),
+  type: text("type", { enum: ["page"] }).notNull().default("page"),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
