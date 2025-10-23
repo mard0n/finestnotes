@@ -14,6 +14,7 @@ export const notes = sqliteTable("notes", {
   isPublic: integer("is_public", { mode: "boolean" }).default(false).notNull(),
   title: text("title").notNull(),
   content: text("content"),
+  contentLexical: text("content_lexical"),
   createdAt: text("created_at")
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull(),

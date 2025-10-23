@@ -1,6 +1,6 @@
 import React, { useRef } from "react";
 import { type Collections } from "./Notes";
-import { type LexicalEditor } from "lexical";
+import { $getRoot, type LexicalEditor } from "lexical";
 
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
@@ -48,10 +48,18 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note }) => {
   });
 
   const updateNoteContent = useMutation({
-    mutationFn: async ({ id, content }: { id: string; content: string }) => {
+    mutationFn: async ({
+      id,
+      content,
+      contentLexical,
+    }: {
+      id: string;
+      content: string;
+      contentLexical: string;
+    }) => {
       const res = await client.api.note[":id"].content.$put({
         param: { id: id.toString() },
-        json: { content },
+        json: { content, contentLexical },
       });
       return await parseResponse(res);
     },
@@ -76,16 +84,16 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note }) => {
   const contentEditableRef = useRef<HTMLDivElement>(null);
 
   const getInitialEditorState = () => {
-    if (!note.content || note.content.trim() === "") {
+    if (!note.contentLexical || note.contentLexical.trim() === "") {
       return undefined;
     }
 
     try {
-      const parsed = JSON.parse(note.content);
+      const parsed = JSON.parse(note.contentLexical);
       if (!parsed.root.children || parsed.root.children.length === 0) {
         return undefined;
       }
-      return note.content;
+      return note.contentLexical;
     } catch (e) {
       console.error("Failed to parse editor content:", e);
       return undefined;
@@ -177,9 +185,15 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note }) => {
         <OnChangePlugin
           onChange={(editorState) => {
             const editorStateJSON = editorState.toJSON();
-            updateNoteContent.mutate({
-              id: note.id,
-              content: JSON.stringify(editorStateJSON),
+            editorState.read(() => {
+              // You can read the editor state here if needed
+              const root = $getRoot();
+
+              updateNoteContent.mutate({
+                id: note.id,
+                content: root.getTextContent(),
+                contentLexical: JSON.stringify(editorStateJSON),
+              });
             });
           }}
         />

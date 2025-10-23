@@ -274,33 +274,7 @@ const NoteItem: React.FC<{
   let noteDescription: string | undefined;
 
   if (collection.type === "note") {
-    if (collection.content && collection.content.trim() !== "") {
-      const editor = createEditor({
-        namespace: "MyMiniEditor",
-        nodes: [
-          HeadingNode,
-          ListNode,
-          ListItemNode,
-          QuoteNode,
-          CodeNode,
-          CodeHighlightNode,
-          LinkNode,
-          AutoLinkNode,
-          HashtagNode,
-        ],
-        theme: {},
-        onError: console.error,
-      });
-      const editorState = editor.parseEditorState(
-        collection.content
-      ) as EditorState;
-
-      editorState.read(() => {
-        const root = $getRoot();
-        const textContent = root.getTextContent();
-        noteDescription = textContent.slice(0, 100);
-      });
-    }
+    noteDescription = collection.content || undefined;
   } else if (collection.type === "page") {
     noteDescription = collection.description;
   }

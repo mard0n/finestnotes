@@ -111,17 +111,18 @@ const note = new Hono<{
     zValidator(
       "json",
       z.object({
-        content: z.string().min(1),
+        content: z.string(),
+        contentLexical: z.string().min(1),
       })
     ),
     async (c) => {
       const { id } = c.req.valid("param");
-      const { content } = c.req.valid("json");
+      const { content, contentLexical } = c.req.valid("json");
       const db = drizzle(c.env.finestdb);
 
       const res = await db
         .update(notes)
-        .set({ content })
+        .set({ content, contentLexical })
         .where(and(eq(notes.id, id), eq(notes.userId, c.var.user.id)))
         .run();
 
