@@ -1,6 +1,6 @@
-import React, { useRef, useState, useEffect, useCallback } from "react";
+import React, { useRef } from "react";
 import { type Collections } from "./Notes";
-import { $getRoot, $getSelection, type LexicalEditor } from "lexical";
+import { type LexicalEditor } from "lexical";
 
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
@@ -9,18 +9,23 @@ import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import TreeViewPlugin from "../lexical/plugins/TreeViewPlugin";
+
+import { TRANSFORMERS } from "@lexical/markdown";
+import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
+import { HeadingNode, QuoteNode } from "@lexical/rich-text";
+import { CodeHighlightNode, CodeNode } from "@lexical/code";
+import { AutoLinkNode, LinkNode } from "@lexical/link";
+import { ListItemNode, ListNode } from "@lexical/list";
+import { HashtagNode } from "@lexical/hashtag";
+
 import { client } from "@utils/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { parseResponse } from "hono/client";
+import { theme } from "../styles/lexical-theme";
 
 interface NoteEditorProps {
   note: Collections[number] & { type: "note" };
 }
-
-const theme = {
-  // Theme styling goes here
-  //...
-};
 
 function onError(error: Error, editor: LexicalEditor) {
   console.error(error);
@@ -80,13 +85,24 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note }) => {
 
   const initialConfig = {
     namespace: "MyEditor",
+    nodes: [
+      HeadingNode,
+      ListNode,
+      ListItemNode,
+      QuoteNode,
+      CodeNode,
+      CodeHighlightNode,
+      LinkNode,
+      AutoLinkNode,
+      HashtagNode,
+    ],
     theme,
     onError,
     editorState: getInitialEditorState(),
   };
 
   return (
-    <div className="flex flex-col h-full w-full gap-4">
+    <div className="flex flex-col gap-4">
       <h1
         contentEditable
         className="text-2xl font-serif outline-none text-black"
@@ -136,6 +152,7 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note }) => {
             });
           }}
         />
+        <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
         {/* <TreeViewPlugin /> */}
       </LexicalComposer>
     </div>

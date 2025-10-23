@@ -10,6 +10,11 @@ import {
   QueryClientProvider,
 } from "@tanstack/react-query";
 import { $getRoot, createEditor, type EditorState } from "lexical";
+import { CodeNode, CodeHighlightNode } from "@lexical/code";
+import { HashtagNode } from "@lexical/hashtag";
+import { LinkNode, AutoLinkNode } from "@lexical/link";
+import { ListNode, ListItemNode } from "@lexical/list";
+import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 
 export type Collections = InferResponseType<typeof client.api.collections.$get>;
 
@@ -82,8 +87,8 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
   return (
     <>
       <Navbar user={user} />
-      <main className="grow flex items-stretch">
-        <div className="w-xs shrink-0 pl-8 pr-6 py-6 border-r border-neutral-200">
+      <main className="grow overflow-y-hidden flex items-stretch">
+        <div className="w-xs overflow-y-scroll shrink-0 pl-8 pr-6 py-6 border-r border-neutral-200">
           <ul>
             <li>
               <button
@@ -125,7 +130,7 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
             </li>
           </ul>
         </div>
-        <div className="w-sm shrink-0 py-6 border-r border-neutral-200">
+        <div className="w-sm overflow-y-scroll shrink-0 py-6 border-r border-neutral-200">
           <h1 className="font-medium text-xl mb-6 px-6">{calculateTitle()}</h1>
           <div className="divider m-0 h-[1px] before:h-[1px] after:h-[1px] before:border-neutral-200 after:border-neutral-200" />
           <ul className="space-y-4 list">
@@ -144,7 +149,7 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
           </ul>
           <div className="divider m-0 h-[1px] before:h-[1px] after:h-[1px] before:border-neutral-200 after:border-neutral-200" />
         </div>
-        <div className="grow px-8 py-6">
+        <div className="grow overflow-y-scroll px-8 py-6">
           {selectedNote ? (
             selectedNote.type === "page" ? (
               <AnnotationEditor annotation={selectedNote} />
@@ -259,6 +264,17 @@ const NoteItem: React.FC<{
     if (collection.content && collection.content.trim() !== "") {
       const editor = createEditor({
         namespace: "MyMiniEditor",
+        nodes: [
+          HeadingNode,
+          ListNode,
+          ListItemNode,
+          QuoteNode,
+          CodeNode,
+          CodeHighlightNode,
+          LinkNode,
+          AutoLinkNode,
+          HashtagNode,
+        ],
         theme: {},
         onError: console.error,
       });

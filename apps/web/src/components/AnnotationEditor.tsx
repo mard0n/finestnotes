@@ -46,7 +46,7 @@ const AnnotationEditor: React.FC<AnnotationEditorProps> = ({ annotation }) => {
   });
 
   return (
-    <div className="flex flex-col h-full w-full">
+    <div className="flex flex-col">
       <h1
         contentEditable
         className="text-2xl font-serif outline-none text-black mb-2"

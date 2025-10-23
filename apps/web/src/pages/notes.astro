@@ -19,8 +19,11 @@ const collections = await parseResponse(res);
   <Fragment slot="navbar"/>
   <NoteList client:only="react" />
   <style>
+    html {
+      height: 100vh
+    }
     body {
-      height: 100vh;
+      height: 100%;
       display: flex;
       flex-direction: column;
     }
