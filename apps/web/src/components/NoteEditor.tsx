@@ -75,10 +75,6 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note }) => {
 
   const contentEditableRef = useRef<HTMLDivElement>(null);
 
-  const handleNoteTitleEdit = (newTitle: string) => {
-    updateNoteTitle.mutate({ id: note.id, title: newTitle });
-  };
-
   const getInitialEditorState = () => {
     if (!note.content || note.content.trim() === "") {
       return undefined;
@@ -132,7 +128,10 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note }) => {
             }
           }}
           onBlur={(e) => {
-            handleNoteTitleEdit(e.target.textContent || "Untitled");
+            updateNoteTitle.mutate({
+              id: note.id,
+              title: e.target.textContent || "Untitled",
+            });
           }}
           suppressContentEditableWarning
         >

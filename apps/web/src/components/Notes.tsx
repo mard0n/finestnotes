@@ -298,15 +298,23 @@ const NoteItem: React.FC<{
     <li
       tabIndex={0}
       key={collection.id}
-      className={`list-row mb-0 after:inset-x-0 after:border-neutral-200 rounded-none px-6 py-3 hover:bg-white/50 cursor-pointer ${
+      className={`list-row mb-0 gap-0 after:inset-x-0 after:border-neutral-200 rounded-none px-6 py-3 hover:bg-white/50 cursor-pointer ${
         selectedNoteId === collection.id ? "bg-white" : ""
       }`}
       onClick={() => handleNoteSelection(collection.id)}
     >
-      <div className="block">
-        <h2 className="font-medium text-black line-clamp-1">
-          {collection.title || "Untitled"}
-        </h2>
+      <div/>
+      <div className="block w-full">
+        <div className="flex items-center gap-2">
+          <h2 className="font-medium text-black line-clamp-1 grow">
+            {collection.title || "Untitled"}
+          </h2>
+          {collection.isPublic ? (
+            <span className="text-xs font-medium">🌐</span>
+          ) : (
+            <span className="text-xs font-medium">🔒</span>
+          )}
+        </div>
         <p className="text-sm text-gray-content mt-1 line-clamp-1">
           {noteDescription || "No description available."}
         </p>
