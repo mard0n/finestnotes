@@ -142,6 +142,50 @@ const note = new Hono<{
     }
   )
 
+  // Update a note's visibility
+  .put(
+    "/:id/visibility",
+    protect,
+    zValidator(
+      "param",
+      z.object({
+        id: z.string().min(1),
+      })
+    ),
+    zValidator(
+      "json",
+      z.object({
+        isPublic: z.boolean(),
+      })
+    ),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { isPublic } = c.req.valid("json");
+      const db = drizzle(c.env.finestdb);
+
+      const res = await db
+        .update(notes)
+        .set({ isPublic })
+        .where(and(eq(notes.id, id), eq(notes.userId, c.var.user.id)))
+        .run();
+
+      if (res.changes === 0) {
+        return c.json(
+          {
+            success: false,
+            message: `Page ${id} not found or you don't have permission to update it`,
+          },
+          404
+        );
+      }
+
+      return c.json({
+        success: true,
+        message: `Page ${id} visibility is successfully updated`,
+      });
+    }
+  )
+
   // Delete a saved page
   .delete(
     "/:id",

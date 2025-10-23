@@ -11,6 +11,7 @@ export const notes = sqliteTable("notes", {
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
+  isPublic: integer("is_public", { mode: "boolean" }).default(false).notNull(),
   title: text("title").notNull(),
   content: text("content"),
   createdAt: text("created_at")
@@ -28,6 +29,7 @@ export const pages = sqliteTable("pages", {
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
+  isPublic: integer("is_public", { mode: "boolean" }).default(false).notNull(),
   url: text("url").notNull(),
   title: text("title").notNull(),
   description: text("description").notNull(),

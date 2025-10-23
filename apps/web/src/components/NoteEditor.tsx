@@ -60,6 +60,19 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note }) => {
     },
   });
 
+  const updateNoteVisibility = useMutation({
+    mutationFn: async ({ id, isPublic }: { id: string; isPublic: boolean }) => {
+      const res = await client.api.note[":id"].visibility.$put({
+        param: { id: id.toString() },
+        json: { isPublic },
+      });
+      return await parseResponse(res);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["collections"] });
+    },
+  });
+
   const contentEditableRef = useRef<HTMLDivElement>(null);
 
   const handleNoteTitleEdit = (newTitle: string) => {
@@ -102,28 +115,47 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note }) => {
   };
 
   return (
-    <div className="flex flex-col gap-4">
-      <h1
-        contentEditable
-        className="text-2xl font-serif outline-none text-black"
-        onPaste={(e) => {
-          e.preventDefault();
-          const text = e.clipboardData.getData("text/plain");
-          document.execCommand("insertText", false, text);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
+    <div className="flex flex-col">
+      <div className="flex">
+        <h1
+          contentEditable
+          className="text-2xl font-serif outline-none text-black mb-2 grow"
+          onPaste={(e) => {
             e.preventDefault();
-            contentEditableRef.current?.focus();
-          }
-        }}
-        onBlur={(e) => {
-          handleNoteTitleEdit(e.target.textContent || "Untitled");
-        }}
-        suppressContentEditableWarning
-      >
-        {note.title}
-      </h1>
+            const text = e.clipboardData.getData("text/plain");
+            document.execCommand("insertText", false, text);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              contentEditableRef.current?.focus();
+            }
+          }}
+          onBlur={(e) => {
+            handleNoteTitleEdit(e.target.textContent || "Untitled");
+          }}
+          suppressContentEditableWarning
+        >
+          {note.title}
+        </h1>
+        <select
+          name="visibility"
+          className="select select-ghost select-sm bg-white w-24 rounded-full"
+          defaultValue={note.isPublic ? "public" : "private"}
+          onChange={(e) => {
+            const isPublic = e.target.value === "public";
+
+            updateNoteVisibility.mutate({
+              id: note.id,
+              isPublic,
+            });
+          }}
+        >
+          <option disabled={true}>Visibility</option>
+          <option value="private">🔒 Private</option>
+          <option value="public">🌐 Public</option>
+        </select>
+      </div>
       <LexicalComposer initialConfig={initialConfig}>
         <div className="relative grow">
           <RichTextPlugin

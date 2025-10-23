@@ -151,11 +151,13 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
         </div>
         <div className="grow overflow-y-scroll px-8 py-6">
           {selectedNote ? (
-            selectedNote.type === "page" ? (
-              <AnnotationEditor annotation={selectedNote} />
-            ) : (
-              <NoteEditor note={selectedNote} />
-            )
+            <>
+              {selectedNote.type === "page" ? (
+                <AnnotationEditor annotation={selectedNote} />
+              ) : (
+                <NoteEditor note={selectedNote} />
+              )}
+            </>
           ) : (
             <></>
           )}

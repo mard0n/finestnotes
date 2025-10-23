@@ -121,7 +121,7 @@ const page = new Hono<{
     }
   )
 
-  // Update a saved page description
+  // Update a page's description
   .put(
     "/:id/description",
     protect,
@@ -161,6 +161,50 @@ const page = new Hono<{
       return c.json({
         success: true,
         message: `Page ${id} description is successfully updated`,
+      });
+    }
+  )
+
+  // Update a page's visibility
+  .put(
+    "/:id/visibility",
+    protect,
+    zValidator(
+      "param",
+      z.object({
+        id: z.string().min(1),
+      })
+    ),
+    zValidator(
+      "json",
+      z.object({
+        isPublic: z.boolean(),
+      })
+    ),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { isPublic } = c.req.valid("json");
+      const db = drizzle(c.env.finestdb);
+
+      const res = await db
+        .update(pages)
+        .set({ isPublic })
+        .where(and(eq(pages.id, id), eq(pages.userId, c.var.user.id)))
+        .run();
+
+      if (res.changes === 0) {
+        return c.json(
+          {
+            success: false,
+            message: `Page ${id} not found or you don't have permission to update it`,
+          },
+          404
+        );
+      }
+
+      return c.json({
+        success: true,
+        message: `Page ${id} visibility is successfully updated`,
       });
     }
   )

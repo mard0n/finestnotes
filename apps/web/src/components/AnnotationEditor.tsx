@@ -45,36 +45,71 @@ const AnnotationEditor: React.FC<AnnotationEditorProps> = ({ annotation }) => {
     },
   });
 
+  const updateAnnotationVisibility = useMutation({
+    mutationFn: async ({ id, isPublic }: { id: string; isPublic: boolean }) => {
+      const res = await client.api.page[":id"].visibility.$put({
+        param: { id: id.toString() },
+        json: { isPublic },
+      });
+      return await parseResponse(res);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["collections"] });
+    },
+  });
+
+  console.log('annotation', annotation);
+  
+
   return (
     <div className="flex flex-col">
-      <h1
-        contentEditable
-        className="text-2xl font-serif outline-none text-black mb-2"
-        onPaste={(e) => {
-          e.preventDefault();
-          const text = e.clipboardData.getData("text/plain");
-          document.execCommand("insertText", false, text);
-        }}
-        onKeyDown={(e) => {
-          if (e.key === "Enter") {
+      <div className="flex">
+        <h1
+          contentEditable
+          className="text-2xl font-serif outline-none text-black mb-2 grow"
+          onPaste={(e) => {
             e.preventDefault();
-            // blur the element to prevent new lines
-            (e.target as HTMLElement).blur();
-          }
-        }}
-        onBlur={(e) => {
-          updateAnnotationTitle.mutate({
-            id: annotation.id,
-            title: e.target.textContent || "Untitled",
-          });
-        }}
-        suppressContentEditableWarning
-      >
-        {annotation.title}
-      </h1>
+            const text = e.clipboardData.getData("text/plain");
+            document.execCommand("insertText", false, text);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              // blur the element to prevent new lines
+              (e.target as HTMLElement).blur();
+            }
+          }}
+          onBlur={(e) => {
+            updateAnnotationTitle.mutate({
+              id: annotation.id,
+              title: e.target.textContent || "Untitled",
+            });
+          }}
+          suppressContentEditableWarning
+        >
+          {annotation.title}
+        </h1>
+        <select
+          name="visibility"
+          className="select select-ghost select-sm bg-white w-24 rounded-full"
+          defaultValue={annotation.isPublic ? "public" : "private"}
+          onChange={(e) => {
+            const isPublic = e.target.value === "public";
+
+            updateAnnotationVisibility.mutate({
+              id: annotation.id,
+              isPublic,
+            });
+          }}
+        >
+          <option disabled={true}>Visibility</option>
+          <option value="private">🔒 Private</option>
+          <option value="public">🌐 Public</option>
+        </select>
+      </div>
       <p
         contentEditable
-        className="mb-6 outline-none"
+        className="mb-4 text-sm outline-none"
         onPaste={(e) => {
           e.preventDefault();
           const text = e.clipboardData.getData("text/plain");
@@ -99,7 +134,7 @@ const AnnotationEditor: React.FC<AnnotationEditorProps> = ({ annotation }) => {
       </p>
 
       {annotation.content ? (
-        <div className="flex flex-col gap-4 overflow-y-auto">
+        <div className="flex text-sm flex-col gap-4 overflow-y-auto">
           {annotation.content.map((content) => {
             if (content.type === "highlight") {
               return (
