@@ -26,7 +26,7 @@ function onError(error: Error, editor: LexicalEditor) {
   console.error(error);
 }
 
-export const NoteEditor: React.FC<NoteEditorProps> = ({ note }) => {
+const NoteEditor: React.FC<NoteEditorProps> = ({ note }) => {
   const queryClient = useQueryClient();
 
   const updateNoteTitle = useMutation({
@@ -89,7 +89,7 @@ export const NoteEditor: React.FC<NoteEditorProps> = ({ note }) => {
     <div className="flex flex-col h-full w-full gap-4">
       <h1
         contentEditable
-        className="text-2xl font-serif outline-none"
+        className="text-2xl font-serif outline-none text-black"
         onPaste={(e) => {
           e.preventDefault();
           const text = e.clipboardData.getData("text/plain");

@@ -3,7 +3,7 @@ import { client } from "@utils/api";
 import type { User } from "better-auth";
 import { parseResponse, type InferResponseType } from "hono/client";
 import NoteEditor from "./NoteEditor";
-import { AnnotationEditor } from "./AnnotationEditor";
+import AnnotationEditor from "./AnnotationEditor";
 import {
   useQuery,
   QueryClient,

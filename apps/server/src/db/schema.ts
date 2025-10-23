@@ -1,10 +1,13 @@
 import { relations, sql } from "drizzle-orm";
 import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 
-
 export const notes = sqliteTable("notes", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  type: text("type", { enum: ["note"] }).notNull().default("note"),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  type: text("type", { enum: ["note"] })
+    .notNull()
+    .default("note"),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
@@ -12,12 +15,16 @@ export const notes = sqliteTable("notes", {
   content: text("content"),
   createdAt: text("created_at")
     .default(sql`CURRENT_TIMESTAMP`)
-    .notNull()
+    .notNull(),
 });
 
 export const pages = sqliteTable("pages", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
-  type: text("type", { enum: ["page"] }).notNull().default("page"),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  type: text("type", { enum: ["page"] })
+    .notNull()
+    .default("page"),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
@@ -29,35 +36,43 @@ export const pages = sqliteTable("pages", {
     .notNull(),
 });
 
-
 export const highlights = sqliteTable("highlights", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   pageId: text("page_id")
-  .notNull()
-  .references(() => pages.id, { onDelete: "cascade" }),
-  type: text("type", { enum: ["highlight"] }).notNull().default("highlight"),
+    .notNull()
+    .references(() => pages.id, { onDelete: "cascade" }),
+  type: text("type", { enum: ["highlight"] })
+    .notNull()
+    .default("highlight"),
   text: text("text").notNull(),
   position: text("position").notNull(),
+  comment: text("comment"),
   createdAt: text("created_at")
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull(),
 });
 
-
 export const images = sqliteTable("images", {
-  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   pageId: text("page_id")
-  .notNull()
-  .references(() => pages.id, { onDelete: "cascade" }),
-  type: text("type", { enum: ["image"] }).notNull().default("image"),
+    .notNull()
+    .references(() => pages.id, { onDelete: "cascade" }),
+  type: text("type", { enum: ["image"] })
+    .notNull()
+    .default("image"),
   imageUrl: text("image_url").notNull(),
   caption: text("caption"),
+  comment: text("comment"),
   createdAt: text("created_at")
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull(),
@@ -67,7 +82,7 @@ export const notesRelations = relations(notes, ({ one, many }) => ({
   user: one(user, {
     fields: [notes.userId],
     references: [user.id],
-  })
+  }),
 }));
 
 export const pagesRelations = relations(pages, ({ one, many }) => ({
@@ -76,7 +91,7 @@ export const pagesRelations = relations(pages, ({ one, many }) => ({
     references: [user.id],
   }),
   highlights: many(highlights),
-  images: many(images)
+  images: many(images),
 }));
 
 export const highlightsRelations = relations(highlights, ({ one }) => ({
@@ -181,4 +196,3 @@ export const verification = sqliteTable("verification", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
 });
-

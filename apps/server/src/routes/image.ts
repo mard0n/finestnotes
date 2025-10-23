@@ -8,99 +8,179 @@ import z from "zod";
 import { protect } from "middlewares/auth.middleware";
 import type { Session, User } from "better-auth";
 
-const image = new Hono<{ Bindings: Bindings, Variables: { user: User; session: Session } }>()
+const image = new Hono<{
+  Bindings: Bindings;
+  Variables: { user: User; session: Session };
+}>()
 
   // Get all saved images for a page url
-  .get("/", protect, zValidator("query", z.object({
-    page_url: z.url(),
-  })), async (c) => {
-    const { page_url } = c.req.valid("query");
-    const db = drizzle(c.env.finestdb);
+  .get(
+    "/",
+    protect,
+    zValidator(
+      "query",
+      z.object({
+        page_url: z.url(),
+      })
+    ),
+    async (c) => {
+      const { page_url } = c.req.valid("query");
+      const db = drizzle(c.env.finestdb);
 
-    const page = await db.select().from(pages).where(eq(pages.url, page_url)).get();
+      const page = await db
+        .select()
+        .from(pages)
+        .where(eq(pages.url, page_url))
+        .get();
 
-    if (!page) {
-      return c.json([]);
+      if (!page) {
+        return c.json([]);
+      }
+
+      const result = await db
+        .select()
+        .from(images)
+        .where(
+          and(eq(images.pageId, page.id), eq(images.userId, c.var.user.id))
+        );
+
+      return c.json(result);
     }
-
-    const result = await db
-      .select()
-      .from(images)
-      .where(
-        and(
-          eq(images.pageId, page.id),
-          eq(images.userId, c.var.user.id),
-        )
-      );
-
-    return c.json(result);
-  })
+  )
 
   // Save an image
-  .post("/", protect, zValidator("json", z.object({
-    pageURL: z.string().min(1),
-    pageTitle: z.string().min(1),
-    pageDescription: z.string().min(1),
-    imageUrl: z.url(),
-    caption: z.string().optional(),
-  })), async (c) => {
-    const { pageURL, pageTitle, pageDescription, imageUrl, caption } = c.req.valid("json");
-    const db = drizzle(c.env.finestdb);
+  .post(
+    "/",
+    protect,
+    zValidator(
+      "json",
+      z.object({
+        pageURL: z.string().min(1),
+        pageTitle: z.string().min(1),
+        pageDescription: z.string().min(1),
+        imageUrl: z.url(),
+        caption: z.string().optional(),
+      })
+    ),
+    async (c) => {
+      const { pageURL, pageTitle, pageDescription, imageUrl, caption } =
+        c.req.valid("json");
+      const db = drizzle(c.env.finestdb);
 
-    let page = await db.select().from(pages).where(
-      and(
-        eq(pages.url, pageURL),
-        eq(pages.userId, c.var.user.id)
-      )
-    ).get();
+      let page = await db
+        .select()
+        .from(pages)
+        .where(and(eq(pages.url, pageURL), eq(pages.userId, c.var.user.id)))
+        .get();
 
-    if (!page) {
-      page = await db.insert(pages).values({
-        userId: c.var.user.id,
-        url: pageURL,
-        title: pageTitle,
-        description: pageDescription,
-      }).returning().get();
+      if (!page) {
+        page = await db
+          .insert(pages)
+          .values({
+            userId: c.var.user.id,
+            url: pageURL,
+            title: pageTitle,
+            description: pageDescription,
+          })
+          .returning()
+          .get();
+      }
+
+      await db
+        .insert(images)
+        .values({
+          userId: c.var.user.id,
+          pageId: page.id,
+          imageUrl,
+          caption,
+        })
+        .run();
+
+      return c.json({
+        success: true,
+        message: `Image is successfully saved`,
+      });
     }
+  )
 
-    await db.insert(images).values({
-      userId: c.var.user.id,
-      pageId: page.id,
-      imageUrl,
-      caption
-    }).run();
+  // Update image comment
+  .put(
+    "/:id/comment",
+    protect,
+    zValidator(
+      "param",
+      z.object({
+        id: z.string().min(1),
+      })
+    ),
+    zValidator(
+      "json",
+      z.object({
+        comment: z.string().min(1),
+      })
+    ),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { comment } = c.req.valid("json");
+      const db = drizzle(c.env.finestdb);
 
-    return c.json({
-      success: true,
-      message: `Image is successfully saved`,
-    });
-  })
+      const res = await db
+        .update(images)
+        .set({ comment })
+        .where(and(eq(images.id, id), eq(images.userId, c.var.user.id)))
+        .run();
+
+      if (res.changes === 0) {
+        return c.json(
+          {
+            success: false,
+            message: `Note ${id} not found or you don't have permission to update it`,
+          },
+          404
+        );
+      }
+
+      return c.json({
+        success: true,
+        message: `Note ${id} title is successfully updated`,
+      });
+    }
+  )
 
   // Delete a saved image
-  .delete("/:id", protect, zValidator("param", z.object({
-    id: z.string().min(1),
-  })), async (c) => {
-    const { id } = c.req.valid("param");
-    const db = drizzle(c.env.finestdb);
+  .delete(
+    "/:id",
+    protect,
+    zValidator(
+      "param",
+      z.object({
+        id: z.string().min(1),
+      })
+    ),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const db = drizzle(c.env.finestdb);
 
-    const res = await db.delete(images).where(
-      and(
-        eq(images.id, Number(id)),
-        eq(images.userId, c.var.user.id),
-      )
-    ).run();
+      const res = await db
+        .delete(images)
+        .where(and(eq(images.id, id), eq(images.userId, c.var.user.id)))
+        .run();
 
-    if (res.changes === 0) {
+      if (res.changes === 0) {
+        return c.json(
+          {
+            success: false,
+            message: `Note ${id} not found or you don't have permission to delete it`,
+          },
+          404
+        );
+      }
+
       return c.json({
-        success: false,
-        message: `Note ${id} not found or you don't have permission to delete it`
-      }, 404)
+        success: true,
+        message: `Image ${id} is successfully deleted`,
+      });
     }
-
-    return c.json({
-      success: true,
-      message: `Image ${id} is successfully deleted`,
-    });
-  });
+  );
 
 export default image;
