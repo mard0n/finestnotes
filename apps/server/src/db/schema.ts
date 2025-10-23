@@ -3,21 +3,20 @@ import { sqliteTable, text, integer } from "drizzle-orm/sqlite-core";
 
 
 export const notes = sqliteTable("notes", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   type: text("type", { enum: ["note"] }).notNull().default("note"),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
   title: text("title").notNull(),
   content: text("content"),
-  contentDescription: text("content_description"),
   createdAt: text("created_at")
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull()
 });
 
 export const pages = sqliteTable("pages", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   type: text("type", { enum: ["page"] }).notNull().default("page"),
   userId: text("user_id")
     .notNull()
@@ -25,7 +24,6 @@ export const pages = sqliteTable("pages", {
   url: text("url").notNull(),
   title: text("title").notNull(),
   description: text("description").notNull(),
-  comment: text("comment"),
   createdAt: text("created_at")
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull(),
@@ -33,11 +31,11 @@ export const pages = sqliteTable("pages", {
 
 
 export const highlights = sqliteTable("highlights", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-  pageId: integer("page_id")
+  pageId: text("page_id")
   .notNull()
   .references(() => pages.id, { onDelete: "cascade" }),
   type: text("type", { enum: ["highlight"] }).notNull().default("highlight"),
@@ -50,11 +48,11 @@ export const highlights = sqliteTable("highlights", {
 
 
 export const images = sqliteTable("images", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-  pageId: integer("page_id")
+  pageId: text("page_id")
   .notNull()
   .references(() => pages.id, { onDelete: "cascade" }),
   type: text("type", { enum: ["image"] }).notNull().default("image"),

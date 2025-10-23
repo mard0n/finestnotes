@@ -9,6 +9,7 @@ import {
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
+import { $getRoot, createEditor, type EditorState } from "lexical";
 
 export type Collections = InferResponseType<typeof client.api.collections.$get>;
 
@@ -47,7 +48,7 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
   const [filterCategory, setFilterCategory] = useState<
     "private" | "public" | "all"
   >("all");
-  const [selectedNoteId, setSelectedNoteId] = useState<number | null>(null);
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
 
   const selectedNote =
     selectedNoteId !== null
@@ -67,7 +68,7 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
     }
   };
 
-  const handleNoteSelection = (noteId: number) => {
+  const handleNoteSelection = (noteId: string) => {
     console.log("Selected note ID:", noteId);
     if (selectedNoteId === noteId) {
       setSelectedNoteId(null);
@@ -82,7 +83,7 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
     <>
       <Navbar user={user} />
       <main className="grow flex items-stretch">
-        <div className="w-xs pl-8 pr-6 py-6 border-r border-neutral-200">
+        <div className="w-xs shrink-0 pl-8 pr-6 py-6 border-r border-neutral-200">
           <ul>
             <li>
               <button
@@ -124,7 +125,7 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
             </li>
           </ul>
         </div>
-        <div className="w-sm py-6 border-r border-neutral-200">
+        <div className="w-sm shrink-0 py-6 border-r border-neutral-200">
           <h1 className="font-medium text-xl mb-6 px-6">{calculateTitle()}</h1>
           <div className="divider m-0 h-[1px] before:h-[1px] after:h-[1px] before:border-neutral-200 after:border-neutral-200" />
           <ul className="space-y-4 list">
@@ -132,34 +133,12 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
               <p className="text-sm text-gray-content px-6">No notes found.</p>
             ) : (
               collections?.map((collection) => (
-                <li
-                  tabIndex={0}
+                <NoteItem
                   key={collection.id}
-                  className={`list-row mb-0 after:inset-x-0 after:border-neutral-200 rounded-none px-6 py-3 hover:bg-white/50 cursor-pointer ${
-                    selectedNoteId === collection.id ? "bg-white" : ""
-                  }`}
-                  onClick={() => handleNoteSelection(collection.id)}
-                >
-                  <div className="block">
-                    <h2 className="font-medium text-black line-clamp-1">
-                      {collection.title || "Untitled"}
-                    </h2>
-                    {collection.type === "note" ? (
-                      <p className="text-sm text-gray-content mt-1 line-clamp-1">
-                        {collection.contentDescription ||
-                          "No content available."}
-                      </p>
-                    ) : (
-                      <p className="text-sm text-gray-content mt-1 line-clamp-1">
-                        {collection.description || "No content available."}
-                      </p>
-                    )}
-                    <p className="text-xs text-gray-content mt-1.5">
-                      <span>{collection.createdAt}</span> ·{" "}
-                      <span>{collection.user.name}</span>{" "}
-                    </p>
-                  </div>
-                </li>
+                  collection={collection}
+                  selectedNoteId={selectedNoteId}
+                  handleNoteSelection={handleNoteSelection}
+                />
               ))
             )}
           </ul>
@@ -266,6 +245,59 @@ const Navbar: React.FC<{ user: User | null }> = ({ user }) => {
         )}
       </div>
     </nav>
+  );
+};
+
+const NoteItem: React.FC<{
+  collection: Collections[number];
+  selectedNoteId: string | null;
+  handleNoteSelection: (id: string) => void;
+}> = ({ collection, selectedNoteId, handleNoteSelection }) => {
+  let noteDescription: string | undefined;
+
+  if (collection.type === "note") {
+    if (collection.content && collection.content.trim() !== "") {
+      const editor = createEditor({
+        namespace: "MyMiniEditor",
+        theme: {},
+        onError: console.error,
+      });
+      const editorState = editor.parseEditorState(
+        collection.content
+      ) as EditorState;
+
+      editorState.read(() => {
+        const root = $getRoot();
+        const textContent = root.getTextContent();
+        noteDescription = textContent.slice(0, 100);
+      });
+    }
+  } else if (collection.type === "page") {
+    noteDescription = collection.description;
+  }
+
+  return (
+    <li
+      tabIndex={0}
+      key={collection.id}
+      className={`list-row mb-0 after:inset-x-0 after:border-neutral-200 rounded-none px-6 py-3 hover:bg-white/50 cursor-pointer ${
+        selectedNoteId === collection.id ? "bg-white" : ""
+      }`}
+      onClick={() => handleNoteSelection(collection.id)}
+    >
+      <div className="block">
+        <h2 className="font-medium text-black line-clamp-1">
+          {collection.title || "Untitled"}
+        </h2>
+        <p className="text-sm text-gray-content mt-1 line-clamp-1">
+          {noteDescription || "No description available."}
+        </p>
+        <p className="text-xs text-gray-content mt-1.5">
+          <span>{collection.createdAt}</span> ·{" "}
+          <span>{collection.user.name}</span>{" "}
+        </p>
+      </div>
+    </li>
   );
 };
 
