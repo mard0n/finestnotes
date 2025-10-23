@@ -53,13 +53,6 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
   const [filterCategory, setFilterCategory] = useState<
     "private" | "public" | "all"
   >("all");
-  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
-
-  const selectedNote =
-    selectedNoteId !== null
-      ? collections?.find((c) => c.id === selectedNoteId)
-      : undefined;
-
   const calculateTitle = () => {
     switch (filterCategory) {
       case "all":
@@ -72,6 +65,19 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
         return "Notes";
     }
   };
+  const filteredCollections = collections?.filter((collection) => {
+    if (filterCategory === "all") return true;
+    if (filterCategory === "public") return collection.isPublic;
+    if (filterCategory === "private") return !collection.isPublic;
+    return true;
+  });
+
+  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+
+  const selectedNote =
+    selectedNoteId !== null
+      ? collections?.find((c) => c.id === selectedNoteId)
+      : undefined;
 
   const handleNoteSelection = (noteId: string) => {
     console.log("Selected note ID:", noteId);
@@ -132,22 +138,27 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
         </div>
         <div className="w-sm overflow-y-scroll shrink-0 py-6 border-r border-neutral-200">
           <h1 className="font-medium text-xl mb-6 px-6">{calculateTitle()}</h1>
-          <div className="divider m-0 h-[1px] before:h-[1px] after:h-[1px] before:border-neutral-200 after:border-neutral-200" />
-          <ul className="space-y-4 list">
-            {collections?.length === 0 ? (
-              <p className="text-sm text-gray-content px-6">No notes found.</p>
-            ) : (
-              collections?.map((collection) => (
-                <NoteItem
-                  key={collection.id}
-                  collection={collection}
-                  selectedNoteId={selectedNoteId}
-                  handleNoteSelection={handleNoteSelection}
-                />
-              ))
-            )}
-          </ul>
-          <div className="divider m-0 h-[1px] before:h-[1px] after:h-[1px] before:border-neutral-200 after:border-neutral-200" />
+          {filteredCollections?.length === 0 ? (
+            <>
+              <div className="divider m-0 h-[1px] before:h-[1px] after:h-[1px] before:border-neutral-200 after:border-neutral-200" />
+              <p className="text-sm text-gray-content p-6">No notes found.</p>
+            </>
+          ) : (
+            <>
+              <div className="divider m-0 h-[1px] before:h-[1px] after:h-[1px] before:border-neutral-200 after:border-neutral-200" />
+              <ul className="space-y-4 list">
+                {filteredCollections?.map((collection) => (
+                  <NoteItem
+                    key={collection.id}
+                    collection={collection}
+                    selectedNoteId={selectedNoteId}
+                    handleNoteSelection={handleNoteSelection}
+                  />
+                ))}
+              </ul>
+              <div className="divider m-0 h-[1px] before:h-[1px] after:h-[1px] before:border-neutral-200 after:border-neutral-200" />
+            </>
+          )}
         </div>
         <div className="grow overflow-y-scroll px-8 py-6">
           {selectedNote ? (
@@ -303,7 +314,7 @@ const NoteItem: React.FC<{
       }`}
       onClick={() => handleNoteSelection(collection.id)}
     >
-      <div/>
+      <div />
       <div className="block w-full">
         <div className="flex items-center gap-2">
           <h2 className="font-medium text-black line-clamp-1 grow">
