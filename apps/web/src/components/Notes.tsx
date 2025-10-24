@@ -9,6 +9,7 @@ import {
   useQuery,
   QueryClient,
   QueryClientProvider,
+  useMutation,
 } from "@tanstack/react-query";
 
 export type Collections = InferResponseType<typeof client.api.collections.$get>;
@@ -213,8 +214,35 @@ const SideBar: React.FC<{
     },
   });
 
+  const { mutate: renameProject } = useMutation({
+    mutationFn: async ({
+      projectName,
+      projectId,
+    }: {
+      projectName: string;
+      projectId: string;
+    }) => {
+      const res = await client.api.projects[":id"].$put({
+        param: { id: projectId },
+        json: { name: projectName },
+      });
+      return await parseResponse(res);
+    },
+    onSuccess: (data, variables) => {
+      console.log('renamed');
+      queryClient.invalidateQueries({ queryKey: ["projects"], exact: false });
+      // Also invalidate the specific project query
+      queryClient.invalidateQueries({ 
+        queryKey: ["project", variables.projectId] 
+      });
+    },
+  });
+
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] =
     useState(false);
+  const [isProjectRenaming, setIsProjectRenaming] = useState<string | false>(
+    false
+  );
 
   return (
     <>
@@ -290,19 +318,44 @@ const SideBar: React.FC<{
             <ul className="flex flex-col gap-2 ml-5">
               {projects.map((project) => (
                 <li key={project.id} className="flex justify-between">
-                  <button
-                    onClick={() => {
-                      setFilterCategory("project");
-                      setSelectedProjectId(project.id);
-                    }}
-                    className={`text-sm cursor-pointer hover:text-black w-full text-left ${
-                      selectedProjectId === project.id
-                        ? "font-medium text-black"
-                        : "font-normal"
-                    }`}
-                  >
-                    {project.name}
-                  </button>
+                  {isProjectRenaming === project.id ? (
+                    <input
+                      type="text"
+                      defaultValue={project.name}
+                      className="input input-sm w-full max-w-xs"
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") {
+                          setIsProjectRenaming(false);
+                          renameProject({
+                            projectName: e.currentTarget.value,
+                            projectId: project.id,
+                          });
+                        }
+                      }}
+                      onBlur={(e) => {
+                        setIsProjectRenaming(false);
+                        renameProject({
+                          projectName: e.target.value,
+                          projectId: project.id,
+                        });
+                      }}
+                      autoFocus
+                    />
+                  ) : (
+                    <button
+                      onClick={() => {
+                        setFilterCategory("project");
+                        setSelectedProjectId(project.id);
+                      }}
+                      className={`text-sm cursor-pointer hover:text-black w-full text-left ${
+                        selectedProjectId === project.id
+                          ? "font-medium text-black"
+                          : "font-normal"
+                      }`}
+                    >
+                      {project.name}
+                    </button>
+                  )}
                   <div className="dropdown dropdown-end">
                     <button
                       role="link"
@@ -326,7 +379,7 @@ const SideBar: React.FC<{
                     </button>
                     <div className="menu dropdown-content z-1 w-52 p-2">
                       <ul className="bg-base-100 p-2 shadow-sm" tabIndex={-1}>
-                        <li onClick={() => {}}>
+                        <li onClick={() => setIsProjectRenaming(project.id)}>
                           <a>Rename</a>
                         </li>
                         <li onClick={() => {}}>
