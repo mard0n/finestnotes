@@ -231,10 +231,27 @@ const SideBar: React.FC<{
     onSuccess: (data, variables) => {
       console.log('renamed');
       queryClient.invalidateQueries({ queryKey: ["projects"], exact: false });
-      // Also invalidate the specific project query
       queryClient.invalidateQueries({ 
         queryKey: ["project", variables.projectId] 
       });
+    },
+  });
+
+  const { mutate: deleteProject } = useMutation({
+    mutationFn: async (projectId: string) => {
+      const res = await client.api.projects[":id"].$delete({
+        param: { id: projectId },
+      });
+      return await parseResponse(res);
+    },
+    onSuccess: (data, projectId) => {
+      // If the deleted project was selected, reset the selection
+      if (selectedProjectId === projectId) {
+        setSelectedProjectId(null);
+        setFilterCategory("all");
+      }
+      queryClient.invalidateQueries({ queryKey: ["projects"], exact: false });
+      queryClient.invalidateQueries({ queryKey: ["collections"], exact: false });
     },
   });
 
@@ -243,6 +260,12 @@ const SideBar: React.FC<{
   const [isProjectRenaming, setIsProjectRenaming] = useState<string | false>(
     false
   );
+
+  const handleDeleteProject = (projectId: string, projectName: string) => {
+    if (window.confirm(`Are you sure you want to delete "${projectName}"? This action cannot be undone.`)) {
+      deleteProject(projectId);
+    }
+  };
 
   return (
     <>
@@ -385,7 +408,7 @@ const SideBar: React.FC<{
                         <li onClick={() => {}}>
                           <a>Change Visibility</a>
                         </li>
-                        <li className="text-red-400" onClick={() => {}}>
+                        <li className="text-red-400" onClick={() => handleDeleteProject(project.id, project.name)}>
                           <a>Delete</a>
                         </li>
                       </ul>
