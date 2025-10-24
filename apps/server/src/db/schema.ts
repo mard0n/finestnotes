@@ -22,6 +22,16 @@ export const notes = sqliteTable("notes", {
   description: text("description"),
 });
 
+export const notesRelations = relations(notes, ({ one, many }) => ({
+  user: one(user, {
+    fields: [notes.userId],
+    references: [user.id],
+  }),
+  highlights: many(highlights),
+  images: many(images),
+  projectNotes: many(projectNotes),
+}));
+
 export const highlights = sqliteTable("highlights", {
   id: text("id")
     .primaryKey()
@@ -42,6 +52,17 @@ export const highlights = sqliteTable("highlights", {
   position: text("position").notNull(),
   comment: text("comment"),
 });
+
+export const highlightsRelations = relations(highlights, ({ one }) => ({
+  note: one(notes, {
+    fields: [highlights.noteId],
+    references: [notes.id],
+  }),
+  user: one(user, {
+    fields: [highlights.userId],
+    references: [user.id],
+  }),
+}));
 
 export const images = sqliteTable("images", {
   id: text("id")
@@ -64,26 +85,6 @@ export const images = sqliteTable("images", {
   comment: text("comment"),
 });
 
-export const notesRelations = relations(notes, ({ one, many }) => ({
-  user: one(user, {
-    fields: [notes.userId],
-    references: [user.id],
-  }),
-  highlights: many(highlights),
-  images: many(images),
-}));
-
-export const highlightsRelations = relations(highlights, ({ one }) => ({
-  note: one(notes, {
-    fields: [highlights.noteId],
-    references: [notes.id],
-  }),
-  user: one(user, {
-    fields: [highlights.userId],
-    references: [user.id],
-  }),
-}));
-
 export const imagesRelations = relations(images, ({ one }) => ({
   note: one(notes, {
     fields: [images.noteId],
@@ -92,6 +93,85 @@ export const imagesRelations = relations(images, ({ one }) => ({
   user: one(user, {
     fields: [images.userId],
     references: [user.id],
+  }),
+}));
+
+export const projects = sqliteTable("projects", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  ownerId: text("owner_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  description: text("description"),
+  isPublic: integer("is_public", { mode: "boolean" }).default(false).notNull(),
+  createdAt: text("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+});
+
+export const projectsRelations = relations(projects, ({ one, many }) => ({
+  owner: one(user, {
+    fields: [projects.ownerId],
+    references: [user.id],
+  }),
+  subscribers: many(projectSubscribers),
+  notes: many(projectNotes),
+}));
+
+export const projectSubscribers = sqliteTable("project_subscribers", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  projectId: text("project_id")
+    .notNull()
+    .references(() => projects.id, { onDelete: "cascade" }),
+  userId: text("user_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  createdAt: text("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+});
+
+export const projectSubscribersRelations = relations(
+  projectSubscribers,
+  ({ one }) => ({
+    project: one(projects, {
+      fields: [projectSubscribers.projectId],
+      references: [projects.id],
+    }),
+    user: one(user, {
+      fields: [projectSubscribers.userId],
+      references: [user.id],
+    }),
+  })
+);
+
+export const projectNotes = sqliteTable("project_notes", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  projectId: text("project_id")
+    .notNull()
+    .references(() => projects.id, { onDelete: "cascade" }),
+  noteId: text("note_id")
+    .notNull()
+    .references(() => notes.id, { onDelete: "cascade" }),
+  createdAt: text("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+});
+
+export const projectNotesRelations = relations(projectNotes, ({ one }) => ({
+  project: one(projects, {
+    fields: [projectNotes.projectId],
+    references: [projects.id],
+  }),
+  note: one(notes, {
+    fields: [projectNotes.noteId],
+    references: [notes.id],
   }),
 }));
 
@@ -114,6 +194,9 @@ export const user = sqliteTable("user", {
 
 export const userRelations = relations(user, ({ many }) => ({
   notes: many(notes),
+  ownedProjects: many(projects),
+  projectSubscriptions: many(projectSubscribers),
+  addedProjectNotes: many(projectNotes),
 }));
 
 export const session = sqliteTable("session", {

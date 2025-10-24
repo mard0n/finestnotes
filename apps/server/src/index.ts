@@ -7,6 +7,7 @@ import note from "./routes/note";
 import page from "./routes/page";
 import image from "./routes/image";
 import highlight from "./routes/highlight";
+import projectRoutes from "./routes/projects";
 import { auth } from "./utils/auth";
 import { logger } from "hono/logger";
 
@@ -61,6 +62,7 @@ const routes = app
   .route("/api/page", page)
   .route("/api/highlight", highlight)
   .route("/api/image", image)
+  .route("/api/projects", projectRoutes)
 
 export type RouteType = typeof routes
 

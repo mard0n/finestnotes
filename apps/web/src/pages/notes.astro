@@ -1,7 +1,7 @@
 ---
 import { createServerClient } from "@utils/api";
 import { parseResponse } from "hono/client";
-import { NoteList } from "@components/Notes.tsx";
+import { NotePage } from "@components/Notes.tsx";
 import Layout from "@layouts/Layout.astro";
 
 if (!Astro.locals.user) {
@@ -16,12 +16,8 @@ const collections = await parseResponse(res);
 ---
 
 <Layout>
-  <Fragment slot="navbar"></Fragment>
-  <NoteList
-    client:only="react"
-    collections={collections}
-    user={Astro.locals.user}
-  />
+  <Fragment slot="navbar"/>
+  <NotePage client:only="react" collections={collections} user={Astro.locals.user} />
   <style>
     html {
       height: 100vh;
