@@ -9,18 +9,22 @@ if (!Astro.locals.user) {
 }
 
 const res = await createServerClient(
-  Astro.request.headers,
+  Astro.request.headers
 ).api.collections.$get();
 
 const collections = await parseResponse(res);
 ---
 
 <Layout>
-  <Fragment slot="navbar"/>
-  <NoteList client:only="react" />
+  <Fragment slot="navbar"></Fragment>
+  <NoteList
+    client:only="react"
+    collections={collections}
+    user={Astro.locals.user}
+  />
   <style>
     html {
-      height: 100vh
+      height: 100vh;
     }
     body {
       height: 100%;

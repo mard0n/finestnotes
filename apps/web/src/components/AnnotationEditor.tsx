@@ -133,9 +133,9 @@ const AnnotationEditor: React.FC<AnnotationEditorProps> = ({ annotation }) => {
         {annotation.description}
       </p>
 
-      {annotation.content ? (
+      {annotation.annotations ? (
         <div className="flex text-sm flex-col gap-4 overflow-y-auto">
-          {annotation.content.map((content) => {
+          {annotation.annotations.map((content) => {
             if (content.type === "highlight") {
               return (
                 <HighlightComponent key={content.id} highlight={content} />
@@ -156,7 +156,7 @@ const AnnotationEditor: React.FC<AnnotationEditorProps> = ({ annotation }) => {
   );
 };
 
-type HighlightContentType = AnnotationType["content"][number] & {
+type HighlightContentType = AnnotationType["annotations"][number] & {
   type: "highlight";
 };
 
@@ -198,7 +198,7 @@ const HighlightComponent: React.FC<{
   );
 };
 
-type ImageContentType = AnnotationType["content"][number] & {
+type ImageContentType = AnnotationType["annotations"][number] & {
   type: "image";
 };
 

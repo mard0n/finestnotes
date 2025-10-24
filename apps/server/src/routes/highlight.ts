@@ -1,5 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
-import { highlights, pages } from "../db/schema";
+import { highlights, notes } from "../db/schema";
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -28,8 +28,8 @@ const highlight = new Hono<{
 
       const page = await db
         .select()
-        .from(pages)
-        .where(eq(pages.url, page_url))
+        .from(notes)
+        .where(eq(notes.url, page_url))
         .get();
 
       if (!page) {
@@ -39,7 +39,7 @@ const highlight = new Hono<{
       const result = await db
         .select()
         .from(highlights)
-        .where(eq(highlights.pageId, page.id));
+        .where(eq(highlights.noteId, page.id));
 
       return c.json(result);
     }
@@ -66,18 +66,19 @@ const highlight = new Hono<{
 
       let page = await db
         .select()
-        .from(pages)
-        .where(and(eq(pages.url, pageURL), eq(pages.userId, c.var.user.id)))
+        .from(notes)
+        .where(and(eq(notes.url, pageURL), eq(notes.userId, c.var.user.id)))
         .get();
 
       if (!page) {
         page = await db
-          .insert(pages)
+          .insert(notes)
           .values({
             userId: c.var.user.id,
             url: pageURL,
             title: pageTitle,
             description: pageDescription,
+            type: "page",
           })
           .returning()
           .get();
@@ -87,7 +88,7 @@ const highlight = new Hono<{
         .insert(highlights)
         .values({
           userId: c.var.user.id,
-          pageId: page.id,
+          noteId: page.id,
           text,
           position,
         })

@@ -5,80 +5,63 @@ export const notes = sqliteTable("notes", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  type: text("type", { enum: ["note"] })
-    .notNull()
-    .default("note"),
+  type: text("type", { enum: ["note", "page"] }).notNull(),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-  isPublic: integer("is_public", { mode: "boolean" }).default(false).notNull(),
+  isPublic: integer("is_public", { mode: "boolean" }).notNull().default(false),
+  createdAt: text("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
   title: text("title").notNull(),
+
   content: text("content"),
   contentLexical: text("content_lexical"),
-  createdAt: text("created_at")
-    .default(sql`CURRENT_TIMESTAMP`)
-    .notNull(),
-});
 
-export const pages = sqliteTable("pages", {
-  id: text("id")
-    .primaryKey()
-    .$defaultFn(() => crypto.randomUUID()),
-  type: text("type", { enum: ["page"] })
-    .notNull()
-    .default("page"),
-  userId: text("user_id")
-    .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
-  isPublic: integer("is_public", { mode: "boolean" }).default(false).notNull(),
-  url: text("url").notNull(),
-  title: text("title").notNull(),
-  description: text("description").notNull(),
-  createdAt: text("created_at")
-    .default(sql`CURRENT_TIMESTAMP`)
-    .notNull(),
+  url: text("url"),
+  description: text("description"),
 });
 
 export const highlights = sqliteTable("highlights", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
+  noteId: text("note_id")
+    .notNull()
+    .references(() => notes.id, { onDelete: "cascade" }),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-  pageId: text("page_id")
-    .notNull()
-    .references(() => pages.id, { onDelete: "cascade" }),
   type: text("type", { enum: ["highlight"] })
     .notNull()
     .default("highlight"),
-  text: text("text").notNull(),
-  position: text("position").notNull(),
-  comment: text("comment"),
   createdAt: text("created_at")
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull(),
+  text: text("text").notNull(),
+  position: text("position").notNull(),
+  comment: text("comment"),
 });
 
 export const images = sqliteTable("images", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
+  noteId: text("note_id")
+    .notNull()
+    .references(() => notes.id, { onDelete: "cascade" }),
   userId: text("user_id")
     .notNull()
     .references(() => user.id, { onDelete: "cascade" }),
-  pageId: text("page_id")
-    .notNull()
-    .references(() => pages.id, { onDelete: "cascade" }),
   type: text("type", { enum: ["image"] })
     .notNull()
     .default("image"),
-  imageUrl: text("image_url").notNull(),
-  caption: text("caption"),
-  comment: text("comment"),
   createdAt: text("created_at")
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull(),
+  imageUrl: text("image_url").notNull(),
+  caption: text("caption"),
+  comment: text("comment"),
 });
 
 export const notesRelations = relations(notes, ({ one, many }) => ({
@@ -86,36 +69,29 @@ export const notesRelations = relations(notes, ({ one, many }) => ({
     fields: [notes.userId],
     references: [user.id],
   }),
-}));
-
-export const pagesRelations = relations(pages, ({ one, many }) => ({
-  user: one(user, {
-    fields: [pages.userId],
-    references: [user.id],
-  }),
   highlights: many(highlights),
   images: many(images),
 }));
 
 export const highlightsRelations = relations(highlights, ({ one }) => ({
+  note: one(notes, {
+    fields: [highlights.noteId],
+    references: [notes.id],
+  }),
   user: one(user, {
     fields: [highlights.userId],
     references: [user.id],
   }),
-  page: one(pages, {
-    fields: [highlights.pageId],
-    references: [pages.id],
-  }),
 }));
 
 export const imagesRelations = relations(images, ({ one }) => ({
+  note: one(notes, {
+    fields: [images.noteId],
+    references: [notes.id],
+  }),
   user: one(user, {
     fields: [images.userId],
     references: [user.id],
-  }),
-  page: one(pages, {
-    fields: [images.pageId],
-    references: [pages.id],
   }),
 }));
 
@@ -137,9 +113,6 @@ export const user = sqliteTable("user", {
 });
 
 export const userRelations = relations(user, ({ many }) => ({
-  pages: many(pages),
-  highlights: many(highlights),
-  images: many(images),
   notes: many(notes),
 }));
 

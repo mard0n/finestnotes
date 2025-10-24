@@ -1,5 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
-import { images, pages } from "../db/schema";
+import { images, notes } from "../db/schema";
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -29,8 +29,8 @@ const image = new Hono<{
 
       const page = await db
         .select()
-        .from(pages)
-        .where(eq(pages.url, page_url))
+        .from(notes)
+        .where(eq(notes.url, page_url))
         .get();
 
       if (!page) {
@@ -41,7 +41,7 @@ const image = new Hono<{
         .select()
         .from(images)
         .where(
-          and(eq(images.pageId, page.id), eq(images.userId, c.var.user.id))
+          and(eq(images.noteId, page.id), eq(images.userId, c.var.user.id))
         );
 
       return c.json(result);
@@ -69,18 +69,19 @@ const image = new Hono<{
 
       let page = await db
         .select()
-        .from(pages)
-        .where(and(eq(pages.url, pageURL), eq(pages.userId, c.var.user.id)))
+        .from(notes)
+        .where(and(eq(notes.url, pageURL), eq(notes.userId, c.var.user.id)))
         .get();
 
       if (!page) {
         page = await db
-          .insert(pages)
+          .insert(notes)
           .values({
             userId: c.var.user.id,
             url: pageURL,
             title: pageTitle,
             description: pageDescription,
+            type: "page",
           })
           .returning()
           .get();
@@ -90,7 +91,7 @@ const image = new Hono<{
         .insert(images)
         .values({
           userId: c.var.user.id,
-          pageId: page.id,
+          noteId: page.id,
           imageUrl,
           caption,
         })

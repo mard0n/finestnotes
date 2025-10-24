@@ -1,5 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
-import { pages } from "../db/schema";
+import { notes } from "../db/schema";
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -29,8 +29,8 @@ const page = new Hono<{
 
       const result = await db
         .select()
-        .from(pages)
-        .where(and(eq(pages.url, url), eq(pages.userId, c.var.user.id)))
+        .from(notes)
+        .where(and(eq(notes.url, url), eq(notes.userId, c.var.user.id)))
         .get();
 
       if (!result) {
@@ -61,8 +61,9 @@ const page = new Hono<{
       const db = drizzle(c.env.finestdb);
 
       await db
-        .insert(pages)
+        .insert(notes)
         .values({
+          type: "page",
           userId: c.var.user.id,
           title,
           url,
@@ -99,9 +100,9 @@ const page = new Hono<{
       const db = drizzle(c.env.finestdb);
 
       const res = await db
-        .update(pages)
+        .update(notes)
         .set({ title })
-        .where(and(eq(pages.id, id), eq(pages.userId, c.var.user.id)))
+        .where(and(eq(notes.id, id), eq(notes.userId, c.var.user.id)))
         .run();
 
       if (res.changes === 0) {
@@ -143,9 +144,9 @@ const page = new Hono<{
       const db = drizzle(c.env.finestdb);
 
       const res = await db
-        .update(pages)
+        .update(notes)
         .set({ description })
-        .where(and(eq(pages.id, id), eq(pages.userId, c.var.user.id)))
+        .where(and(eq(notes.id, id), eq(notes.userId, c.var.user.id)))
         .run();
 
       if (res.changes === 0) {
@@ -187,9 +188,9 @@ const page = new Hono<{
       const db = drizzle(c.env.finestdb);
 
       const res = await db
-        .update(pages)
+        .update(notes)
         .set({ isPublic })
-        .where(and(eq(pages.id, id), eq(pages.userId, c.var.user.id)))
+        .where(and(eq(notes.id, id), eq(notes.userId, c.var.user.id)))
         .run();
 
       if (res.changes === 0) {
@@ -223,8 +224,8 @@ const page = new Hono<{
       const db = drizzle(c.env.finestdb);
 
       const res = await db
-        .delete(pages)
-        .where(and(eq(pages.id, id), eq(pages.userId, c.var.user.id)))
+        .delete(notes)
+        .where(and(eq(notes.id, id), eq(notes.userId, c.var.user.id)))
         .run();
 
       if (res.changes === 0) {

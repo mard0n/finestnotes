@@ -9,12 +9,6 @@ import {
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
-import { $getRoot, createEditor, type EditorState } from "lexical";
-import { CodeNode, CodeHighlightNode } from "@lexical/code";
-import { HashtagNode } from "@lexical/hashtag";
-import { LinkNode, AutoLinkNode } from "@lexical/link";
-import { ListNode, ListItemNode } from "@lexical/list";
-import { HeadingNode, QuoteNode } from "@lexical/rich-text";
 
 export type Collections = InferResponseType<typeof client.api.collections.$get>;
 
@@ -271,10 +265,10 @@ const NoteItem: React.FC<{
   selectedNoteId: string | null;
   handleNoteSelection: (id: string) => void;
 }> = ({ collection, selectedNoteId, handleNoteSelection }) => {
-  let noteDescription: string | undefined;
+  let noteDescription: string | null = ""
 
   if (collection.type === "note") {
-    noteDescription = collection.content || undefined;
+    noteDescription = collection.content;
   } else if (collection.type === "page") {
     noteDescription = collection.description;
   }

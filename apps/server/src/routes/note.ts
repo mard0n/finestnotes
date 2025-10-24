@@ -42,6 +42,7 @@ const note = new Hono<{
         .insert(notes)
         .values({
           userId: c.var.user.id,
+          type: "note",
           title,
           content,
         })

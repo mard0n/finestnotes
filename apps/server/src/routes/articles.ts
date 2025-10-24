@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
-import { notes, pages } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { notes } from "../db/schema";
+import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { type Bindings } from "../index";
@@ -26,54 +26,26 @@ const articles = new Hono<{ Bindings: Bindings }>()
 
       const db = drizzle(c.env.finestdb, { schema: schema });
 
-      const [noteData, pageData] = await Promise.all([
-        db.query.notes.findMany({
-          with: {
-            user: true,
-          },
-          where: eq(notes.isPublic, true),
-        }),
-        db.query.pages.findMany({
-          with: {
-            user: true,
-          },
-          where: eq(notes.isPublic, true),
-        }),
-      ]);
+      const articles = await db.query.notes.findMany({
+        with: {
+          user: true,
+        },
+        where: eq(notes.isPublic, true),
+      });
 
-      // merge noteData and pageData sort by createdAt
-      const allArticles = [
-        ...pageData.map((page) => ({
-          id: page.id,
-          title: page.title,
-          link: "",
-          description: page.description,
-          createdAt: page.createdAt,
-          user: page.user,
-        })),
-        ...noteData.map((note) => ({
-          id: note.id,
-          title: note.title,
-          link: "",
-          description: note.content ?? "",
-          createdAt: note.createdAt,
-          user: note.user,
-        })),
-      ];
-
-      allArticles.sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
+      const normalizedArticles = normalizeNotes(articles);
 
       // Apply pagination
-      const articles = allArticles.slice(offset, offset + limitNum);
-      const hasMore = offset + limitNum < allArticles.length;
+      const paginatedArticles = normalizedArticles.slice(
+        offset,
+        offset + limitNum
+      );
+      const hasMore = offset + limitNum < normalizedArticles.length;
 
       return c.json({
-        articles,
+        articles: paginatedArticles,
         hasMore,
-        total: allArticles.length,
+        total: normalizedArticles.length,
         page: pageNum,
         limit: limitNum,
       });
@@ -92,45 +64,68 @@ const articles = new Hono<{ Bindings: Bindings }>()
       // Check both notes and pages tables for the id
       const db = drizzle(c.env.finestdb, { schema: schema });
 
-      const noteArticle = await db
-        .select()
-        .from(notes)
-        .where(eq(notes.id, id))
-        .get();
-      if (noteArticle) {
-        return c.json(noteArticle);
-      }
-
-      const pageArticle = await db.query.pages.findFirst({
-        where: eq(pages.id, id),
+      const articles = await db.query.notes.findMany({
         with: {
-          highlights: {
-            orderBy: (highlights, { asc }) => [asc(highlights.createdAt)],
-          },
-          images: {
-            orderBy: (images, { asc }) => [asc(images.createdAt)],
-          },
+          user: true,
+          highlights: true,
+          images: true,
         },
+        where: and(eq(notes.id, id), eq(notes.isPublic, true)),
       });
 
-      if (pageArticle) {
-        // Merge highlights and images into a content array, sorted by createdAt
-        const content = [...pageArticle.highlights, ...pageArticle.images].sort(
-          (a, b) =>
-            new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      if (!articles) {
+        return c.json(
+          {
+            success: false,
+            message: `Note ${id} not found or is not public.`,
+          },
+          404
         );
-
-        return c.json({
-          ...pageArticle,
-          content,
-          // Remove individual arrays if you don't want duplicates
-          highlights: undefined,
-          images: undefined,
-        });
       }
 
-      return c.json(null);
+      return c.json(normalizeNotes(articles));
     }
   );
 
 export default articles;
+
+export function normalizeNotes(
+  notes: (typeof schema.notes.$inferSelect & {
+    user: typeof schema.user.$inferSelect;
+    highlights?: (typeof schema.highlights.$inferSelect)[];
+    images?: (typeof schema.images.$inferSelect)[];
+  })[]
+) {
+  const notesData = notes
+    .filter((article) => article.type === "note")
+    .map(({ highlights, images, description, ...note }) => ({
+      ...note,
+      type: "note" as const,
+    }));
+
+  const pagesData = notes
+    .filter((article) => article.type === "page")
+    .map(({ content, contentLexical, ...page }) => {
+      const annotations = [
+        ...(page.highlights || []),
+        ...(page.images || []),
+      ].sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+      );
+      return {
+        ...page,
+        annotations,
+        type: "page" as const,
+      };
+    })
+    .map(({ highlights, images, ...page }) => ({
+      ...page,
+    }));
+
+  const allArticles = [...notesData, ...pagesData];
+  allArticles.sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+  return allArticles;
+}

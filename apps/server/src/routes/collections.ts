@@ -6,51 +6,26 @@ import { notes } from "../db/schema";
 import { eq } from "drizzle-orm";
 import { protect } from "middlewares/auth.middleware";
 import type { User, Session } from "better-auth";
+import { normalizeNotes } from "./articles";
 
-const collections = new Hono<{ Bindings: Bindings, Variables: { user: User; session: Session } }>()
+const collections = new Hono<{
+  Bindings: Bindings;
+  Variables: { user: User; session: Session };
+}>()
   // Get all collections
   .get("/", protect, async (c) => {
     const db = drizzle(c.env.finestdb, { schema: schema });
 
-    const [noteData, pageData] = await Promise.all([
-      db.query.notes.findMany({
-        where: eq(notes.userId, c.var.user.id),
-        with: {
-          user: true
-        }
-      }),
-      db.query.pages.findMany({
-        where: eq(notes.userId, c.var.user.id),
-        with: {
-          user: true,
-          highlights: true,
-          images: true,
-        }
-      }),
-    ]);
+    const notesData = await db.query.notes.findMany({
+      where: eq(notes.userId, c.var.user.id),
+      with: {
+        user: true,
+      },
+    });
 
-    const collections = [
-      ...pageData.map(page => {
-        const data = {
-          ...page,
-          // remove highlights
-          highlights: undefined,
-          images: undefined,
-          content: [
-            ...page.highlights,
-            ...page.images
-          ].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime())
-        }
-        delete data.highlights;
-        delete data.images;
-        return data;
-      }),
-      ...noteData,
-    ];
-
-    collections.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    const collections = normalizeNotes(notesData);
 
     return c.json(collections);
-  })
+  });
 
 export default collections;
