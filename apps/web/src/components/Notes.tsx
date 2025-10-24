@@ -229,10 +229,32 @@ const SideBar: React.FC<{
       return await parseResponse(res);
     },
     onSuccess: (data, variables) => {
-      console.log('renamed');
+      console.log("renamed");
       queryClient.invalidateQueries({ queryKey: ["projects"], exact: false });
-      queryClient.invalidateQueries({ 
-        queryKey: ["project", variables.projectId] 
+      queryClient.invalidateQueries({
+        queryKey: ["project", variables.projectId],
+      });
+    },
+  });
+
+  const { mutate: changeVisibility } = useMutation({
+    mutationFn: async ({
+      projectId,
+      isPublic,
+    }: {
+      projectId: string;
+      isPublic: boolean;
+    }) => {
+      const res = await client.api.projects[":id"].$put({
+        param: { id: projectId },
+        json: { isPublic },
+      });
+      return await parseResponse(res);
+    },
+    onSuccess: (data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ["projects"], exact: false });
+      queryClient.invalidateQueries({
+        queryKey: ["project", variables.projectId],
       });
     },
   });
@@ -245,13 +267,15 @@ const SideBar: React.FC<{
       return await parseResponse(res);
     },
     onSuccess: (data, projectId) => {
-      // If the deleted project was selected, reset the selection
       if (selectedProjectId === projectId) {
         setSelectedProjectId(null);
         setFilterCategory("all");
       }
       queryClient.invalidateQueries({ queryKey: ["projects"], exact: false });
-      queryClient.invalidateQueries({ queryKey: ["collections"], exact: false });
+      queryClient.invalidateQueries({
+        queryKey: ["collections"],
+        exact: false,
+      });
     },
   });
 
@@ -262,9 +286,23 @@ const SideBar: React.FC<{
   );
 
   const handleDeleteProject = (projectId: string, projectName: string) => {
-    if (window.confirm(`Are you sure you want to delete "${projectName}"? This action cannot be undone.`)) {
+    if (
+      window.confirm(
+        `Are you sure you want to delete "${projectName}"? This action cannot be undone.`
+      )
+    ) {
       deleteProject(projectId);
     }
+  };
+
+  const handleChangeVisibility = (
+    projectId: string,
+    currentIsPublic: boolean
+  ) => {
+    changeVisibility({
+      projectId,
+      isPublic: !currentIsPublic,
+    });
   };
 
   return (
@@ -376,7 +414,10 @@ const SideBar: React.FC<{
                           : "font-normal"
                       }`}
                     >
-                      {project.name}
+                      <span className="text-lg">{project.isPublic ? "🌐 " : "🔒 "}</span>{' '}
+                      <span className="align-text-bottom">
+                        {project.name}
+                      </span>
                     </button>
                   )}
                   <div className="dropdown dropdown-end">
@@ -405,10 +446,22 @@ const SideBar: React.FC<{
                         <li onClick={() => setIsProjectRenaming(project.id)}>
                           <a>Rename</a>
                         </li>
-                        <li onClick={() => {}}>
-                          <a>Change Visibility</a>
+                        <li
+                          onClick={() =>
+                            handleChangeVisibility(project.id, project.isPublic)
+                          }
+                        >
+                          <a>
+                            Make it{" "}
+                            {project.isPublic ? "Private 🔒" : "Public 🌐"}
+                          </a>
                         </li>
-                        <li className="text-red-400" onClick={() => handleDeleteProject(project.id, project.name)}>
+                        <li
+                          className="text-red-400"
+                          onClick={() =>
+                            handleDeleteProject(project.id, project.name)
+                          }
+                        >
                           <a>Delete</a>
                         </li>
                       </ul>
