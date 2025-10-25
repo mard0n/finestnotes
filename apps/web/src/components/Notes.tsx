@@ -10,6 +10,7 @@ import {
   QueryClient,
   QueryClientProvider,
   useMutation,
+  useQueryClient,
 } from "@tanstack/react-query";
 
 export type Collections = InferResponseType<typeof client.api.collections.$get>;
@@ -90,17 +91,7 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
           />
         </div>
         <div className="grow overflow-y-scroll px-8 py-6">
-          {selectedNote ? (
-            <>
-              {selectedNote.type === "page" ? (
-                <AnnotationEditor annotation={selectedNote} />
-              ) : (
-                <NoteEditor note={selectedNote} />
-              )}
-            </>
-          ) : (
-            <></>
-          )}
+          <SelectedNoteEditor selectedNote={selectedNote} />
         </div>
       </main>
     </>
@@ -414,10 +405,10 @@ const SideBar: React.FC<{
                           : "font-normal"
                       }`}
                     >
-                      <span className="text-lg">{project.isPublic ? "🌐 " : "🔒 "}</span>{' '}
-                      <span className="align-text-bottom">
-                        {project.name}
-                      </span>
+                      <span className="text-lg">
+                        {project.isPublic ? "🌐 " : "🔒 "}
+                      </span>{" "}
+                      <span className="align-text-bottom">{project.name}</span>
                     </button>
                   )}
                   <div className="dropdown dropdown-end">
@@ -643,7 +634,7 @@ const NoteListItem: React.FC<{
       <div className="block w-full" onClick={() => handleNoteSelection(id)}>
         <div className="flex items-center gap-2">
           <h2 className="font-medium text-black line-clamp-1 grow">
-            {title || "Untitled"}
+            {title || <>&nbsp;</>}
           </h2>
           <div className="flex items-center gap-1">
             {isPublic ? (
@@ -654,13 +645,147 @@ const NoteListItem: React.FC<{
           </div>
         </div>
         <p className="text-sm text-gray-content mt-1 line-clamp-1">
-          {description || "No description available."}
+          {description || <>&nbsp;</>}
         </p>
         <p className="text-xs text-gray-content mt-1.5">
           <span>{createdAt}</span> · <span>{authorName}</span>{" "}
         </p>
       </div>
     </li>
+  );
+};
+
+const SelectedNoteEditor: React.FC<{
+  selectedNote: Collections[number] | undefined;
+}> = ({ selectedNote }) => {
+  const queryClient = useQueryClient();
+
+  const updateNoteTitle = useMutation({
+    mutationFn: async ({ id, title }: { id: string; title: string }) => {
+      const res = await client.api.note[":id"].title.$put({
+        param: { id: id.toString() },
+        json: { title },
+      });
+      return await parseResponse(res);
+    },
+    onSuccess: () => {
+      console.log('invalidate collections');
+      queryClient.invalidateQueries({ queryKey: ["collections"] });
+    },
+  });
+
+  const updateNoteVisibility = useMutation({
+    mutationFn: async ({ id, isPublic }: { id: string; isPublic: boolean }) => {
+      const res = await client.api.note[":id"].visibility.$put({
+        param: { id: id.toString() },
+        json: { isPublic },
+      });
+      return await parseResponse(res);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["collections"] });
+    },
+  });
+
+  console.log("selectedNote", selectedNote);
+
+  return selectedNote ? (
+    <>
+      <div className="flex">
+        <input
+          key={selectedNote.id} 
+          type="text"
+          name="title"
+          id="title"
+          className="text-2xl font-serif outline-none text-black mb-2 grow"
+          onPaste={(e) => {
+            e.preventDefault();
+            const text = e.clipboardData.getData("text/plain");
+            e.currentTarget.value = text;
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              (e.target as HTMLElement).blur();
+            }
+          }}
+          onBlur={(e) => {
+            updateNoteTitle.mutate({
+              id: selectedNote.id,
+              title: e.target.value,
+            });
+          }}
+          defaultValue={selectedNote.title}
+          placeholder="Untitled note"
+        />
+        <div className="dropdown dropdown-end mr-3">
+          <button
+            tabIndex={0}
+            className="btn btn-ghost btn-sm rounded-full bg-white font-normal "
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="size-6"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M12 10.5v6m3-3H9m4.06-7.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"
+              />
+            </svg>{" "}
+            Add to project
+          </button>
+          <div className="dropdown-content menu  z-1 w-52 p-2">
+            <ul className="bg-base-100 p-2 shadow-sm" tabIndex={-1}>
+              <li>
+                <a href="/notes">My notes</a>
+              </li>
+              <li>
+                <a href="https://chromewebstore.google.com/">
+                  Browser Extension
+                </a>
+              </li>
+              <li>
+                <a href="/settings">Settings</a>
+              </li>
+              <li>
+                <a id="signout">Sign out</a>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <select
+          name="visibility"
+          className="select select-ghost bg-white select-sm w-24 rounded-full cursor-pointer transition hover:border-gray-light/50"
+          defaultValue={selectedNote.isPublic ? "public" : "private"}
+          onChange={(e) => {
+            const isPublic = e.target.value === "public";
+
+            updateNoteVisibility.mutate({
+              id: selectedNote.id,
+              isPublic,
+            });
+          }}
+        >
+          <option disabled={true}>Visibility</option>
+          <option value="private">🔒 Private</option>
+          <option value="public">🌐 Public</option>
+        </select>
+      </div>
+      {selectedNote.type === "page" ? (
+        <AnnotationEditor annotation={selectedNote} />
+      ) : (
+        <NoteEditor note={selectedNote} />
+      )}
+    </>
+  ) : (
+    <div className="flex justify-center items-center h-full">
+      <span className="text-gray-light select-none">No note selected</span>
+    </div>
   );
 };
 

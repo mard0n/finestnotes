@@ -105,7 +105,7 @@ const projectRoutes = new Hono<{
     zValidator(
       "json",
       z.object({
-        name: z.string().min(1),
+        name: z.string(),
         description: z.string().optional(),
         isPublic: z.boolean().optional().default(false),
       })
@@ -140,13 +140,13 @@ const projectRoutes = new Hono<{
     zValidator(
       "param",
       z.object({
-        id: z.string().min(1),
+        id: z.string(),
       })
     ),
     zValidator(
       "json",
       z.object({
-        name: z.string().min(1).optional(),
+        name: z.string().optional(),
         description: z.string().optional(),
         isPublic: z.boolean().optional(),
       })
@@ -187,7 +187,7 @@ const projectRoutes = new Hono<{
     zValidator(
       "param",
       z.object({
-        id: z.string().min(1),
+        id: z.string(),
       })
     ),
     async (c) => {
@@ -224,13 +224,13 @@ const projectRoutes = new Hono<{
     zValidator(
       "param",
       z.object({
-        id: z.string().min(1),
+        id: z.string(),
       })
     ),
     zValidator(
       "json",
       z.object({
-        noteId: z.string().min(1),
+        noteId: z.string(),
       })
     ),
     async (c) => {
@@ -297,8 +297,8 @@ const projectRoutes = new Hono<{
     zValidator(
       "param",
       z.object({
-        id: z.string().min(1),
-        itemId: z.string().min(1),
+        id: z.string(),
+        itemId: z.string(),
       })
     ),
     async (c) => {
@@ -354,13 +354,13 @@ const projectRoutes = new Hono<{
     zValidator(
       "param",
       z.object({
-        id: z.string().min(1),
+        id: z.string(),
       })
     ),
     zValidator(
       "json",
       z.object({
-        userId: z.string().min(1),
+        userId: z.string(),
       })
     ),
     async (c) => {
@@ -421,8 +421,8 @@ const projectRoutes = new Hono<{
     zValidator(
       "param",
       z.object({
-        id: z.string().min(1),
-        userId: z.string().min(1),
+        id: z.string(),
+        userId: z.string(),
       })
     ),
     async (c) => {

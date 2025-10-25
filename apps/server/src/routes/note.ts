@@ -30,8 +30,8 @@ const note = new Hono<{
     zValidator(
       "json",
       z.object({
-        title: z.string().min(1),
-        content: z.string().min(1),
+        title: z.string(),
+        content: z.string(),
       })
     ),
     async (c) => {
@@ -62,13 +62,13 @@ const note = new Hono<{
     zValidator(
       "param",
       z.object({
-        id: z.string().min(1),
+        id: z.string(),
       })
     ),
     zValidator(
       "json",
       z.object({
-        title: z.string().min(1),
+        title: z.string(),
       })
     ),
     async (c) => {
@@ -106,14 +106,14 @@ const note = new Hono<{
     zValidator(
       "param",
       z.object({
-        id: z.string().min(1),
+        id: z.string(),
       })
     ),
     zValidator(
       "json",
       z.object({
         content: z.string(),
-        contentLexical: z.string().min(1),
+        contentLexical: z.string(),
       })
     ),
     async (c) => {
@@ -151,7 +151,7 @@ const note = new Hono<{
     zValidator(
       "param",
       z.object({
-        id: z.string().min(1),
+        id: z.string(),
       })
     ),
     zValidator(
@@ -195,7 +195,7 @@ const note = new Hono<{
     zValidator(
       "param",
       z.object({
-        id: z.string().min(1),
+        id: z.string(),
       })
     ),
     async (c) => {

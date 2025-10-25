@@ -2,7 +2,7 @@ import { defineExtensionMessaging } from '@webext-core/messaging';
 import { client } from "../api/config";
 import type { InferRequestType, InferResponseType } from 'hono';
 
-const $page_delete = client.api.page[':id'].$delete
+const $page_delete = client.api.note[':id'].$delete
 const $highlight_delete = client.api.highlight[':id'].$delete
 
 interface ProtocolMap {
@@ -15,15 +15,15 @@ interface ProtocolMap {
   };
   getTabInfo(): { title: string; url: string; description: string };
 
-  highlightText(params: { highlightId: number, annotationXPathLink: string }): void;
+  highlightText(params: { highlightId: string, annotationXPathLink: string }): void;
   showSnackbar(params: { message: string; duration?: number; type?: 'error' | 'success' }): void;
 
   fetchHighlights(params: { url: string }): void | InferResponseType<typeof client.api.highlight.$get>;
-  deleteHighlight(params: { highlightId: number }): void | InferResponseType<typeof $highlight_delete>;
+  deleteHighlight(params: { highlightId: string }): void | InferResponseType<typeof $highlight_delete>;
 
   savePage(params: InferRequestType<typeof client.api.page.$post>['json']): void | InferResponseType<typeof client.api.page.$post>;
   getPage(params: { url: string }): void | InferResponseType<typeof client.api.page.$get>;
-  deletePage(params: { pageId: number }): void | InferResponseType<typeof $page_delete>;
+  deletePage(params: { pageId: string }): void | InferResponseType<typeof $page_delete>;
 }
 
 export const { sendMessage, onMessage } = defineExtensionMessaging<ProtocolMap>();

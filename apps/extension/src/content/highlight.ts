@@ -66,7 +66,7 @@ function getTextNodesInBetween({
   return nodes;
 }
 
-export function highlight(selection: SelectionRange, highlightId: number) {
+export function highlight(selection: SelectionRange, highlightId: string) {
   const { node: startNode, offset: startOffset } =
     getPointFromStablePointContainer({
       node: selection.startNode,
@@ -135,7 +135,7 @@ export function highlight(selection: SelectionRange, highlightId: number) {
   });
 }
 
-function createHighlightSpan(highlightId: number, range: Range) {
+function createHighlightSpan(highlightId: string, range: Range) {
   const highlightSpan = document.createElement("mark");
   highlightSpan.style.backgroundColor = "yellow";
 
@@ -354,7 +354,7 @@ export function setupHighlightEventListeners() {
     // TODO: Send message to background to delete annotation
     console.log(`Deleted highlight ${highlightIdToDelete}`);
 
-    await sendMessage("deleteHighlight", { highlightId: parseInt(highlightIdToDelete) });
+    await sendMessage("deleteHighlight", { highlightId: highlightIdToDelete });
 
 
     clearHoverState();

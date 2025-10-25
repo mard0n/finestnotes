@@ -13,19 +13,6 @@ interface AnnotationEditorProps {
 const AnnotationEditor: React.FC<AnnotationEditorProps> = ({ annotation }) => {
   const queryClient = useQueryClient();
 
-  const updateAnnotationTitle = useMutation({
-    mutationFn: async ({ id, title }: { id: string; title: string }) => {
-      const res = await client.api.page[":id"].title.$put({
-        param: { id: id.toString() },
-        json: { title },
-      });
-      return await parseResponse(res);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["collections"] });
-    },
-  });
-
   const updateAnnotationDescription = useMutation({
     mutationFn: async ({
       id,
@@ -35,21 +22,8 @@ const AnnotationEditor: React.FC<AnnotationEditorProps> = ({ annotation }) => {
       description: string;
     }) => {
       const res = await client.api.page[":id"].description.$put({
-        param: { id: id.toString() },
+        param: { id },
         json: { description },
-      });
-      return await parseResponse(res);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["collections"] });
-    },
-  });
-
-  const updateAnnotationVisibility = useMutation({
-    mutationFn: async ({ id, isPublic }: { id: string; isPublic: boolean }) => {
-      const res = await client.api.page[":id"].visibility.$put({
-        param: { id: id.toString() },
-        json: { isPublic },
       });
       return await parseResponse(res);
     },
@@ -63,76 +37,32 @@ const AnnotationEditor: React.FC<AnnotationEditorProps> = ({ annotation }) => {
 
   return (
     <div className="flex flex-col">
-      <div className="flex">
-        <h1
-          contentEditable
-          className="text-2xl font-serif outline-none text-black mb-2 grow"
-          onPaste={(e) => {
-            e.preventDefault();
-            const text = e.clipboardData.getData("text/plain");
-            document.execCommand("insertText", false, text);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              // blur the element to prevent new lines
-              (e.target as HTMLElement).blur();
-            }
-          }}
-          onBlur={(e) => {
-            updateAnnotationTitle.mutate({
-              id: annotation.id,
-              title: e.target.textContent || "Untitled",
-            });
-          }}
-          suppressContentEditableWarning
-        >
-          {annotation.title}
-        </h1>
-        <select
-          name="visibility"
-          className="select select-ghost select-sm bg-white w-24 rounded-full"
-          defaultValue={annotation.isPublic ? "public" : "private"}
-          onChange={(e) => {
-            const isPublic = e.target.value === "public";
-
-            updateAnnotationVisibility.mutate({
-              id: annotation.id,
-              isPublic,
-            });
-          }}
-        >
-          <option disabled={true}>Visibility</option>
-          <option value="private">🔒 Private</option>
-          <option value="public">🌐 Public</option>
-        </select>
-      </div>
-      <p
-        contentEditable
+      <input
+        key={annotation.id}
+        type="text"
+        name="title"
+        id="title"
         className="mb-4 text-sm outline-none"
         onPaste={(e) => {
           e.preventDefault();
           const text = e.clipboardData.getData("text/plain");
-          document.execCommand("insertText", false, text);
+          e.currentTarget.value = text;
         }}
         onKeyDown={(e) => {
           if (e.key === "Enter") {
             e.preventDefault();
-            // blur the element to prevent new lines
             (e.target as HTMLElement).blur();
           }
         }}
         onBlur={(e) => {
-          updateAnnotationDescription.mutate({
+           updateAnnotationDescription.mutate({
             id: annotation.id,
-            description: e.target.textContent || "No description",
+            description: e.target.value,
           });
         }}
-        suppressContentEditableWarning
-      >
-        {annotation.description}
-      </p>
-
+        defaultValue={annotation.description || ""}
+        placeholder="No description"
+      />
       {annotation.annotations ? (
         <div className="flex text-sm flex-col gap-4 overflow-y-auto">
           {annotation.annotations.map((content) => {
@@ -228,8 +158,9 @@ const CommentComponent: React.FC<{
         placeholder="Add your comment..."
         className="textarea textarea-neutral w-full"
         value={newComment}
+        autoFocus
         onKeyDown={(e) => {
-          if (e.key === "Enter" && e.shiftKey) {
+          if (e.key === "Enter" && e.metaKey) {
             e.preventDefault();
             onCommentChange(newComment);
             setIsCommenting(false);

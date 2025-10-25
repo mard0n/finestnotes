@@ -50,7 +50,7 @@ browser.commands.onCommand.addListener(async (command, tab) => {
     const isPageSaved = pageData?.success
 
     if (isPageSaved) {
-      const deleteRes = await client.api.page[":id"].$delete({ param: { id: pageData.data.id.toString() } });
+      const deleteRes = await client.api.note[":id"].$delete({ param: { id: pageData.data.id.toString() } });
       const deleteData = await parseResponse(deleteRes).catch(
         (e: DetailedError) => {
           console.error("DetailedError", e)
@@ -64,8 +64,7 @@ browser.commands.onCommand.addListener(async (command, tab) => {
         json: {
           title: tabInfo.title,
           url: tabInfo.url,
-          description: tabInfo.description,
-          comment: ""
+          description: tabInfo.description
         }
       });
       const saveData = await parseResponse(saveRes).catch(
@@ -112,7 +111,7 @@ onMessage("savePage", async (request) => {
 })
 
 onMessage("deletePage", async (request) => {
-  const res = await client.api.page[":id"].$delete({ param: { id: request.data.pageId.toString() } })
+  const res = await client.api.note[":id"].$delete({ param: { id: request.data.pageId.toString() } })
   return await parseResponse(res).catch((e: DetailedError) => { console.error("DetailedError calling deletePage", e) })
 })
 

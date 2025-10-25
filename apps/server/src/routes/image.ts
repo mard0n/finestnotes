@@ -55,9 +55,9 @@ const image = new Hono<{
     zValidator(
       "json",
       z.object({
-        pageURL: z.string().min(1),
-        pageTitle: z.string().min(1),
-        pageDescription: z.string().min(1),
+        pageURL: z.string(),
+        pageTitle: z.string(),
+        pageDescription: z.string(),
         imageUrl: z.url(),
         caption: z.string().optional(),
       })
@@ -111,13 +111,13 @@ const image = new Hono<{
     zValidator(
       "param",
       z.object({
-        id: z.string().min(1),
+        id: z.string(),
       })
     ),
     zValidator(
       "json",
       z.object({
-        comment: z.string().min(1),
+        comment: z.string(),
       })
     ),
     async (c) => {
@@ -155,7 +155,7 @@ const image = new Hono<{
     zValidator(
       "param",
       z.object({
-        id: z.string().min(1),
+        id: z.string(),
       })
     ),
     async (c) => {

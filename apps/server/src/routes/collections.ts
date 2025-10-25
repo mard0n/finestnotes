@@ -20,8 +20,13 @@ const collections = new Hono<{
       where: eq(notes.userId, c.var.user.id),
       with: {
         user: true,
+        highlights: true,
+        images: true,
       },
     });
+
+    console.log('notesData', notesData);
+    
 
     const collections = normalizeNotes(notesData);
 

@@ -52,10 +52,10 @@ const highlight = new Hono<{
     zValidator(
       "json",
       z.object({
-        pageURL: z.string().min(1),
-        pageTitle: z.string().min(1),
-        pageDescription: z.string().min(1),
-        text: z.string().min(1),
+        pageURL: z.string(),
+        pageTitle: z.string(),
+        pageDescription: z.string().optional(),
+        text: z.string(),
         position: z.string(),
       })
     ),
@@ -105,7 +105,7 @@ const highlight = new Hono<{
     zValidator(
       "param",
       z.object({
-        id: z.string().min(1),
+        id: z.string(),
       })
     ),
     zValidator(
@@ -149,7 +149,7 @@ const highlight = new Hono<{
     zValidator(
       "param",
       z.object({
-        id: z.string().min(1),
+        id: z.string(),
       })
     ),
     async (c) => {

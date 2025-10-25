@@ -34,19 +34,6 @@ function onError(error: Error, editor: LexicalEditor) {
 const NoteEditor: React.FC<NoteEditorProps> = ({ note }) => {
   const queryClient = useQueryClient();
 
-  const updateNoteTitle = useMutation({
-    mutationFn: async ({ id, title }: { id: string; title: string }) => {
-      const res = await client.api.note[":id"].title.$put({
-        param: { id: id.toString() },
-        json: { title },
-      });
-      return await parseResponse(res);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["collections"] });
-    },
-  });
-
   const updateNoteContent = useMutation({
     mutationFn: async ({
       id,
@@ -58,21 +45,8 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note }) => {
       contentLexical: string;
     }) => {
       const res = await client.api.note[":id"].content.$put({
-        param: { id: id.toString() },
+        param: { id },
         json: { content, contentLexical },
-      });
-      return await parseResponse(res);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["collections"] });
-    },
-  });
-
-  const updateNoteVisibility = useMutation({
-    mutationFn: async ({ id, isPublic }: { id: string; isPublic: boolean }) => {
-      const res = await client.api.note[":id"].visibility.$put({
-        param: { id: id.toString() },
-        json: { isPublic },
       });
       return await parseResponse(res);
     },
@@ -119,88 +93,43 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note }) => {
   };
 
   return (
-    <div className="flex flex-col">
-      <div className="flex">
-        <h1
-          contentEditable
-          className="text-2xl font-serif outline-none text-black mb-2 grow"
-          onPaste={(e) => {
-            e.preventDefault();
-            const text = e.clipboardData.getData("text/plain");
-            document.execCommand("insertText", false, text);
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              contentEditableRef.current?.focus();
-            }
-          }}
-          onBlur={(e) => {
-            updateNoteTitle.mutate({
-              id: note.id,
-              title: e.target.textContent || "Untitled",
-            });
-          }}
-          suppressContentEditableWarning
-        >
-          {note.title}
-        </h1>
-        <select
-          name="visibility"
-          className="select select-ghost select-sm bg-white w-24 rounded-full"
-          defaultValue={note.isPublic ? "public" : "private"}
-          onChange={(e) => {
-            const isPublic = e.target.value === "public";
-
-            updateNoteVisibility.mutate({
-              id: note.id,
-              isPublic,
-            });
-          }}
-        >
-          <option disabled={true}>Visibility</option>
-          <option value="private">🔒 Private</option>
-          <option value="public">🌐 Public</option>
-        </select>
-      </div>
-      <LexicalComposer initialConfig={initialConfig}>
-        <div className="relative grow">
-          <RichTextPlugin
-            contentEditable={
-              <ContentEditable
-                className="h-full outline-none text-sm"
-                ref={contentEditableRef}
-                aria-placeholder={"What's on your mind?"}
-                placeholder={
-                  <div className="absolute left-0 top-0 pointer-events-none text-gray-content">
-                    Take a note...
-                  </div>
-                }
-              />
-            }
-            ErrorBoundary={LexicalErrorBoundary}
-          />
-        </div>
-        <HistoryPlugin />
-        <OnChangePlugin
-          onChange={(editorState) => {
-            const editorStateJSON = editorState.toJSON();
-            editorState.read(() => {
-              // You can read the editor state here if needed
-              const root = $getRoot();
-
-              updateNoteContent.mutate({
-                id: note.id,
-                content: root.getTextContent(),
-                contentLexical: JSON.stringify(editorStateJSON),
-              });
-            });
-          }}
+    <LexicalComposer initialConfig={initialConfig}>
+      <div className="relative grow">
+        <RichTextPlugin
+          contentEditable={
+            <ContentEditable
+              className="h-full outline-none text-sm"
+              ref={contentEditableRef}
+              aria-placeholder={"What's on your mind?"}
+              placeholder={
+                <div className="absolute left-0 top-0 pointer-events-none text-gray-content">
+                  Take a note...
+                </div>
+              }
+            />
+          }
+          ErrorBoundary={LexicalErrorBoundary}
         />
-        <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
-        {/* <TreeViewPlugin /> */}
-      </LexicalComposer>
-    </div>
+      </div>
+      <HistoryPlugin />
+      <OnChangePlugin
+        onChange={(editorState) => {
+          const editorStateJSON = editorState.toJSON();
+          editorState.read(() => {
+            // You can read the editor state here if needed
+            const root = $getRoot();
+
+            updateNoteContent.mutate({
+              id: note.id,
+              content: root.getTextContent(),
+              contentLexical: JSON.stringify(editorStateJSON),
+            });
+          });
+        }}
+      />
+      <MarkdownShortcutPlugin transformers={TRANSFORMERS} />
+      {/* <TreeViewPlugin /> */}
+    </LexicalComposer>
   );
 };
 

@@ -56,7 +56,7 @@ const articles = new Hono<{ Bindings: Bindings }>()
     zValidator(
       "param",
       z.object({
-        id: z.string().min(1),
+        id: z.string(),
       })
     ),
     async (c) => {
