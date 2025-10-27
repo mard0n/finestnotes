@@ -20,10 +20,9 @@ if (!project) {
   throw new Error("Project not found");
 }
 
-
-const isSubscribed = Astro.locals.user?.id && project.subscribers?.some(
-  (sub: any) => sub.id === Astro.locals.user!.id
-);
+const isSubscribed =
+  Astro.locals.user?.id &&
+  project.subscribers?.some((sub: any) => sub.id === Astro.locals.user!.id);
 ---
 
 <Layout>
@@ -42,17 +41,28 @@ const isSubscribed = Astro.locals.user?.id && project.subscribers?.some(
           }
         </div>
       </div>
-      <button
-        id="subscribe-btn"
-        class:list={[
-          "btn btn-sm",
-          isSubscribed ? "btn-outline" : "btn-primary"
-        ]}
-        data-project-id={id}
-        data-is-subscribed={isSubscribed}
-      >
-        {isSubscribed ? "Unsubscribe" : "Subscribe"}
-      </button>
+      {
+        project.ownerId === Astro.locals.user?.id ? (
+          <a
+            href={`/notes?projectId=${id}`}
+            class="btn btn-sm btn-soft mr-2"
+          >
+            Edit Project
+          </a>
+        ) : (
+          <button
+            id="subscribe-btn"
+            class:list={[
+              "btn btn-sm",
+              isSubscribed ? "btn-outline" : "btn-primary",
+            ]}
+            data-project-id={id}
+            data-is-subscribed={isSubscribed}
+          >
+            {isSubscribed ? "Unsubscribe" : "Subscribe"}
+          </button>
+        )
+      }
     </div>
     <ul class="flex flex-col list rounded-box">
       {
@@ -71,44 +81,50 @@ const isSubscribed = Astro.locals.user?.id && project.subscribers?.some(
 </Layout>
 
 <script>
-import { client } from "@utils/api";
-import { parseResponse } from "hono/client";
+  import { client } from "@utils/api";
+  import { parseResponse } from "hono/client";
 
-  const subscribeBtn = document.getElementById('subscribe-btn') as HTMLButtonElement;
-  let isSubscribed = subscribeBtn?.dataset.isSubscribed === 'true';
-  
-  subscribeBtn?.addEventListener('click', async () => {
+  const subscribeBtn = document.getElementById(
+    "subscribe-btn"
+  ) as HTMLButtonElement;
+  let isSubscribed = subscribeBtn?.dataset.isSubscribed === "true";
+
+  subscribeBtn?.addEventListener("click", async () => {
     const projectId = subscribeBtn.dataset.projectId!;
-    
+
     try {
       if (isSubscribed) {
-        const res = await client.api.projects[":id"].subscribers.$delete({ param: { id: projectId } });
+        const res = await client.api.projects[":id"].subscribers.$delete({
+          param: { id: projectId },
+        });
         const data = await parseResponse(res);
 
         if (!data.success) {
-          throw new Error(data.message || 'Unsubscribe failed');
+          throw new Error(data.message || "Unsubscribe failed");
         }
-        
-        subscribeBtn.textContent = 'Subscribe';
-        subscribeBtn.classList.remove('btn-outline');
-        subscribeBtn.classList.add('btn-primary');
+
+        subscribeBtn.textContent = "Subscribe";
+        subscribeBtn.classList.remove("btn-outline");
+        subscribeBtn.classList.add("btn-primary");
         isSubscribed = false;
       } else {
-        const res = await client.api.projects[":id"].subscribers.$post({ param: { id: projectId } });
+        const res = await client.api.projects[":id"].subscribers.$post({
+          param: { id: projectId },
+        });
         const data = await parseResponse(res);
 
         if (!data.success) {
-          throw new Error(data.message || 'Subscribe failed');
+          throw new Error(data.message || "Subscribe failed");
         }
-        
-        subscribeBtn.textContent = 'Unsubscribe';
-        subscribeBtn.classList.remove('btn-primary');
-        subscribeBtn.classList.add('btn-outline');
+
+        subscribeBtn.textContent = "Unsubscribe";
+        subscribeBtn.classList.remove("btn-primary");
+        subscribeBtn.classList.add("btn-outline");
         isSubscribed = true;
       }
     } catch (error) {
-      console.error('Failed to toggle subscription:', error);
-      alert('Failed to update subscription. Please try again.');
+      console.error("Failed to toggle subscription:", error);
+      alert("Failed to update subscription. Please try again.");
     }
   });
 </script>

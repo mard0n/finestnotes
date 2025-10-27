@@ -57,18 +57,43 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
   );
 
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const [isInitialized, setIsInitialized] = useState(false);
+  
   const selectedNote =
     selectedNoteId !== null
       ? collections?.find((c) => c.id === selectedNoteId)
       : undefined;
 
+  // Auto-select note or project from URL parameters
   useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const noteId = urlParams.get('noteId');
+    const projectId = urlParams.get('projectId');
+
+    if (noteId) {
+      setSelectedNoteId(noteId);
+      // Clear URL parameters after reading
+      window.history.replaceState({}, '', '/notes');
+    } else if (projectId) {
+      setFilterCategory('project');
+      setSelectedProjectId(projectId);
+      // Clear URL parameters after reading
+      window.history.replaceState({}, '', '/notes');
+    }
+    
+    setIsInitialized(true);
+  }, []);
+
+  useEffect(() => {
+    // Only clear selections after initialization and when filter category changes
+    if (!isInitialized) return;
+    
     if (filterCategory !== "project") {
       setSelectedProjectId(null);
     }
 
     setSelectedNoteId(null);
-  }, [filterCategory]);
+  }, [filterCategory, isInitialized]);
 
   console.log("selectedNote", selectedNote);
 
