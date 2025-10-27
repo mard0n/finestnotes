@@ -302,6 +302,22 @@ const SideBar: React.FC<{
     },
   });
 
+  const { mutate: unsubscribe } = useMutation({
+    mutationFn: async (projectId: string) => {
+      const res = await client.api.projects[":id"].subscribers.$delete({
+        param: { id: projectId },
+      });
+      return await parseResponse(res);
+    },
+    onSuccess: (data, projectId) => {
+      if (selectedProjectId === projectId) {
+        setSelectedProjectId(null);
+        setFilterCategory("all");
+      }
+      queryClient.invalidateQueries({ queryKey: ["projects"], exact: false });
+    },
+  });
+
   const [isCreateProjectModalOpen, setIsCreateProjectModalOpen] =
     useState(false);
   const [isProjectRenaming, setIsProjectRenaming] = useState<string | false>(
@@ -475,29 +491,40 @@ const SideBar: React.FC<{
                       </svg>
                     </button>
                     <div className="menu dropdown-content z-1 w-52 p-2">
-                      <ul className="bg-base-100 p-2 shadow-sm" tabIndex={-1}>
-                        <li onClick={() => setIsProjectRenaming(project.id)}>
-                          <a>Rename</a>
-                        </li>
-                        <li
-                          onClick={() =>
-                            handleChangeVisibility(project.id, project.isPublic)
-                          }
-                        >
-                          <a>
-                            Make it{" "}
-                            {project.isPublic ? "Private 🔒" : "Public 🌐"}
-                          </a>
-                        </li>
-                        <li
-                          className="text-red-400"
-                          onClick={() =>
-                            handleDeleteProject(project.id, project.name)
-                          }
-                        >
-                          <a>Delete</a>
-                        </li>
-                      </ul>
+                      {project.ownerId !== user.id ? (
+                        <ul className="bg-base-100 p-2 shadow-sm" tabIndex={-1}>
+                          <li onClick={() => unsubscribe(project.id)}>
+                            <a>Unsubscribe</a>
+                          </li>
+                        </ul>
+                      ) : (
+                        <ul className="bg-base-100 p-2 shadow-sm" tabIndex={-1}>
+                          <li onClick={() => setIsProjectRenaming(project.id)}>
+                            <a>Rename</a>
+                          </li>
+                          <li
+                            onClick={() =>
+                              handleChangeVisibility(
+                                project.id,
+                                project.isPublic
+                              )
+                            }
+                          >
+                            <a>
+                              Make it{" "}
+                              {project.isPublic ? "Private 🔒" : "Public 🌐"}
+                            </a>
+                          </li>
+                          <li
+                            className="text-red-400"
+                            onClick={() =>
+                              handleDeleteProject(project.id, project.name)
+                            }
+                          >
+                            <a>Delete</a>
+                          </li>
+                        </ul>
+                      )}
                     </div>
                   </div>
                 </li>
@@ -551,7 +578,6 @@ const NoteList: React.FC<{
     setSelectedNoteId(noteId);
   };
 
-  
   if (filterCategory !== "project") {
     const filteredCollections = collections?.filter((collection) => {
       if (filterCategory === "all") return true;

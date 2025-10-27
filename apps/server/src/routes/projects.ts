@@ -25,7 +25,7 @@ const projectRoutes = new Hono<{
       },
     });
 
-    // Get subscribed projects (excluding owned projects)
+    // Get subscribed projects (excluding owned projects, only public)
     const subscribedProjects = await db.query.projectSubscribers
       .findMany({
         where: eq(projectSubscribers.userId, c.var.user.id),
@@ -38,7 +38,10 @@ const projectRoutes = new Hono<{
         },
       })
       .then((subs) =>
-        subs.filter((sub) => sub.project.ownerId !== c.var.user.id)
+        subs.filter(
+          (sub) =>
+            sub.project.ownerId !== c.var.user.id && sub.project.isPublic
+        )
       );
 
     const allProjects = [
