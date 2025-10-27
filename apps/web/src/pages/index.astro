@@ -1,8 +1,8 @@
 ---
 import Layout from "@layouts/Layout.astro";
-import FinestSymbol from "@assets/finest-symbol.svg";
 import { createServerClient } from "@utils/api";
 import { parseResponse } from "hono/client";
+import Article from "@components/Article";
 
 const client = createServerClient(Astro.request.headers);
 const page = Astro.url.searchParams.get('page') || '1'
@@ -15,7 +15,7 @@ const hasMore = data.hasMore;
 ---
 
 <Layout>
-	<div class="ml-24 mt-16 max-w-3xl">
+	<main class="ml-24 mt-16 max-w-3xl">
 		<ul class="list rounded-box">
 			<div role="tablist" class="tabs tabs-border gap-4">
 				<a href="/" role="tab" class="tab tab-active font-bold before:border-base-300 before:w-full before:left-0 before:bg-base-300 p-0">Newest</a>
@@ -23,36 +23,17 @@ const hasMore = data.hasMore;
 			</div>
 			{
 				articles.map((article) => (
-					<li class="list-row px-0 py-7 after:inset-x-[0px]">
-						<div>
-							<FinestSymbol class="absolute left-0 -ml-8 mt-1"/>
-							<a href={`/article/${article.id}`}>
-								<div class="mb-1 text-lg font-serif text-black">{article.title}</div>
-							</a>
-							{article.type === 'note' ? 
-								<a href={`/article/${article.id}`}>
-									<div class="mb-2 text-base truncate text-gray-content " title={article.content} >
-										{article.content}
-									</div>
-								</a> : 
-								<a href={`/article/${article.id}`}>
-									<div class="mb-2 text-base truncate text-gray-content " title={article.description} >
-										{article.description}
-									</div>
-								</a>}
-							<div class="text-sm text-[#777]">
-								<span><a href="/user/:id">{article.user.name}</a></span> · 
-								<span>{article.createdAt}</span> · 
-								<span><a>200 comments</a></span>
-							</div>
-						</div>
-					</li>
+					<Article 
+						id={article.id} 
+						title={article.title}
+						description={article.type === 'note' ? article.content : article.description} 
+						authorName={article.user.name} 
+						createdAt={article.createdAt} />
 				))
 			}
 		</ul>
 		{hasMore ? <button id="load-more">Load more</button> : <></>}
-	</div>
-	
+	</main>
 </Layout>
 
 

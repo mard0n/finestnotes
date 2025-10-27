@@ -2,10 +2,8 @@
 import AnnotationViewer from "@components/AnnotationViewer";
 import NoteViewer from "@components/NoteViewer";
 import Layout from "@layouts/Layout.astro";
-import { client } from "@utils/api";
+import { createServerClient } from "@utils/api";
 import { parseResponse } from "hono/client";
-
-export const prerender = false;
 
 const { id } = Astro.params;
 
@@ -13,7 +11,9 @@ if (!id) {
   throw new Error("Article ID is required");
 }
 
-const response = await client.api.articles[":id"].$get({ param: { id: id } });
+const response = await createServerClient(Astro.request.headers).api.articles[
+  ":id"
+].$get({ param: { id: id } });
 console.log("Fetched article:", response);
 const article = await parseResponse(response);
 
@@ -44,19 +44,29 @@ if (!article) {
         )
       }
     </div>
-    <div class="text-right absolute w-xs top-0 right-8">
-      <h3 class="underline mb-2 font-medium">Part of these projects:</h3>
-      <ul class="text-sm text-gray-light">
-        {
-          article.projects.map((project) => (
-            <li class="mb-1">
-              <a href={`/project/${project.id}`} class="link link-hover">
-                {project.name} <span class="text-gray-600">by </span>{project.owner.name}
-              </a>
-            </li>
-          ))
-        }
-      </ul>
-    </div>
+    {
+      article.projects.length ? (
+        <div class="text-right absolute w-xs top-0 right-8">
+          <h3 class="underline mb-2 font-medium">Part of these projects:</h3>
+          <ul class="text-sm text-gray-light">
+            {article.projects.map((project) => (
+              <li class="mb-1">
+                <a href={`/project/${project.id}`} class="link link-hover">
+                  {project.name}
+                </a>
+                <span class="text-gray-600">by </span>
+                {project.owner.id === Astro.locals.user?.id ? (
+                  <span class="text-gray-600">you</span>
+                ) : (
+                  <a href={`/user/${project.owner.id}`} class="link link-hover">
+                    {project.owner.name}
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : null
+    }
   </main>
 </Layout>

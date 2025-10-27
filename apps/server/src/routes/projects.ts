@@ -25,7 +25,7 @@ const projectRoutes = new Hono<{
       },
     });
 
-    // Get subscribed projects
+    // Get subscribed projects (excluding owned projects)
     const subscribedProjects = await db.query.projectSubscribers.findMany({
       where: eq(projectSubscribers.userId, c.var.user.id),
       with: {
@@ -35,7 +35,9 @@ const projectRoutes = new Hono<{
           },
         },
       },
-    });
+    }).then(subs => 
+      subs.filter(sub => sub.project.ownerId !== c.var.user.id)
+    );
 
     const allProjects = [
       ...ownedProjects.map((p) => ({ ...p, role: "owner" as const })),
@@ -355,7 +357,7 @@ const projectRoutes = new Hono<{
     }
   )
 
-  // Add subscriber to project
+  // Subscribe user to project
   .post(
     "/:id/subscribers",
     protect,
@@ -365,18 +367,13 @@ const projectRoutes = new Hono<{
         id: z.string(),
       })
     ),
-    zValidator(
-      "json",
-      z.object({
-        userId: z.string(),
-      })
-    ),
     async (c) => {
       const { id: projectId } = c.req.valid("param");
-      const { userId } = c.req.valid("json");
       const db = drizzle(c.env.finestdb, { schema: schema });
 
-      // Only owner can add subscribers
+      // If no userId provided, user is subscribing themselves
+      const userIdToSubscribe = c.var.user.id;
+
       const project = await db.query.projects.findFirst({
         where: eq(projects.id, projectId),
       });
@@ -385,18 +382,20 @@ const projectRoutes = new Hono<{
         return c.json({ success: false, message: "Project not found" }, 404);
       }
 
-      if (project.ownerId !== c.var.user.id) {
+      if (!project.isPublic) {
         return c.json(
-          { success: false, message: "Only owner can add subscribers" },
+          {
+            success: false,
+            message: "Cannot subscribe to private projects",
+          },
           403
         );
       }
 
-      // Check if already subscribed
       const existing = await db.query.projectSubscribers.findFirst({
         where: and(
           eq(projectSubscribers.projectId, projectId),
-          eq(projectSubscribers.userId, userId)
+          eq(projectSubscribers.userId, userIdToSubscribe)
         ),
       });
 
@@ -411,7 +410,7 @@ const projectRoutes = new Hono<{
         .insert(projectSubscribers)
         .values({
           projectId,
-          userId,
+          userId: userIdToSubscribe,
         })
         .run();
 
@@ -422,22 +421,22 @@ const projectRoutes = new Hono<{
     }
   )
 
-  // Remove subscriber from project
+  // Unsubscribe from project
   .delete(
-    "/:id/subscribers/:userId",
+    "/:id/subscribers",
     protect,
     zValidator(
       "param",
       z.object({
         id: z.string(),
-        userId: z.string(),
       })
     ),
     async (c) => {
-      const { id: projectId, userId } = c.req.valid("param");
+      const { id: projectId } = c.req.valid("param");
       const db = drizzle(c.env.finestdb, { schema: schema });
 
-      // Only owner can remove subscribers
+      const userIdToUnsubscribe = c.var.user.id;
+
       const project = await db.query.projects.findFirst({
         where: eq(projects.id, projectId),
       });
@@ -446,9 +445,12 @@ const projectRoutes = new Hono<{
         return c.json({ success: false, message: "Project not found" }, 404);
       }
 
-      if (project.ownerId !== c.var.user.id) {
+      if (!project.isPublic) {
         return c.json(
-          { success: false, message: "Only owner can remove subscribers" },
+          {
+            success: false,
+            message: "Cannot unsubscribe from private projects",
+          },
           403
         );
       }
@@ -458,18 +460,21 @@ const projectRoutes = new Hono<{
         .where(
           and(
             eq(projectSubscribers.projectId, projectId),
-            eq(projectSubscribers.userId, userId)
+            eq(projectSubscribers.userId, userIdToUnsubscribe)
           )
         )
         .run();
 
       if (res.changes === 0) {
-        return c.json({ success: false, message: "Subscriber not found" }, 404);
+        return c.json(
+          { success: false, message: "You are not subscribed to this project" },
+          404
+        );
       }
 
       return c.json({
         success: true,
-        message: "Subscriber removed successfully",
+        message: "Unsubscribed successfully",
       });
     }
   );

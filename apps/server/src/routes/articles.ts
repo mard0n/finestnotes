@@ -94,10 +94,12 @@ const articles = new Hono<{ Bindings: Bindings }>()
 
       const { projectNotes, ...rest } = article;
 
+      const publicProjects = projectNotes?.filter((pn) => pn.project.isPublic).map((pn) => pn.project) ?? [];
+
       const [normalizedArticle] = normalizeNotes([
         {
           ...rest,
-          projects: projectNotes?.map((pn) => pn.project) ?? [],
+          projects: publicProjects,
         },
       ]);
 
