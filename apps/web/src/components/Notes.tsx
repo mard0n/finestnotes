@@ -552,6 +552,9 @@ const NoteList: React.FC<{
                   ).toLocaleDateString()}
                   authorName={collection.user.name}
                   selectedNoteId={selectedNoteId}
+                  projectNames={collection.projects.map(
+                    (project) => project.name
+                  )}
                   handleNoteSelection={handleNoteSelection}
                 />
               ))}
@@ -588,6 +591,7 @@ const NoteList: React.FC<{
                   createdAt={new Date(note.createdAt).toLocaleDateString()}
                   authorName={note.user.name}
                   selectedNoteId={selectedNoteId}
+                  projectNames={note.projects.map((project) => project.name)}
                   handleNoteSelection={handleNoteSelection}
                 />
               ))}
@@ -615,6 +619,7 @@ const NoteListItem: React.FC<{
   createdAt: string;
   authorName: string;
   selectedNoteId: string | null;
+  projectNames: string[];
   handleNoteSelection: (id: string) => void;
 }> = ({
   id,
@@ -624,6 +629,7 @@ const NoteListItem: React.FC<{
   createdAt,
   authorName,
   selectedNoteId,
+  projectNames,
   handleNoteSelection,
 }) => {
   return (
@@ -634,7 +640,7 @@ const NoteListItem: React.FC<{
       }`}
     >
       <div />
-      <div className="block w-full" onClick={() => handleNoteSelection(id)}>
+      <div className="block w-full min-w-0" onClick={() => handleNoteSelection(id)}>
         <div className="flex items-center gap-2">
           <h2 className="font-medium text-black line-clamp-1 grow">
             {title || <>&nbsp;</>}
@@ -653,6 +659,18 @@ const NoteListItem: React.FC<{
         <p className="text-xs text-gray-content mt-1.5">
           <span>{createdAt}</span> · <span>{authorName}</span>{" "}
         </p>
+        <div className="mt-2 overflow-x-auto no-scrollbar">
+          <ul className="flex gap-2 whitespace-nowrap">
+            {projectNames.map((projectName) => (
+              <li
+                key={projectName}
+                className="badge badge-md text-xs text-black badge-outline rounded-full border-base-300 flex-shrink-0"
+              >
+                {projectName}
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
     </li>
   );
@@ -728,7 +746,7 @@ const SelectedNoteEditor: React.FC<{
               viewBox="0 0 24 24"
               strokeWidth={1.5}
               stroke="currentColor"
-              className="size-6"
+              className="size-4"
             >
               <path
                 strokeLinecap="round"

@@ -67,6 +67,11 @@ const projectRoutes = new Hono<{
             note: {
               with: {
                 user: true,
+                projectNotes: {
+                  with: {
+                    project: true,
+                  },
+                },
               },
             },
           },
@@ -92,7 +97,10 @@ const projectRoutes = new Hono<{
     const flattenedProject = {
       ...project,
       subscribers: project.subscribers.map((sub) => sub.user),
-      notes: project.notes.map((pn) => pn.note),
+      notes: project.notes.map((pn) => ({
+        ...pn.note,
+        projects: pn.note.projectNotes.map((pnn) => pnn.project),
+      })),
     };
 
     return c.json(flattenedProject);
