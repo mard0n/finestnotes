@@ -115,7 +115,7 @@ const articles = new Hono<{ Bindings: Bindings }>()
         },
       ]);
 
-      return c.json(normalizedArticle);
+      return c.json(normalizedArticle!);
     }
   );
 

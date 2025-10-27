@@ -49,18 +49,10 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
 
   const [filterCategory, setFilterCategory] = useState<FilterCategory>("all");
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
-    null,
+    null
   );
-
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
-  const [isInitialized, setIsInitialized] = useState(false);
 
-  const selectedNote =
-    selectedNoteId !== null
-      ? collections?.find((c) => c.id === selectedNoteId)
-      : undefined;
-
-  // Auto-select note or project from URL parameters
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
     const noteId = urlParams.get("noteId");
@@ -68,30 +60,21 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
 
     if (noteId) {
       setSelectedNoteId(noteId);
-      // Clear URL parameters after reading
       window.history.replaceState({}, "", "/notes");
     } else if (projectId) {
       setFilterCategory("project");
       setSelectedProjectId(projectId);
-      // Clear URL parameters after reading
       window.history.replaceState({}, "", "/notes");
     }
-
-    setIsInitialized(true);
   }, []);
 
   useEffect(() => {
-    // Only clear selections after initialization and when filter category changes
-    if (!isInitialized) return;
-
     if (filterCategory !== "project") {
       setSelectedProjectId(null);
     }
 
     setSelectedNoteId(null);
-  }, [filterCategory, isInitialized]);
-
-  console.log("selectedNote", selectedNote);
+  }, [filterCategory]);
 
   return (
     <>
@@ -117,7 +100,7 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
           />
         </div>
         <div className="grow overflow-y-scroll px-8 py-6">
-          <SelectedNoteEditor selectedNote={selectedNote} />
+          <SelectedNoteEditor user={user} selectedNoteId={selectedNoteId} />
         </div>
       </main>
     </>

@@ -1,15 +1,29 @@
-import { useQueryClient, useMutation } from "@tanstack/react-query";
+import { useQueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import { client } from "@utils/api";
 import { parseResponse } from "hono/client";
-import type { Collections } from "..";
 import { AddToProjectDropdownContent } from "../components/ProjectModals";
+import AnnotationViewer from "../editors-viewers/AnnotationViewer";
+import NoteViewer from "../editors-viewers/NoteViewer";
+import type { User } from "better-auth";
 import AnnotationEditor from "../editors-viewers/AnnotationEditor";
 import NoteEditor from "../editors-viewers/NoteEditor";
 
 const SelectedNoteEditor: React.FC<{
-  selectedNote: Collections[number] | undefined;
-}> = ({ selectedNote }) => {
+  selectedNoteId: string | null;
+  user: User;
+}> = ({ selectedNoteId, user }) => {
   const queryClient = useQueryClient();
+
+  const { data: selectedNote } = useQuery({
+    queryKey: ["collection", selectedNoteId],
+    queryFn: async () => {
+      const res = await client.api.collections[":id"].$get({
+        param: { id: selectedNoteId! },
+      });
+      return await parseResponse(res);
+    },
+    enabled: !!selectedNoteId,
+  });
 
   const updateNoteTitle = useMutation({
     mutationFn: async ({ id, title }: { id: string; title: string }) => {
@@ -39,7 +53,30 @@ const SelectedNoteEditor: React.FC<{
 
   console.log("selectedNote", selectedNote);
 
-  return selectedNote ? (
+  if (!selectedNote) {
+    return (
+      <div className="flex justify-center items-center h-full">
+        <span className="text-gray-light select-none">No note selected</span>
+      </div>
+    );
+  }
+
+  if (selectedNote?.userId !== user.id) {
+    return (
+      <>
+        <h1 className="text-2xl font-serif outline-none text-black mb-2 grow">
+          {selectedNote.title}
+        </h1>
+        {selectedNote.type === "page" ? (
+          <AnnotationViewer annotation={selectedNote} />
+        ) : (
+          <NoteViewer note={selectedNote} />
+        )}
+      </>
+    );
+  }
+
+  return (
     <>
       <div className="flex">
         <input
@@ -90,7 +127,7 @@ const SelectedNoteEditor: React.FC<{
             <AddToProjectDropdownContent
               noteId={selectedNote.id}
               noteProjectIds={selectedNote.projects.map(
-                (project) => project.id,
+                (project) => project.id
               )}
             />
           </div>
@@ -119,10 +156,6 @@ const SelectedNoteEditor: React.FC<{
         <NoteEditor note={selectedNote} />
       )}
     </>
-  ) : (
-    <div className="flex justify-center items-center h-full">
-      <span className="text-gray-light select-none">No note selected</span>
-    </div>
   );
 };
 
