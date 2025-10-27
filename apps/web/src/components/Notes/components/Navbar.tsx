@@ -1,6 +1,9 @@
 import type { User } from "better-auth";
 
-const Navbar: React.FC<{ user: User | null }> = ({ user }) => {
+const Navbar: React.FC<{
+  user: User | null;
+  handleNewNoteCreation: () => void;
+}> = ({ user, handleNewNoteCreation }) => {
   return (
     <nav className="flex items-stretch border-b border-neutral-200">
       <div className="w-xs border-r border-neutral-200 pl-8 pr-6 py-4 flex items-center">
@@ -33,7 +36,7 @@ const Navbar: React.FC<{ user: User | null }> = ({ user }) => {
             placeholder="Search"
           />
         </label>
-        <button title="Create a new note">
+        <button title="Create a new note" onClick={handleNewNoteCreation}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"

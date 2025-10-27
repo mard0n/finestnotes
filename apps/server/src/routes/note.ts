@@ -38,7 +38,7 @@ const note = new Hono<{
       const { title, content } = c.req.valid("json");
       const db = drizzle(c.env.finestdb);
 
-      await db
+      const result = await db
         .insert(notes)
         .values({
           userId: c.var.user.id,
@@ -46,11 +46,13 @@ const note = new Hono<{
           title,
           content,
         })
-        .run();
+        .returning()
+        .get()
 
       return c.json({
         success: true,
         message: `Note is successfully created`,
+        data: result
       });
     }
   )

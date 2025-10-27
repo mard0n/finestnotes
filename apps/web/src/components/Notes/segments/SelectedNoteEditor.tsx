@@ -104,6 +104,7 @@ const SelectedNoteEditor: React.FC<{
           }}
           defaultValue={selectedNote.title}
           placeholder="Untitled note"
+          autoFocus
         />
         <div className="dropdown dropdown-end">
           <button className="btn btn-ghost btn-sm rounded-full bg-white font-normal mr-3">

@@ -6,6 +6,8 @@ import {
   useQuery,
   QueryClient,
   QueryClientProvider,
+  useQueryClient,
+  useMutation,
 } from "@tanstack/react-query";
 import Navbar from "./components/Navbar";
 import SideBar from "./segments/Sidebar";
@@ -47,6 +49,25 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
     initialData: initialCollections,
   });
 
+  const queryClient = useQueryClient();
+
+  const { mutate: createNewNote } = useMutation({
+    mutationFn: async () => {
+      const res = await client.api.note.$post({
+        json: {
+          title: "",
+          content: "",
+        },
+      });
+      return await parseResponse(res);
+    },
+    onSuccess: ({ data }) => {
+      queryClient.invalidateQueries({ queryKey: ["collections"] });
+      setFilterCategory("all");
+      setSelectedNoteId(data.id)
+    },
+  });
+
   const [filterCategory, setFilterCategory] = useState<FilterCategory>("all");
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(
     null
@@ -76,9 +97,13 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
     setSelectedNoteId(null);
   }, [filterCategory]);
 
+  const handleNewNoteCreation = () => {
+    createNewNote();
+  };
+
   return (
     <>
-      <Navbar user={user} />
+      <Navbar user={user} handleNewNoteCreation={handleNewNoteCreation} />
       <main className="grow overflow-y-hidden flex items-stretch">
         <div className="w-xs overflow-y-scroll shrink-0 pl-8 pr-6 py-6 border-r border-neutral-200">
           <SideBar
