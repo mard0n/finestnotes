@@ -217,9 +217,9 @@ const projectRoutes = new Hono<{
     }
   )
 
-  // Add item to project (note or page)
+  // Add note to project
   .post(
-    "/:id/items",
+    "/:id/notes",
     protect,
     zValidator(
       "param",
@@ -290,19 +290,19 @@ const projectRoutes = new Hono<{
     }
   )
 
-  // Remove item from project
+  // Remove note from project
   .delete(
-    "/:id/items/:itemId",
+    "/:id/notes/:noteId",
     protect,
     zValidator(
       "param",
       z.object({
         id: z.string(),
-        itemId: z.string(),
+        noteId: z.string(),
       })
     ),
     async (c) => {
-      const { id: projectId, itemId } = c.req.valid("param");
+      const { id: projectId, noteId } = c.req.valid("param");
       const db = drizzle(c.env.finestdb, { schema: schema });
 
       // Check if user has access to the project
@@ -331,7 +331,7 @@ const projectRoutes = new Hono<{
         .where(
           and(
             eq(projectNotes.projectId, projectId),
-            eq(projectNotes.id, itemId)
+            eq(projectNotes.noteId, noteId)
           )
         )
         .run();

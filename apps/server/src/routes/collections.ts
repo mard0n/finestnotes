@@ -22,13 +22,20 @@ const collections = new Hono<{
         user: true,
         highlights: true,
         images: true,
+        projectNotes: {
+          with: {
+            project: true,
+          },
+        }
       },
     });
 
-    console.log('notesData', notesData);
-    
+    const flattenedNotes = notesData.map(({ projectNotes, ...note }) => ({
+      ...note,
+      projects: projectNotes?.map(pn => pn.project) ?? [],
+    }));
 
-    const collections = normalizeNotes(notesData);
+    const collections = normalizeNotes(flattenedNotes);
 
     return c.json(collections);
   });

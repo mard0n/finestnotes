@@ -89,39 +89,61 @@ const articles = new Hono<{ Bindings: Bindings }>()
 
 export default articles;
 
-export function normalizeNotes(
-  notes: (typeof schema.notes.$inferSelect & {
-    user: typeof schema.user.$inferSelect;
+type BaseNoteWithRelations<T extends Record<string, any> = {}> =
+  typeof schema.notes.$inferSelect & {
     highlights?: (typeof schema.highlights.$inferSelect)[];
     images?: (typeof schema.images.$inferSelect)[];
-  })[]
-) {
-  const notesData = notes
+  } & T;
+
+type NormalizedNote<T extends Record<string, any> = {}> = Omit<
+  BaseNoteWithRelations<T>,
+  "highlights" | "images" | "description"
+> & {
+  type: "note";
+};
+
+type NormalizedPage<T extends Record<string, any> = {}> = Omit<
+  BaseNoteWithRelations<T>,
+  "content" | "contentLexical" | "highlights" | "images"
+> & {
+  annotations: (
+    | typeof schema.highlights.$inferSelect
+    | typeof schema.images.$inferSelect
+  )[];
+  type: "page";
+};
+
+type NormalizedArticle<T extends Record<string, any> = {}> =
+  | NormalizedNote<T>
+  | NormalizedPage<T>;
+
+export function normalizeNotes<T extends Record<string, any> = {}>(
+  notes: BaseNoteWithRelations<T>[]
+): NormalizedArticle<T>[] {
+  const notesData: NormalizedNote<T>[] = notes
     .filter((article) => article.type === "note")
     .map(({ highlights, images, description, ...note }) => ({
       ...note,
       type: "note" as const,
     }));
 
-  const pagesData = notes
+  const pagesData: NormalizedPage<T>[] = notes
     .filter((article) => article.type === "page")
-    .map(({ content, contentLexical, ...page }) => {
+    .map(({ content, contentLexical, highlights, images, ...page }) => {
       const annotations = [
-        ...(page.highlights || []),
-        ...(page.images || []),
-      ].sort(
-        (a, b) =>
-          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-      );
+        ...((highlights ?? []) as (typeof schema.highlights.$inferSelect)[]),
+        ...((images ?? []) as (typeof schema.images.$inferSelect)[]),
+      ].sort((a, b) => {
+        const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return aTime - bTime;
+      });
       return {
         ...page,
         annotations,
         type: "page" as const,
       };
-    })
-    .map(({ highlights, images, ...page }) => ({
-      ...page,
-    }));
+    });
 
   const allArticles = [...notesData, ...pagesData];
   allArticles.sort(

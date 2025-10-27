@@ -1,10 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { client } from "@utils/api";
 import type { User } from "better-auth";
 import { parseResponse, type InferResponseType } from "hono/client";
 import NoteEditor from "./NoteEditor";
 import AnnotationEditor from "./AnnotationEditor";
-import { CreateProjectModal } from "./ProjectModals";
+import {
+  AddToProjectDropdownContent,
+  CreateProjectModal,
+} from "./ProjectModals";
 import {
   useQuery,
   QueryClient,
@@ -669,7 +672,6 @@ const SelectedNoteEditor: React.FC<{
       return await parseResponse(res);
     },
     onSuccess: () => {
-      console.log('invalidate collections');
       queryClient.invalidateQueries({ queryKey: ["collections"] });
     },
   });
@@ -693,7 +695,7 @@ const SelectedNoteEditor: React.FC<{
     <>
       <div className="flex">
         <input
-          key={selectedNote.id} 
+          key={selectedNote.id}
           type="text"
           name="title"
           id="title"
@@ -718,11 +720,8 @@ const SelectedNoteEditor: React.FC<{
           defaultValue={selectedNote.title}
           placeholder="Untitled note"
         />
-        <div className="dropdown dropdown-end mr-3">
-          <button
-            tabIndex={0}
-            className="btn btn-ghost btn-sm rounded-full bg-white font-normal "
-          >
+        <div className="dropdown dropdown-end">
+          <button className="btn btn-ghost btn-sm rounded-full bg-white font-normal mr-3">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -736,26 +735,16 @@ const SelectedNoteEditor: React.FC<{
                 strokeLinejoin="round"
                 d="M12 10.5v6m3-3H9m4.06-7.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"
               />
-            </svg>{" "}
+            </svg>
             Add to project
           </button>
-          <div className="dropdown-content menu  z-1 w-52 p-2">
-            <ul className="bg-base-100 p-2 shadow-sm" tabIndex={-1}>
-              <li>
-                <a href="/notes">My notes</a>
-              </li>
-              <li>
-                <a href="https://chromewebstore.google.com/">
-                  Browser Extension
-                </a>
-              </li>
-              <li>
-                <a href="/settings">Settings</a>
-              </li>
-              <li>
-                <a id="signout">Sign out</a>
-              </li>
-            </ul>
+          <div className="dropdown-content menu z-1 p-2 w-xs">
+            <AddToProjectDropdownContent
+              noteId={selectedNote.id}
+              noteProjectIds={selectedNote.projects.map(
+                (project) => project.id
+              )}
+            />
           </div>
         </div>
         <select
