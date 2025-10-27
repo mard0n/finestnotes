@@ -1,5 +1,5 @@
 import React from "react";
-import type { Collections } from "./Notes";
+import type { Collections } from "..";
 
 type AnnotationType = Collections[number] & { type: "page" };
 

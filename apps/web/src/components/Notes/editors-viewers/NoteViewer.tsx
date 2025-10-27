@@ -2,7 +2,7 @@ import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import type { Collections } from "./Notes";
+import type { Collections } from "..";
 import { getInitialEditorState, initialConfig } from "./NoteEditor";
 
 const NoteViewer: React.FC<{

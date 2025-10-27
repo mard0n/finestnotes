@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-import { type Collections } from "./Notes";
+import { type Collections } from "..";
 import { $getRoot, type LexicalEditor } from "lexical";
 
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
@@ -8,7 +8,6 @@ import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
-import TreeViewPlugin from "../lexical/plugins/TreeViewPlugin";
 
 import { TRANSFORMERS } from "@lexical/markdown";
 import { MarkdownShortcutPlugin } from "@lexical/react/LexicalMarkdownShortcutPlugin";
@@ -21,7 +20,7 @@ import { HashtagNode } from "@lexical/hashtag";
 import { client } from "@utils/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { parseResponse } from "hono/client";
-import { theme } from "../styles/lexical-theme";
+import { theme } from "@styles/lexical-theme";
 
 export const initialConfig = {
   namespace: "MyEditor",
@@ -89,7 +88,10 @@ const NoteEditor: React.FC<{
 
   return (
     <LexicalComposer
-      initialConfig={{ ...initialConfig, editorState: getInitialEditorState(note) }}
+      initialConfig={{
+        ...initialConfig,
+        editorState: getInitialEditorState(note),
+      }}
     >
       <div className="relative grow">
         <RichTextPlugin

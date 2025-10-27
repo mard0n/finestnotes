@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import type { Collections } from "./Notes";
+import type { Collections } from "..";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { client } from "@utils/api";
 import { parseResponse } from "hono/client";
@@ -32,8 +32,7 @@ const AnnotationEditor: React.FC<AnnotationEditorProps> = ({ annotation }) => {
     },
   });
 
-  console.log('annotation', annotation);
-  
+  console.log("annotation", annotation);
 
   return (
     <div className="flex flex-col">
@@ -55,7 +54,7 @@ const AnnotationEditor: React.FC<AnnotationEditorProps> = ({ annotation }) => {
           }
         }}
         onBlur={(e) => {
-           updateAnnotationDescription.mutate({
+          updateAnnotationDescription.mutate({
             id: annotation.id,
             description: e.target.value,
           });
