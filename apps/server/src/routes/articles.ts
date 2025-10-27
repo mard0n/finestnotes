@@ -51,6 +51,8 @@ const articles = new Hono<{ Bindings: Bindings }>()
       });
     }
   )
+
+  // Get article by ID
   .get(
     "/:id",
     zValidator(
@@ -64,16 +66,23 @@ const articles = new Hono<{ Bindings: Bindings }>()
       // Check both notes and pages tables for the id
       const db = drizzle(c.env.finestdb, { schema: schema });
 
-      const articles = await db.query.notes.findMany({
+      let article = await db.query.notes.findFirst({
         with: {
           user: true,
           highlights: true,
           images: true,
+          projectNotes: {
+            with: {
+              project: {
+                with: { owner: true },
+              },
+            },
+          },
         },
         where: and(eq(notes.id, id), eq(notes.isPublic, true)),
       });
 
-      if (!articles) {
+      if (!article) {
         return c.json(
           {
             success: false,
@@ -83,7 +92,16 @@ const articles = new Hono<{ Bindings: Bindings }>()
         );
       }
 
-      return c.json(normalizeNotes(articles));
+      const { projectNotes, ...rest } = article;
+
+      const [normalizedArticle] = normalizeNotes([
+        {
+          ...rest,
+          projects: projectNotes?.map((pn) => pn.project) ?? [],
+        },
+      ]);
+
+      return c.json(normalizedArticle);
     }
   );
 

@@ -1,6 +1,9 @@
 ---
+import AnnotationViewer from "@components/AnnotationViewer";
+import NoteViewer from "@components/NoteViewer";
 import Layout from "@layouts/Layout.astro";
-import { server } from "@utils/api";
+import { client } from "@utils/api";
+import { parseResponse } from "hono/client";
 
 export const prerender = false;
 
@@ -10,10 +13,9 @@ if (!id) {
   throw new Error("Article ID is required");
 }
 
-const response = await server.api.articles[":id"].$get({ param: { id } });
+const response = await client.api.articles[":id"].$get({ param: { id: id } });
 console.log("Fetched article:", response);
-
-const article = await response.json();
+const article = await parseResponse(response);
 
 if (!article) {
   throw new Error("Article not found");
@@ -21,6 +23,40 @@ if (!article) {
 ---
 
 <Layout>
-  <h1>{article.title}</h1>
-  <p>{article.createdAt}</p>
+  <main class="relative w-full">
+    <div class="max-w-2xl mx-auto my-8 px-4">
+      <h1 class="font-serif text-2xl text-black">{article.title}</h1>
+      {
+        article.type === "page" && article.description && (
+          <p class="text-sm mt-2 mb-3">{article.description}</p>
+        )
+      }
+      <div class="text-xs text-gray-500 mb-4 mt-1">
+        by {article.user.name} · {
+          new Date(article.createdAt).toLocaleDateString()
+        }
+      </div>
+      {
+        article.type === "note" ? (
+          <NoteViewer client:load note={article} />
+        ) : (
+          <AnnotationViewer client:load annotation={article} />
+        )
+      }
+    </div>
+    <div class="text-right absolute w-xs top-0 right-8">
+      <h3 class="underline mb-2 font-medium">Part of these projects:</h3>
+      <ul class="text-sm text-gray-light">
+        {
+          article.projects.map((project) => (
+            <li class="mb-1">
+              <a href={`/project/${project.id}`} class="link link-hover">
+                {project.name} <span class="text-gray-600">by </span>{project.owner.name}
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </main>
 </Layout>

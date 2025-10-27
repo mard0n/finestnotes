@@ -23,15 +23,45 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { parseResponse } from "hono/client";
 import { theme } from "../styles/lexical-theme";
 
-interface NoteEditorProps {
-  note: Collections[number] & { type: "note" };
-}
+export const initialConfig = {
+  namespace: "MyEditor",
+  nodes: [
+    HeadingNode,
+    ListNode,
+    ListItemNode,
+    QuoteNode,
+    CodeNode,
+    CodeHighlightNode,
+    LinkNode,
+    AutoLinkNode,
+    HashtagNode,
+  ],
+  theme,
+  onError: console.error,
+};
 
-function onError(error: Error, editor: LexicalEditor) {
-  console.error(error);
-}
+export const getInitialEditorState = (note: Note) => {
+  if (!note.contentLexical || note.contentLexical.trim() === "") {
+    return undefined;
+  }
 
-const NoteEditor: React.FC<NoteEditorProps> = ({ note }) => {
+  try {
+    const parsed = JSON.parse(note.contentLexical);
+    if (!parsed.root.children || parsed.root.children.length === 0) {
+      return undefined;
+    }
+    return note.contentLexical;
+  } catch (e) {
+    console.error("Failed to parse editor content:", e);
+    return undefined;
+  }
+};
+
+type Note = Collections[number] & { type: "note" };
+
+const NoteEditor: React.FC<{
+  note: Note;
+}> = ({ note }) => {
   const queryClient = useQueryClient();
 
   const updateNoteContent = useMutation({
@@ -57,43 +87,10 @@ const NoteEditor: React.FC<NoteEditorProps> = ({ note }) => {
 
   const contentEditableRef = useRef<HTMLDivElement>(null);
 
-  const getInitialEditorState = () => {
-    if (!note.contentLexical || note.contentLexical.trim() === "") {
-      return undefined;
-    }
-
-    try {
-      const parsed = JSON.parse(note.contentLexical);
-      if (!parsed.root.children || parsed.root.children.length === 0) {
-        return undefined;
-      }
-      return note.contentLexical;
-    } catch (e) {
-      console.error("Failed to parse editor content:", e);
-      return undefined;
-    }
-  };
-
-  const initialConfig = {
-    namespace: "MyEditor",
-    nodes: [
-      HeadingNode,
-      ListNode,
-      ListItemNode,
-      QuoteNode,
-      CodeNode,
-      CodeHighlightNode,
-      LinkNode,
-      AutoLinkNode,
-      HashtagNode,
-    ],
-    theme,
-    onError,
-    editorState: getInitialEditorState(),
-  };
-
   return (
-    <LexicalComposer initialConfig={initialConfig}>
+    <LexicalComposer
+      initialConfig={{ ...initialConfig, editorState: getInitialEditorState(note) }}
+    >
       <div className="relative grow">
         <RichTextPlugin
           contentEditable={
