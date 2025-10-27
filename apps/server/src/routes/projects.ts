@@ -39,8 +39,7 @@ const projectRoutes = new Hono<{
       })
       .then((subs) =>
         subs.filter(
-          (sub) =>
-            sub.project.ownerId !== c.var.user.id && sub.project.isPublic
+          (sub) => sub.project.ownerId !== c.var.user.id && sub.project.isPublic
         )
       );
 
@@ -104,10 +103,12 @@ const projectRoutes = new Hono<{
     const flattenedProject = {
       ...project,
       subscribers: project.subscribers.map((sub) => sub.user),
-      notes: project.notes.map((pn) => ({
-        ...pn.note,
-        projects: pn.note.projectNotes.map((pnn) => pnn.project),
-      })),
+      notes: project.notes
+        .filter((pn) => pn.note.isPublic || pn.note.userId === c.var.user.id)
+        .map((pn) => ({
+          ...pn.note,
+          projects: pn.note.projectNotes.map((pnn) => pnn.project),
+        })),
     };
 
     return c.json(flattenedProject);
