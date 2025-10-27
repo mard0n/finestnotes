@@ -58,7 +58,7 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
 
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
-  
+
   const selectedNote =
     selectedNoteId !== null
       ? collections?.find((c) => c.id === selectedNoteId)
@@ -67,27 +67,27 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
   // Auto-select note or project from URL parameters
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
-    const noteId = urlParams.get('noteId');
-    const projectId = urlParams.get('projectId');
+    const noteId = urlParams.get("noteId");
+    const projectId = urlParams.get("projectId");
 
     if (noteId) {
       setSelectedNoteId(noteId);
       // Clear URL parameters after reading
-      window.history.replaceState({}, '', '/notes');
+      window.history.replaceState({}, "", "/notes");
     } else if (projectId) {
-      setFilterCategory('project');
+      setFilterCategory("project");
       setSelectedProjectId(projectId);
       // Clear URL parameters after reading
-      window.history.replaceState({}, '', '/notes');
+      window.history.replaceState({}, "", "/notes");
     }
-    
+
     setIsInitialized(true);
   }, []);
 
   useEffect(() => {
     // Only clear selections after initialization and when filter category changes
     if (!isInitialized) return;
-    
+
     if (filterCategory !== "project") {
       setSelectedProjectId(null);
     }
@@ -103,6 +103,7 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
       <main className="grow overflow-y-hidden flex items-stretch">
         <div className="w-xs overflow-y-scroll shrink-0 pl-8 pr-6 py-6 border-r border-neutral-200">
           <SideBar
+            user={user}
             filterCategory={filterCategory}
             setFilterCategory={setFilterCategory}
             selectedProjectId={selectedProjectId}
@@ -111,6 +112,7 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
         </div>
         <div className="w-sm overflow-y-scroll shrink-0 py-6 border-r border-neutral-200">
           <NoteList
+            user={user}
             collections={collections}
             filterCategory={filterCategory}
             selectedProjectId={selectedProjectId}
@@ -215,11 +217,13 @@ const Navbar: React.FC<{ user: User | null }> = ({ user }) => {
 };
 
 const SideBar: React.FC<{
+  user: User;
   filterCategory: FilterCategory;
   setFilterCategory: React.Dispatch<React.SetStateAction<FilterCategory>>;
   selectedProjectId: string | null;
   setSelectedProjectId: React.Dispatch<React.SetStateAction<string | null>>;
 }> = ({
+  user,
   filterCategory,
   setFilterCategory,
   selectedProjectId,
@@ -395,9 +399,9 @@ const SideBar: React.FC<{
           {projectsLoading ? (
             <p className="text-sm text-gray-content ml-5">Loading...</p>
           ) : projects && projects.length > 0 ? (
-            <ul className="flex flex-col gap-2 ml-5">
+            <ul className="flex flex-col gap-2">
               {projects.map((project) => (
-                <li key={project.id} className="flex justify-between">
+                <li key={project.id} className="flex justify-between group">
                   {isProjectRenaming === project.id ? (
                     <input
                       type="text"
@@ -427,7 +431,7 @@ const SideBar: React.FC<{
                         setFilterCategory("project");
                         setSelectedProjectId(project.id);
                       }}
-                      className={`text-sm cursor-pointer hover:text-black w-full text-left ${
+                      className={`text-sm cursor-pointer hover:text-black w-full text-left truncate ${
                         selectedProjectId === project.id
                           ? "font-medium text-black"
                           : "font-normal"
@@ -436,10 +440,20 @@ const SideBar: React.FC<{
                       <span className="text-lg">
                         {project.isPublic ? "🌐 " : "🔒 "}
                       </span>{" "}
-                      <span className="align-text-bottom">{project.name}</span>
+                      <span className="align-text-bottom">{project.name}</span>{" "}
+                      {project.ownerId === user.id ? (
+                        <></>
+                      ) : (
+                        <a
+                          href={`/user/${project.ownerId}`}
+                          className="link link-hover text-gray-light align-text-bottom"
+                        >
+                          ({project.owner.name})
+                        </a>
+                      )}
                     </button>
                   )}
-                  <div className="dropdown dropdown-end">
+                  <div className="dropdown dropdown-end invisible group-hover:visible">
                     <button
                       role="link"
                       className="btn btn-xs btn-ghost text-xs text-gray-content hover:text-black"
@@ -504,12 +518,14 @@ const SideBar: React.FC<{
 };
 
 const NoteList: React.FC<{
+  user: User;
   collections: Collections;
   filterCategory: FilterCategory;
   selectedProjectId: string | null;
   selectedNoteId: string | null;
   setSelectedNoteId: React.Dispatch<React.SetStateAction<string | null>>;
 }> = ({
+  user,
   collections,
   filterCategory,
   selectedProjectId,
@@ -534,6 +550,8 @@ const NoteList: React.FC<{
     }
     setSelectedNoteId(noteId);
   };
+
+  
   if (filterCategory !== "project") {
     const filteredCollections = collections?.filter((collection) => {
       if (filterCategory === "all") return true;
@@ -597,9 +615,19 @@ const NoteList: React.FC<{
   } else {
     return (
       <>
-        <h1 className="font-medium text-xl mb-6 px-6">
-          {project ? project.name : "Project"}
-        </h1>
+        <div className="mb-6">
+          <h1 className="font-medium text-xl px-6">
+            {project ? project.name : "Project"}
+          </h1>
+          {project?.ownerId !== user.id ? (
+            <a
+              href={`/users/${project?.ownerId}`}
+              className="link link-hover text-sm text-gray-light px-6 mt-1"
+            >
+              by {project?.owner.name}
+            </a>
+          ) : null}
+        </div>
         {project?.notes.length ? (
           <>
             <div className="divider m-0 h-[1px] before:h-[1px] after:h-[1px] before:border-neutral-200 after:border-neutral-200" />
@@ -665,7 +693,10 @@ const NoteListItem: React.FC<{
       }`}
     >
       <div />
-      <div className="block w-full min-w-0" onClick={() => handleNoteSelection(id)}>
+      <div
+        className="block w-full min-w-0"
+        onClick={() => handleNoteSelection(id)}
+      >
         <div className="flex items-center gap-2">
           <h2 className="font-medium text-black line-clamp-1 grow">
             {title || <>&nbsp;</>}

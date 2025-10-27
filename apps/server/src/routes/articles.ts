@@ -61,8 +61,15 @@ const articles = new Hono<{ Bindings: Bindings }>()
         id: z.string(),
       })
     ),
+    zValidator(
+      "query",
+      z.object({
+        userId: z.string().optional(),
+      })
+    ),
     async (c) => {
       const { id } = c.req.valid("param");
+      const { userId } = c.req.valid("query");
       // Check both notes and pages tables for the id
       const db = drizzle(c.env.finestdb, { schema: schema });
 
@@ -94,7 +101,12 @@ const articles = new Hono<{ Bindings: Bindings }>()
 
       const { projectNotes, ...rest } = article;
 
-      const publicProjects = projectNotes?.filter((pn) => pn.project.isPublic).map((pn) => pn.project) ?? [];
+      const publicProjects =
+        projectNotes
+          ?.filter(
+            (pn) => pn.project.isPublic || pn.project.ownerId === userId
+          )
+          .map((pn) => pn.project) ?? [];
 
       const [normalizedArticle] = normalizeNotes([
         {
