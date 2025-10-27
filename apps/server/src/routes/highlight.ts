@@ -125,7 +125,7 @@ const highlight = new Hono<{
         .where(and(eq(highlights.id, id), eq(highlights.userId, c.var.user.id)))
         .run();
 
-      if (res.changes === 0) {
+      if (res.meta.changes === 0) {
         return c.json(
           {
             success: false,
@@ -161,7 +161,7 @@ const highlight = new Hono<{
         .where(and(eq(highlights.id, id), eq(highlights.userId, c.var.user.id)))
         .run();
 
-      if (res.changes === 0) {
+      if (res.meta.changes === 0) {
         return c.json(
           {
             success: false,

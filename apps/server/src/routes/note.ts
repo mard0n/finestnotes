@@ -82,7 +82,7 @@ const note = new Hono<{
         .where(and(eq(notes.id, id), eq(notes.userId, c.var.user.id)))
         .run();
 
-      if (res.changes === 0) {
+      if (res.meta.changes === 0) {
         return c.json(
           {
             success: false,
@@ -127,7 +127,7 @@ const note = new Hono<{
         .where(and(eq(notes.id, id), eq(notes.userId, c.var.user.id)))
         .run();
 
-      if (res.changes === 0) {
+      if (res.meta.changes === 0) {
         return c.json(
           {
             success: false,
@@ -171,7 +171,7 @@ const note = new Hono<{
         .where(and(eq(notes.id, id), eq(notes.userId, c.var.user.id)))
         .run();
 
-      if (res.changes === 0) {
+      if (res.meta.changes === 0) {
         return c.json(
           {
             success: false,
@@ -207,7 +207,7 @@ const note = new Hono<{
         .where(and(eq(notes.id, id), eq(notes.userId, c.var.user.id)))
         .run();
 
-      if (res.changes === 0) {
+      if (res.meta.changes === 0) {
         return c.json(
           {
             success: false,

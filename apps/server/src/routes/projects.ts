@@ -26,18 +26,20 @@ const projectRoutes = new Hono<{
     });
 
     // Get subscribed projects (excluding owned projects)
-    const subscribedProjects = await db.query.projectSubscribers.findMany({
-      where: eq(projectSubscribers.userId, c.var.user.id),
-      with: {
-        project: {
-          with: {
-            owner: true,
+    const subscribedProjects = await db.query.projectSubscribers
+      .findMany({
+        where: eq(projectSubscribers.userId, c.var.user.id),
+        with: {
+          project: {
+            with: {
+              owner: true,
+            },
           },
         },
-      },
-    }).then(subs => 
-      subs.filter(sub => sub.project.ownerId !== c.var.user.id)
-    );
+      })
+      .then((subs) =>
+        subs.filter((sub) => sub.project.ownerId !== c.var.user.id)
+      );
 
     const allProjects = [
       ...ownedProjects.map((p) => ({ ...p, role: "owner" as const })),
@@ -172,7 +174,7 @@ const projectRoutes = new Hono<{
         .where(and(eq(projects.id, id), eq(projects.ownerId, c.var.user.id)))
         .run();
 
-      if (res.changes === 0) {
+      if (res.meta.changes === 0) {
         return c.json(
           {
             success: false,
@@ -209,7 +211,7 @@ const projectRoutes = new Hono<{
         .where(and(eq(projects.id, id), eq(projects.ownerId, c.var.user.id)))
         .run();
 
-      if (res.changes === 0) {
+      if (res.meta.changes === 0) {
         return c.json(
           {
             success: false,
@@ -346,7 +348,7 @@ const projectRoutes = new Hono<{
         )
         .run();
 
-      if (res.changes === 0) {
+      if (res.meta.changes === 0) {
         return c.json({ success: false, message: "Item not found" }, 404);
       }
 
@@ -465,7 +467,7 @@ const projectRoutes = new Hono<{
         )
         .run();
 
-      if (res.changes === 0) {
+      if (res.meta.changes === 0) {
         return c.json(
           { success: false, message: "You are not subscribed to this project" },
           404

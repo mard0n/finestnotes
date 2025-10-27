@@ -131,7 +131,7 @@ const image = new Hono<{
         .where(and(eq(images.id, id), eq(images.userId, c.var.user.id)))
         .run();
 
-      if (res.changes === 0) {
+      if (res.meta.changes === 0) {
         return c.json(
           {
             success: false,
@@ -167,7 +167,7 @@ const image = new Hono<{
         .where(and(eq(images.id, id), eq(images.userId, c.var.user.id)))
         .run();
 
-      if (res.changes === 0) {
+      if (res.meta.changes === 0) {
         return c.json(
           {
             success: false,
