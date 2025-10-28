@@ -10,8 +10,9 @@ import NoteEditor from "../editors-viewers/NoteEditor";
 
 const SelectedNoteEditor: React.FC<{
   selectedNoteId: string | null;
+  setSelectedNoteId: React.Dispatch<React.SetStateAction<string | null>>;
   user: User;
-}> = ({ selectedNoteId, user }) => {
+}> = ({ selectedNoteId, user, setSelectedNoteId }) => {
   const queryClient = useQueryClient();
 
   const { data: selectedNote } = useQuery({
@@ -50,6 +51,32 @@ const SelectedNoteEditor: React.FC<{
       queryClient.invalidateQueries({ queryKey: ["collections"] });
     },
   });
+
+  const deleteNote = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await client.api.note[":id"].$delete({
+        param: { id: id.toString() },
+      });
+      return await parseResponse(res);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["collections"] });
+      setSelectedNoteId(null);
+    },
+  });
+
+  const handleDeleteClick = () => {
+    if (
+      selectedNote &&
+      window.confirm(
+        `Are you sure you want to delete "${
+          selectedNote.title || "Untitled note"
+        }"?`
+      )
+    ) {
+      deleteNote.mutate(selectedNote.id);
+    }
+  };
 
   console.log("selectedNote", selectedNote);
 
@@ -106,50 +133,58 @@ const SelectedNoteEditor: React.FC<{
           placeholder="Untitled note"
           autoFocus
         />
-        <div className="dropdown dropdown-end">
-          <button className="btn btn-ghost btn-sm rounded-full bg-white font-normal mr-3">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="size-4"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 10.5v6m3-3H9m4.06-7.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"
+        <div className="flex gap-3">
+          <div className="dropdown dropdown-end">
+            <button className="btn btn-ghost btn-sm rounded-full bg-white font-normal">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="size-4"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M12 10.5v6m3-3H9m4.06-7.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"
+                />
+              </svg>
+              Add to project
+            </button>
+            <div className="dropdown-content menu z-1 p-2 w-xs">
+              <AddToProjectDropdownContent
+                noteId={selectedNote.id}
+                noteProjectIds={selectedNote.projects.map(
+                  (project) => project.id
+                )}
               />
-            </svg>
-            Add to project
-          </button>
-          <div className="dropdown-content menu z-1 p-2 w-xs">
-            <AddToProjectDropdownContent
-              noteId={selectedNote.id}
-              noteProjectIds={selectedNote.projects.map(
-                (project) => project.id
-              )}
-            />
+            </div>
           </div>
-        </div>
-        <select
-          name="visibility"
-          className="select select-ghost bg-white select-sm w-24 rounded-full cursor-pointer transition hover:border-gray-light/50"
-          defaultValue={selectedNote.isPublic ? "public" : "private"}
-          onChange={(e) => {
-            const isPublic = e.target.value === "public";
+          <select
+            name="visibility"
+            className="select select-ghost bg-white select-sm w-24 rounded-full cursor-pointer transition hover:border-gray-light/50"
+            defaultValue={selectedNote.isPublic ? "public" : "private"}
+            onChange={(e) => {
+              const isPublic = e.target.value === "public";
 
-            updateNoteVisibility.mutate({
-              id: selectedNote.id,
-              isPublic,
-            });
-          }}
-        >
-          <option disabled={true}>Visibility</option>
-          <option value="private">🔒 Private</option>
-          <option value="public">🌐 Public</option>
-        </select>
+              updateNoteVisibility.mutate({
+                id: selectedNote.id,
+                isPublic,
+              });
+            }}
+          >
+            <option disabled={true}>Visibility</option>
+            <option value="private">🔒 Private</option>
+            <option value="public">🌐 Public</option>
+          </select>
+          <button
+            className="btn btn-ghost btn-error btn-sm rounded-full bg-white text-red-500 font-normal"
+            onClick={handleDeleteClick}
+          >
+            Delete
+          </button>
+        </div>
       </div>
       {selectedNote.type === "page" ? (
         <AnnotationEditor annotation={selectedNote} />

@@ -125,7 +125,7 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
           />
         </div>
         <div className="grow overflow-y-scroll px-8 py-6">
-          <SelectedNoteEditor user={user} selectedNoteId={selectedNoteId} />
+          <SelectedNoteEditor user={user} selectedNoteId={selectedNoteId} setSelectedNoteId={setSelectedNoteId} />
         </div>
       </main>
     </>
