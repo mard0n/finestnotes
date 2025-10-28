@@ -3,7 +3,9 @@ import type { User } from "better-auth";
 const Navbar: React.FC<{
   user: User | null;
   handleNewNoteCreation: () => void;
-}> = ({ user, handleNewNoteCreation }) => {
+  searchQuery: string;
+  setSearchQuery: React.Dispatch<React.SetStateAction<string>>;
+}> = ({ user, handleNewNoteCreation, searchQuery, setSearchQuery }) => {
   return (
     <nav className="flex items-stretch border-b border-neutral-200">
       <div className="w-xs border-r border-neutral-200 pl-8 pr-6 py-4 flex items-center">
@@ -34,6 +36,8 @@ const Navbar: React.FC<{
             name="search"
             className="grow"
             placeholder="Search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
           />
         </label>
         <button title="Create a new note" onClick={handleNewNoteCreation}>

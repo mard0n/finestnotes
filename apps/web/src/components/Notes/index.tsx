@@ -73,6 +73,7 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
     null
   );
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   useEffect(() => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -103,7 +104,7 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
 
   return (
     <>
-      <Navbar user={user} handleNewNoteCreation={handleNewNoteCreation} />
+      <Navbar user={user} handleNewNoteCreation={handleNewNoteCreation} searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
       <main className="grow overflow-y-hidden flex items-stretch">
         <div className="w-xs overflow-y-scroll shrink-0 pl-8 pr-6 py-6 border-r border-neutral-200">
           <SideBar
@@ -122,6 +123,7 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
             selectedProjectId={selectedProjectId}
             selectedNoteId={selectedNoteId}
             setSelectedNoteId={setSelectedNoteId}
+            searchQuery={searchQuery}
           />
         </div>
         <div className="grow overflow-y-scroll px-8 py-6">

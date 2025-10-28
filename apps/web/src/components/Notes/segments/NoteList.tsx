@@ -11,6 +11,7 @@ const NoteList: React.FC<{
   selectedProjectId: string | null;
   selectedNoteId: string | null;
   setSelectedNoteId: React.Dispatch<React.SetStateAction<string | null>>;
+  searchQuery: string;
 }> = ({
   user,
   collections,
@@ -18,6 +19,7 @@ const NoteList: React.FC<{
   selectedProjectId,
   selectedNoteId,
   setSelectedNoteId,
+  searchQuery,
 }) => {
   const { data: project } = useQuery({
     queryKey: ["project", selectedProjectId],
@@ -44,6 +46,14 @@ const NoteList: React.FC<{
       if (filterCategory === "public") return collection.isPublic;
       if (filterCategory === "private") return !collection.isPublic;
       return false;
+    }).filter((collection) => {
+      if (!searchQuery.trim()) return true;
+      const query = searchQuery.toLowerCase();
+      const titleMatch = collection.title.toLowerCase().includes(query);
+      const contentMatch = collection.type === "note" 
+        ? collection.content?.toLowerCase().includes(query)
+        : collection.description?.toLowerCase().includes(query);
+      return titleMatch || contentMatch;
     });
 
     const calculateTitle = () => {
@@ -99,6 +109,16 @@ const NoteList: React.FC<{
       </>
     );
   } else {
+    const filteredNotes = project?.notes.filter((note) => {
+      if (!searchQuery.trim()) return true;
+      const query = searchQuery.toLowerCase();
+      const titleMatch = note.title.toLowerCase().includes(query);
+      const contentMatch = note.type === "note"
+        ? note.content?.toLowerCase().includes(query)
+        : note.description?.toLowerCase().includes(query);
+      return titleMatch || contentMatch;
+    });
+
     return (
       <>
         <div className="mb-6">
@@ -114,11 +134,11 @@ const NoteList: React.FC<{
             </a>
           ) : null}
         </div>
-        {project?.notes.length ? (
+        {filteredNotes?.length ? (
           <>
             <div className="divider m-0 h-[1px] before:h-[1px] after:h-[1px] before:border-neutral-200 after:border-neutral-200" />
             <ul className="space-y-4 list">
-              {project.notes.map((note) => (
+              {filteredNotes.map((note) => (
                 <NoteListItem
                   key={note.id}
                   id={note.id}
