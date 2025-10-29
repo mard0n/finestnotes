@@ -12,7 +12,7 @@ const isLoggedIn = !!user;
   <div
     class="w-xs grow px-6 py-4 flex gap-3 items-center justify-between"
   >
-    <label class="input input-ghost !outline-offset-0 w-full">
+    <form id="search-form" action="/search" method="GET" class="input input-ghost !outline-offset-0 w-full">
       <svg
         class="h-[1.2em] opacity-50"
         xmlns="http://www.w3.org/2000/svg"
@@ -29,8 +29,8 @@ const isLoggedIn = !!user;
           <path d="m21 21-4.3-4.3"></path>
         </g>
       </svg>
-      <input type="search" name="search" class="grow" placeholder="Search" />
-    </label>
+      <input type="search" name="q" class="grow" placeholder="Search" />
+    </form>
   </div>
   <div class="flex grow gap-10 items-center justify-end px-8 py-4">
     {
