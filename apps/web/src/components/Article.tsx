@@ -1,3 +1,4 @@
+import { formatDate } from "@utils/date";
 import React from "react";
 
 export const Article: React.FC<{
@@ -6,10 +7,14 @@ export const Article: React.FC<{
   description: string | null;
   authorName: string;
   createdAt: string;
-}> = ({ id, title, description, authorName, createdAt }) => {
+  userId?: string;
+  authorId?: string;
+}> = ({ id, title, description, authorName, createdAt, userId, authorId }) => {
+  const isOwner = userId && authorId && userId === authorId;
   return (
-    <li className="list-row px-0 after:inset-x-[0px]">
-      <div>
+    <li className="list-row after:inset-x-[0px] px-0 gap-0">
+      <div></div>
+      <div className="min-w-0">
         <svg
           width="13"
           height="19"
@@ -25,23 +30,28 @@ export const Article: React.FC<{
             strokeLinecap="round"
           />
         </svg>
-
-        <a href={`/article/${id}`}>
-          <div className="mb-1 text-lg font-serif text-black">{title}</div>
+        <a className="block" href={`/article/${id}`}>
+          <div className="text-lg font-serif text-black">{title}</div>
+          {description ? (
+            <div
+              className="mb-1 text-sm truncate text-content-medium"
+              title={description.slice(0, 100)}
+            >
+              {description}
+            </div>
+          ) : null}
         </a>
-        <a href={`/article/${id}`}>
-          <div
-            className="mb-2 text-base truncate text-gray-content "
-            title={description || ""}
-          >
-            {description}
-          </div>
-        </a>
-        <div className="text-sm text-[#777]">
-          <span>
-            <a href="/user/:id">{authorName}</a>
-          </span>{" "}
-          · <span>{createdAt}</span> ·{" "}
+        <div className="text-sm text-content-light">
+          {isOwner ? (
+            <span>You</span>
+          ) : (
+            <span>
+              <a className="link" href="/user/:id">
+                {authorName}
+              </a>
+            </span>
+          )}{" "}
+          · <span>{formatDate(createdAt)}</span> ·{" "}
           <span>
             <a>200 comments</a>
           </span>

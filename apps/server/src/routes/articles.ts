@@ -10,7 +10,50 @@ import * as schema from "../db/schema";
 const articles = new Hono<{ Bindings: Bindings }>()
   // Get all articles
   .get(
-    "/",
+    "/recommended",
+    zValidator(
+      "query",
+      z.object({
+        page: z.string().optional().default("1"),
+        limit: z.string().optional().default("20"),
+      })
+    ),
+    async (c) => {
+      const { page, limit } = c.req.valid("query");
+      const pageNum = parseInt(page);
+      const limitNum = parseInt(limit);
+      const offset = (pageNum - 1) * limitNum;
+
+      const db = drizzle(c.env.finestdb, { schema: schema });
+
+      const articles = await db.query.notes.findMany({
+        with: {
+          user: true,
+        },
+        where: eq(notes.isPublic, true),
+      });
+
+      const normalizedArticles = normalizeNotes(articles);
+
+      // Apply pagination
+      const paginatedArticles = normalizedArticles.slice(
+        offset,
+        offset + limitNum
+      );
+      const hasMore = offset + limitNum < normalizedArticles.length;
+
+      return c.json({
+        articles: paginatedArticles,
+        hasMore,
+        total: normalizedArticles.length,
+        page: pageNum,
+        limit: limitNum,
+      });
+    }
+  )
+
+  .get(
+    "/newest",
     zValidator(
       "query",
       z.object({

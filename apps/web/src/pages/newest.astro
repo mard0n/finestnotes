@@ -6,7 +6,7 @@ import Article from "@components/Article";
 
 const client = createServerClient(Astro.request.headers);
 const page = Astro.url.searchParams.get('page') || '1'
-const res = await client.api.articles.recommended.$get({query: {
+const res = await client.api.articles.newest.$get({query: {
 	page
 }})
 const data = await parseResponse(res);
@@ -17,8 +17,8 @@ const hasMore = data.hasMore;
 <Layout>
 	<main class="ml-24 mt-16 max-w-3xl">
 		<div role="tablist" class="tabs tabs-border gap-4">
-			<a href="/" role="tab" class="tab tab-active font-bold before:border-base-300 before:w-full before:left-0 before:bg-base-300 p-0">Recommended</a>
-			<a href="/newest" role="tab" class="tab before:w-full before:left-0 p-0">Newest</a>
+			<a href="/" role="tab" class="tab before:w-full before:left-0 p-0">Recommended</a>
+			<a href="/newest" role="tab" class="tab tab-active font-bold before:border-base-300 before:w-full before:left-0 before:bg-base-300 p-0">Newest</a>
 		</div>
 		<ul class="list mt-4 rounded-none">
 		{
