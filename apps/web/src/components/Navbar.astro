@@ -3,16 +3,18 @@ const user = Astro.locals.user;
 const isLoggedIn = !!user;
 ---
 
-<nav class="flex items-stretch border-b border-neutral-200">
-  <div
-    class="w-xs pl-8 pr-6 py-4 flex items-center"
-  >
-    <a href="/" class="">Finest</a>
+<nav class="flex items-stretch py-4 border-b border-neutral-200">
+  <div class="ml-8 flex items-center font-serif font-bold text-xl">
+    <a href="/" class="hidden xl:block">Finest Notes</a>
+    <a href="/" class="block xl:hidden">FN</a>
   </div>
-  <div
-    class="w-xs grow px-6 py-4 flex gap-3 items-center justify-between"
-  >
-    <form id="search-form" action="/search" method="GET" class="input input-ghost !outline-offset-0 w-full">
+  <div class="mx-8 flex grow">
+    <form
+      id="search-form"
+      action="/search"
+      method="GET"
+      class="input input-ghost !outline-offset-0 w-full"
+    >
       <svg
         class="h-[1.2em] opacity-50"
         xmlns="http://www.w3.org/2000/svg"
@@ -32,16 +34,40 @@ const isLoggedIn = !!user;
       <input type="search" name="q" class="grow" placeholder="Search" />
     </form>
   </div>
-  <div class="flex grow gap-10 items-center justify-end px-8 py-4">
+  <div class="mr-8 flex gap-10 items-center justify-end">
     {
       isLoggedIn ? (
         <>
-          <a href="/notes">my notes</a>
+          <a class="hidden md:block" href="/notes">
+            my notes
+          </a>
+          <a class="block md:hidden" href="/notes">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              class="lucide lucide-file-text-icon lucide-file-text"
+            >
+              <>
+                <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                <path d="M10 9H8" />
+                <path d="M16 13H8" />
+                <path d="M16 17H8" />
+              </>
+            </svg>
+          </a>
           <div class="dropdown dropdown-hover dropdown-end">
-            <span tabindex="0" role="link" class="m-1">
+            <span tabindex="0" role="link" class="m-1 max-w-6 truncate">
               {user.name}
             </span>
-            <div class="dropdown-content menu  z-1 w-52 p-2">
+            <div class="dropdown-content menu z-1 w-52 p-2">
               <ul class="bg-base-100 p-2 shadow-sm" tabindex="-1">
                 <li>
                   <a href="/notes">My notes</a>
