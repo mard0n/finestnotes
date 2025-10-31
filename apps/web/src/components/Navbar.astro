@@ -110,7 +110,7 @@ const searchQuery = Astro.url.searchParams.get("q") || "";
                   <a href="/settings">Settings</a>
                 </li>
                 <li>
-                  <a id="signout">Sign out</a>
+                  <a href="/auth/signout" id="signout">Sign out</a>
                 </li>
               </ul>
             </div>
@@ -118,7 +118,7 @@ const searchQuery = Astro.url.searchParams.get("q") || "";
         </>
       ) : (
         <>
-          <a href="/login">Login</a>
+          <a href="/auth/login">Login</a>
         </>
       )
     }

@@ -79,7 +79,7 @@ const Navbar: React.FC<{
                     <a href="/settings">Settings</a>
                   </li>
                   <li>
-                    <a id="signout">Sign out</a>
+                    <a href="/auth/signout" id="signout">Sign out</a>
                   </li>
                 </ul>
               </div>
@@ -87,7 +87,7 @@ const Navbar: React.FC<{
           </>
         ) : (
           <>
-            <a href="/login">Login</a>
+            <a href="/auth/login">Login</a>
           </>
         )}
       </div>

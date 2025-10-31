@@ -94,7 +94,7 @@ function App() {
   async function handleLogin() {
     try {
       const webUrl = import.meta.env.VITE_WEB_URL || "http://localhost:4321";
-      browser.tabs.create({ url: `${webUrl}/login` });
+      browser.tabs.create({ url: `${webUrl}/auth/login` });
     } catch (error) {
       console.error("Error during login:", error);
     }

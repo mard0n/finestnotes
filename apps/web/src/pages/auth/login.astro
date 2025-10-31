@@ -1,7 +1,6 @@
 ---
 import Layout from "@layouts/Layout.astro";
 
-console.log("Astro.locals.user", Astro.locals.user);
 const isLoggedIn = !!Astro.locals.user;
 ---
 
@@ -62,7 +61,7 @@ const isLoggedIn = !!Astro.locals.user;
 									required
 								/>
 								<label class="label mt-2">
-									<a href="/forgot-password" class="label-text-alt link link-primary">Forgot password?</a>
+									<a href="/auth/forgot-password" class="label-text-alt link link-primary">Forgot password?</a>
 								</label>
 							</div>
 							
@@ -75,7 +74,7 @@ const isLoggedIn = !!Astro.locals.user;
 							<div class="text-center">
 								<p class="text-sm">
 									Don't have an account?{" "}
-									<a href="/signup" class="link link-primary">Sign up</a>
+									<a href="/auth/signup" class="link link-primary">Sign up</a>
 								</p>
 							</div>
 						</form>

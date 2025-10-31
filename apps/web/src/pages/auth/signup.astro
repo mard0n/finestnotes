@@ -1,9 +1,8 @@
 ---
 import Layout from "@layouts/Layout.astro";
 
-export const prerender = false;
+export const prerender = true
 
-// Check if user is already logged in
 if (Astro.locals.user) {
 	return Astro.redirect("/");
 }
@@ -130,7 +129,7 @@ if (Astro.locals.user) {
 					<div class="text-center">
 						<p class="text-sm">
 							Already have an account?{" "}
-							<a href="/login" class="link link-primary">Sign in</a>
+							<a href="/auth/login" class="link link-primary">Sign in</a>
 						</p>
 					</div>
 				</form>
@@ -189,7 +188,7 @@ if (Astro.locals.user) {
 				fetchOptions: {
 					onSuccess: () => {
 						// Redirect on success
-						window.location.href = "/verify";
+						window.location.href = "/auth/verify";
 					},
 					onError: (ctx) => {
 						showError(ctx.error.message || "Signup failed. Please try again.");
