@@ -11,8 +11,12 @@ export const Article: React.FC<{
   authorId?: string;
 }> = ({ id, title, description, authorName, createdAt, userId, authorId }) => {
   const isOwner = userId && authorId && userId === authorId;
+  console.log("isOwner", isOwner);
+  console.log("userId", userId);
+  console.log("authorId", authorId);
+
   return (
-    <li className="list-row after:inset-x-[0px] px-0 gap-0">
+    <li className="list-row after:inset-x-[0px] px-0 gap-0 first:pt-0 last:pb-0">
       <div></div>
       <div className="min-w-0">
         <svg
@@ -43,15 +47,16 @@ export const Article: React.FC<{
         </a>
         <div className="text-sm text-content-light">
           {isOwner ? (
-            <span>You</span>
-          ) : (
+            <span>You · </span>
+          ) : authorName ? (
             <span>
               <a className="link" href="/user/:id">
                 {authorName}
-              </a>
+              </a>{" "}
+              ·
             </span>
-          )}{" "}
-          · <span>{formatDate(createdAt)}</span> ·{" "}
+          ) : null}{" "}
+          <span>{formatDate(createdAt)}</span> ·{" "}
           <span>
             <a>200 comments</a>
           </span>
