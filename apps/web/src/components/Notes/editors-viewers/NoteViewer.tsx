@@ -2,8 +2,8 @@ import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import type { Collections } from "..";
 import { getInitialEditorState, initialConfig } from "./NoteEditor";
+import type { Collections } from "@utils/types";
 
 const NoteViewer: React.FC<{
   note: Collections[number] & { type: "note" };

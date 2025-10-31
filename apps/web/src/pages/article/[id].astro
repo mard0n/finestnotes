@@ -1,9 +1,12 @@
 ---
 import AnnotationViewer from "@components/Notes/editors-viewers/AnnotationViewer";
-import NoteViewer from "@components/Notes/editors-viewers/NoteViewer";
+import Badge from "@components/ui/Badge";
 import Layout from "@layouts/Layout.astro";
 import { createServerClient } from "@utils/api";
+import { formatDate } from "@utils/date";
 import { parseResponse } from "hono/client";
+import ArticleActionBar from "./_components/ArticleActionBar.tsx";
+import NoteViewer from "./_components/NoteViewer.astro";
 
 const { id } = Astro.params;
 
@@ -14,66 +17,64 @@ if (!id) {
 const response = await createServerClient(Astro.request.headers).api.articles[
   ":id"
 ].$get({ param: { id: id }, query: { userId: Astro.locals.user?.id } });
+
 console.log("Fetched article:", response);
 const article = await parseResponse(response);
 
 if (!article) {
   throw new Error("Article not found");
 }
+
+const isOwner = Astro.locals.user?.id === article.user.id;
+const authorName = isOwner ? "You" : article.user.name;
 ---
 
 <Layout>
-  <main class="relative w-full">
-    <div class="max-w-2xl mx-auto my-8 px-4">
-      <h1 class="font-serif text-2xl text-black">{article.title}</h1>
-      {
-        article.type === "page" && article.description && (
-          <p class="text-sm mt-2 mb-3">{article.description}</p>
-        )
-      }
-      <div class="text-xs text-gray-500 mb-4 mt-1">
-        by {article.user.name} · {
-          new Date(article.createdAt).toLocaleDateString()
-        }
-      </div>
-      {
-        article.type === "note" ? (
-          <NoteViewer client:load note={article} />
-        ) : (
-          <AnnotationViewer client:load annotation={article} />
-        )
-      }
-    </div>
+  <main class="max-w-2xl mx-auto my-8">
+    <ArticleActionBar client:load article={article} user={Astro.locals.user} />
+    <h1 class="font-serif text-2xl text-black">{article.title}</h1>
     {
-      (
-        <div class="text-right absolute w-xs top-0 right-8">
-          <h3 class="underline mb-2 font-medium">Part of these projects:</h3>
-          <ul class="text-sm text-gray-light">
-            {article.projects.length ? (
-              article.projects.map((project) => (
-                <li class="mb-1">
-                  <a href={`/project/${project.id}`} class="link link-hover">
-                    {project.name}
-                  </a>
-                  <span class="text-gray-600">by </span>
-                  {project.owner.id === Astro.locals.user?.id ? (
-                    <span class="text-gray-600">you</span>
-                  ) : (
-                    <a
-                      href={`/user/${project.owner.id}`}
-                      class="link link-hover"
-                    >
-                      {project.owner.name}
-                    </a>
-                  )}
-                </li>
-              ))
-            ) : (
-              <li>Not part of any project.</li>
-            )}
-          </ul>
-        </div>
+      article.type === "page" && article.description && (
+        <p class="text-sm mt-2 mb-3">{article.description}</p>
       )
     }
+    <div class="text-xs text-gray-500 mb-4 mt-1">
+      by {
+        isOwner ? (
+          <span>You</span>
+        ) : (
+          <span>
+            <a class="link" href="/user/:id">
+              {authorName}
+            </a>
+          </span>
+        )
+      } · <span title={new Date(article.createdAt).toLocaleDateString()}
+        >{formatDate(article.createdAt)}</span
+      >
+    </div>
+    {
+      article.type === "note" ? (
+        <NoteViewer note={article} />
+      ) : (
+        <AnnotationViewer annotation={article} />
+      )
+    }
+
+    <div class="divider mt-10">projects</div>
+    <ul class="flex gap-2 whitespace-nowrap">
+      {
+        article.projects.map((project) => (
+          <Badge
+            id={project.id}
+            ownerId={project.owner.id}
+            ownerName={project.owner.name}
+            userId={Astro.locals.user?.id}
+          >
+            {project.name}
+          </Badge>
+        ))
+      }
+    </ul>
   </main>
 </Layout>

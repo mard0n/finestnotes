@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { client } from "@utils/api";
 import type { User } from "better-auth";
-import { parseResponse, type InferResponseType } from "hono/client";
+import { parseResponse } from "hono/client";
 import {
   useQuery,
   QueryClient,
@@ -13,9 +13,7 @@ import Navbar from "./components/Navbar";
 import SideBar from "./segments/Sidebar";
 import NoteList from "./segments/NoteList";
 import SelectedNoteEditor from "./segments/SelectedNoteEditor";
-
-export type Collections = InferResponseType<typeof client.api.collections.$get>;
-export type Projects = InferResponseType<typeof client.api.projects.$get>;
+import type { Collections } from "@utils/types";
 
 export const queryClient = new QueryClient();
 
@@ -57,6 +55,8 @@ const Notes: React.FC<{ initialCollections: Collections; user: User }> = ({
         json: {
           title: "",
           content: "",
+          contentLexical: "",
+          contentHTML: "",
         },
       });
       return await parseResponse(res);

@@ -1,6 +1,5 @@
 import React, { useRef } from "react";
-import { type Collections } from "..";
-import { $getRoot, type LexicalEditor } from "lexical";
+import { $getRoot } from "lexical";
 
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
@@ -16,11 +15,13 @@ import { CodeHighlightNode, CodeNode } from "@lexical/code";
 import { AutoLinkNode, LinkNode } from "@lexical/link";
 import { ListItemNode, ListNode } from "@lexical/list";
 import { HashtagNode } from "@lexical/hashtag";
+import { $generateHtmlFromNodes } from "@lexical/html";
 
 import { client } from "@utils/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { parseResponse } from "hono/client";
 import { theme } from "@styles/lexical-theme";
+import type { Collections } from "@utils/types";
 
 export const initialConfig = {
   namespace: "MyEditor",
@@ -68,14 +69,16 @@ const NoteEditor: React.FC<{
       id,
       content,
       contentLexical,
+      contentHTML,
     }: {
       id: string;
       content: string;
       contentLexical: string;
+      contentHTML: string;
     }) => {
       const res = await client.api.note[":id"].content.$put({
         param: { id },
-        json: { content, contentLexical },
+        json: { content, contentLexical, contentHTML },
       });
       return await parseResponse(res);
     },
@@ -112,16 +115,20 @@ const NoteEditor: React.FC<{
       </div>
       <HistoryPlugin />
       <OnChangePlugin
-        onChange={(editorState) => {
+        onChange={(editorState, editor) => {
           const editorStateJSON = editorState.toJSON();
           editorState.read(() => {
-            // You can read the editor state here if needed
             const root = $getRoot();
+
+            const htmlString = $generateHtmlFromNodes(editor, null);
+            console.log('htmlString', htmlString);
+            
 
             updateNoteContent.mutate({
               id: note.id,
               content: root.getTextContent(),
               contentLexical: JSON.stringify(editorStateJSON),
+              contentHTML: htmlString,
             });
           });
         }}

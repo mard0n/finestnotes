@@ -17,6 +17,7 @@ export const notes = sqliteTable("notes", {
 
   content: text("content"),
   contentLexical: text("content_lexical"),
+  contentHTML: text("content_html"),
 
   url: text("url"),
   description: text("description"),

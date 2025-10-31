@@ -4,7 +4,7 @@ import type { User } from "better-auth";
 import { parseResponse } from "hono/client";
 import { useState } from "react";
 import type { FilterCategory } from "..";
-import { CreateProjectModal } from "../components/ProjectModals";
+import CreateProjectModal from "../components/CreateProjectModal";
 
 const SideBar: React.FC<{
   user: User;
@@ -254,7 +254,7 @@ const SideBar: React.FC<{
                       ) : (
                         <a
                           href={`/user/${project.ownerId}`}
-                          className="link link-hover text-gray-light align-text-bottom"
+                          className="link link-hover text-content-light align-text-bottom"
                         >
                           ({project.owner.name})
                         </a>

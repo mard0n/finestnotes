@@ -7,6 +7,8 @@ import type { Bindings } from "../index";
 import z from "zod";
 import { protect } from "middlewares/auth.middleware";
 import type { Session, User } from "better-auth";
+import createDOMPurify from "dompurify";
+import { parseHTML } from "linkedom";
 
 const note = new Hono<{
   Bindings: Bindings;
@@ -32,11 +34,18 @@ const note = new Hono<{
       z.object({
         title: z.string(),
         content: z.string(),
+        contentLexical: z.string(),
+        contentHTML: z.string(),
       })
     ),
     async (c) => {
-      const { title, content } = c.req.valid("json");
+      const { title, content, contentLexical, contentHTML } =
+        c.req.valid("json");
       const db = drizzle(c.env.finestdb);
+
+      const { window } = parseHTML("<!DOCTYPE html>");
+      const DOMPurify = createDOMPurify(window);
+      const cleanHTML = DOMPurify.sanitize(contentHTML);
 
       const result = await db
         .insert(notes)
@@ -45,14 +54,16 @@ const note = new Hono<{
           type: "note",
           title,
           content,
+          contentLexical,
+          contentHTML: cleanHTML,
         })
         .returning()
-        .get()
+        .get();
 
       return c.json({
         success: true,
         message: `Note is successfully created`,
-        data: result
+        data: result,
       });
     }
   )
@@ -116,16 +127,21 @@ const note = new Hono<{
       z.object({
         content: z.string(),
         contentLexical: z.string(),
+        contentHTML: z.string(),
       })
     ),
     async (c) => {
       const { id } = c.req.valid("param");
-      const { content, contentLexical } = c.req.valid("json");
+      const { content, contentLexical, contentHTML } = c.req.valid("json");
       const db = drizzle(c.env.finestdb);
+
+      const { window } = parseHTML("<!DOCTYPE html>");
+      const DOMPurify = createDOMPurify(window);
+      const cleanHTML = DOMPurify.sanitize(contentHTML);
 
       const res = await db
         .update(notes)
-        .set({ content, contentLexical })
+        .set({ content, contentLexical, contentHTML: cleanHTML })
         .where(and(eq(notes.id, id), eq(notes.userId, c.var.user.id)))
         .run();
 

@@ -2,7 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { client } from "@utils/api";
 import type { User } from "better-auth";
 import { parseResponse } from "hono/client";
-import type { Collections, FilterCategory } from "..";
+import type { FilterCategory } from "..";
+import type { Collections } from "@utils/types";
 
 const NoteList: React.FC<{
   user: User;
@@ -128,7 +129,7 @@ const NoteList: React.FC<{
           {project?.ownerId !== user.id ? (
             <a
               href={`/users/${project?.ownerId}`}
-              className="link link-hover text-sm text-gray-light px-6 mt-1"
+              className="link link-hover text-sm text-content-light px-6 mt-1"
             >
               by {project?.owner.name}
             </a>

@@ -1,7 +1,7 @@
 import { useQueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import { client } from "@utils/api";
 import { parseResponse } from "hono/client";
-import { AddToProjectDropdownContent } from "../components/ProjectModals";
+import AddToProjectDropdown from "@components/AddToProjectDropdown";
 import AnnotationViewer from "../editors-viewers/AnnotationViewer";
 import NoteViewer from "../editors-viewers/NoteViewer";
 import type { User } from "better-auth";
@@ -83,7 +83,7 @@ const SelectedNoteEditor: React.FC<{
   if (!selectedNote) {
     return (
       <div className="flex justify-center items-center h-full">
-        <span className="text-gray-light select-none">No note selected</span>
+        <span className="text-content-light select-none">No note selected</span>
       </div>
     );
   }
@@ -153,7 +153,7 @@ const SelectedNoteEditor: React.FC<{
               Add to project
             </button>
             <div className="dropdown-content menu z-1 p-2 w-xs">
-              <AddToProjectDropdownContent
+              <AddToProjectDropdown
                 noteId={selectedNote.id}
                 noteProjectIds={selectedNote.projects.map(
                   (project) => project.id
@@ -163,7 +163,7 @@ const SelectedNoteEditor: React.FC<{
           </div>
           <select
             name="visibility"
-            className="select select-ghost bg-white select-sm w-24 rounded-full cursor-pointer transition hover:border-gray-light/50"
+            className="select select-ghost bg-white select-sm w-24 rounded-full cursor-pointer transition hover:border-content-light/50"
             defaultValue={selectedNote.isPublic ? "public" : "private"}
             onChange={(e) => {
               const isPublic = e.target.value === "public";

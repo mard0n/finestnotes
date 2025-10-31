@@ -1,5 +1,5 @@
+import type { Collections } from "@utils/types";
 import React from "react";
-import type { Collections } from "..";
 
 type AnnotationType = Collections[number] & { type: "page" };
 
@@ -42,11 +42,11 @@ const HighlightComponent: React.FC<{
 }> = ({ highlight }) => {
   return (
     <div>
-      <blockquote className="text-md pl-5 text-gray-dark/90 italic relative before:content-[''] before:absolute before:left-0 before:top-0 before:w-0.5 before:h-full before:bg-gray-light">
+      <blockquote className="text-md pl-5 text-content-dark/90 italic relative before:content-[''] before:absolute before:left-0 before:top-0 before:w-0.5 before:h-full before:bg-content-light">
         {highlight.text}
       </blockquote>
       {highlight.comment && (
-        <div className="pl-5 pt-2 flex items-center gap-2">
+        <div className="pl-5 pt-2 w-full flex items-center gap-2">
           <svg
             width="18"
             height="24"
@@ -55,7 +55,7 @@ const HighlightComponent: React.FC<{
             strokeWidth={1.5}
             stroke="currentColor"
             xmlns="http://www.w3.org/2000/svg"
-            className="text-gray-light"
+            className="text-content-light"
           >
             <path
               d="M5.59331 2.21094C5.56389 2.90311 5.57153 4.31055 5.66732 6.20438C5.74104 7.66184 6.15775 8.74089 6.57635 9.72788C7.05127 10.8476 7.99939 11.9176 9.20746 13.0572C11.9235 14.9973 12.7838 15.268 13.7264 15.4066C14.3353 15.4673 15.2096 15.5083 16.3297 15.3949"

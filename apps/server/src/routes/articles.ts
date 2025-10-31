@@ -113,7 +113,6 @@ const articles = new Hono<{ Bindings: Bindings }>()
     async (c) => {
       const { id } = c.req.valid("param");
       const { userId } = c.req.valid("query");
-      // Check both notes and pages tables for the id
       const db = drizzle(c.env.finestdb, { schema: schema });
 
       let article = await db.query.notes.findFirst({
