@@ -30,7 +30,7 @@ const authorName = isOwner ? "You" : article.user.name;
 ---
 
 <Layout>
-  <main class="max-w-2xl mx-auto my-8">
+  <main class="max-w-2xl mx-auto my-8 px-4">
     <ArticleActionBar client:load article={article} user={Astro.locals.user} />
     <h1 class="font-serif text-2xl text-black">{article.title}</h1>
     {
@@ -62,7 +62,7 @@ const authorName = isOwner ? "You" : article.user.name;
     }
 
     <div class="divider mt-10">projects</div>
-    <ul class="flex gap-2 whitespace-nowrap">
+    <ul class="flex gap-2 flex-wrap">
       {
         article.projects.map((project) => (
           <Badge

@@ -18,13 +18,13 @@ const Badge: React.FC<BadgeProps> = ({
   id,
 }) => {
   const baseStyles =
-    "badge badge-lg text-xs text-black badge-outline rounded-full border-base-300 flex-shrink-0 gap-1";
+    "badge badge-lg text-xs text-black badge-outline rounded-full border-base-300 flex-shrink-0 gap-1 whitespace-nowrap max-w-full";
 
   const isOwner = ownerId === userId;
 
   return (
     <span className={`${baseStyles} ${className}`}>
-      <a className="link link-hover" href={`/project/${id}`}>
+      <a className="link link-hover truncate" href={`/project/${id}`}>
         {children}
       </a>{" "}
       <span className="text-content-medium">by </span>

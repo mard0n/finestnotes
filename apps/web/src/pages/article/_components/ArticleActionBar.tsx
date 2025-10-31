@@ -22,7 +22,7 @@ const ActionBar: React.FC<{ article: Article; user: User | null }> = ({
 }) => {
   return (
     <div className="mb-4 flex justify-between items-center">
-      <div className="flex gap-4">
+      <div className="flex gap-2 md:gap-4">
         <button className="btn btn-ghost btn-sm rounded-full bg-white font-normal">
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -64,17 +64,19 @@ const ActionBar: React.FC<{ article: Article; user: User | null }> = ({
                 <path d="M7 17 17 7" />
               </>
             </svg>
-            Visit
+            <span className="hidden md:inline">
+              Visit
+            </span>
           </a>
         ) : null}
       </div>
-      <div className="flex gap-4">
+      <div className="flex gap-2 md:gap-4">
         <button className="btn btn-ghost btn-sm rounded-full bg-white font-normal">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
             viewBox="0 0 24 24"
-            strokeWidth="1.5"
+            strokeWidth="2"
             stroke="currentColor"
             className="size-4"
           >
@@ -84,7 +86,9 @@ const ActionBar: React.FC<{ article: Article; user: User | null }> = ({
               d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
             ></path>
           </svg>
-          Save
+          <span className="hidden md:inline">
+            Save
+          </span>
         </button>
         <div className="dropdown dropdown-end">
           <button className="btn btn-ghost btn-sm rounded-full bg-white font-normal">
@@ -92,7 +96,7 @@ const ActionBar: React.FC<{ article: Article; user: User | null }> = ({
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
-              strokeWidth={1.5}
+              strokeWidth="2"
               stroke="currentColor"
               className="size-4"
             >
@@ -102,7 +106,9 @@ const ActionBar: React.FC<{ article: Article; user: User | null }> = ({
                 d="M12 10.5v6m3-3H9m4.06-7.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"
               ></path>
             </svg>
-            Add to project
+            <span className="hidden md:inline">
+              Add to project
+            </span>
           </button>
           <div className="dropdown-content menu z-1 p-2 w-xs">
             <AddToProjectDropdown
