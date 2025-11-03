@@ -20,7 +20,7 @@ const note = new Hono<{
     const result = await db
       .select()
       .from(notes)
-      .where(eq(notes.userId, c.var.user.id))
+      .where(eq(notes.authorId, c.var.user.id))
       .all();
     return c.json(result);
   })
@@ -50,7 +50,7 @@ const note = new Hono<{
       const result = await db
         .insert(notes)
         .values({
-          userId: c.var.user.id,
+          authorId: c.var.user.id,
           type: "note",
           title,
           content,
@@ -92,7 +92,7 @@ const note = new Hono<{
       const res = await db
         .update(notes)
         .set({ title })
-        .where(and(eq(notes.id, id), eq(notes.userId, c.var.user.id)))
+        .where(and(eq(notes.id, id), eq(notes.authorId, c.var.user.id)))
         .run();
 
       if (res.meta.changes === 0) {
@@ -142,7 +142,7 @@ const note = new Hono<{
       const res = await db
         .update(notes)
         .set({ content, contentLexical, contentHTML: cleanHTML })
-        .where(and(eq(notes.id, id), eq(notes.userId, c.var.user.id)))
+        .where(and(eq(notes.id, id), eq(notes.authorId, c.var.user.id)))
         .run();
 
       if (res.meta.changes === 0) {
@@ -186,7 +186,7 @@ const note = new Hono<{
       const res = await db
         .update(notes)
         .set({ isPublic })
-        .where(and(eq(notes.id, id), eq(notes.userId, c.var.user.id)))
+        .where(and(eq(notes.id, id), eq(notes.authorId, c.var.user.id)))
         .run();
 
       if (res.meta.changes === 0) {
@@ -222,7 +222,7 @@ const note = new Hono<{
 
       const res = await db
         .delete(notes)
-        .where(and(eq(notes.id, id), eq(notes.userId, c.var.user.id)))
+        .where(and(eq(notes.id, id), eq(notes.authorId, c.var.user.id)))
         .run();
 
       if (res.meta.changes === 0) {

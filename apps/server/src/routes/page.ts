@@ -30,7 +30,7 @@ const page = new Hono<{
       const result = await db
         .select()
         .from(notes)
-        .where(and(eq(notes.url, url), eq(notes.userId, c.var.user.id)))
+        .where(and(eq(notes.url, url), eq(notes.authorId, c.var.user.id)))
         .get();
 
       if (!result) {
@@ -64,7 +64,7 @@ const page = new Hono<{
         .insert(notes)
         .values({
           type: "page",
-          userId: c.var.user.id,
+          authorId: c.var.user.id,
           title,
           url,
           description,
@@ -102,7 +102,7 @@ const page = new Hono<{
       const res = await db
         .update(notes)
         .set({ description })
-        .where(and(eq(notes.id, id), eq(notes.userId, c.var.user.id)))
+        .where(and(eq(notes.id, id), eq(notes.authorId, c.var.user.id)))
         .run();
 
       if (res.meta.changes === 0) {

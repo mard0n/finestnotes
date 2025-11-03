@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
-import { user, projects, notes, projectNotes } from "../db/schema";
-import { eq, and, sql, count } from "drizzle-orm";
+import { user, projects, notes } from "../db/schema";
+import { eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import type { Bindings } from "../index";
@@ -27,25 +27,25 @@ const userRoutes = new Hono<{
       const userData = await db.query.user.findFirst({
         where: eq(user.id, id),
         with: {
-          ownedProjects: {
+          projects: {
             where: eq(projects.isPublic, true),
             extras: (table, { sql }) => ({
               noteCount: sql<number>`(
                 SELECT COUNT(*)
-                FROM "project_notes"
-                WHERE "project_notes"."project_id" = ${table.id}
+                FROM "projects_to_notes"
+                WHERE "projects_to_notes"."project_id" = ${table.id}
               )`.as('note_count')
             })
           },
           notes: {
             where: eq(notes.isPublic, true),
             with: {
-              projectNotes: {
+              projectsToNotes: {
                 with: {
                   project: true,
                 },
               },
-              user: true,
+              author: true,
             },
           },
         },

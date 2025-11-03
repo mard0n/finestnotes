@@ -6,19 +6,16 @@ import Article from "@components/Article";
 
 const client = createServerClient(Astro.request.headers);
 const page = Astro.url.searchParams.get('page') || '1'
-const res = await client.api.articles.recommended.$get({query: {
+const res = await client.api.articles.$get({query: {
 	page
 }})
-const data = await parseResponse(res);
-const articles = data.articles;
-const hasMore = data.hasMore;
+const articles = await parseResponse(res);
 ---
 
 <Layout>
 	<main class="article-container">
 		<div role="tablist" class="tabs tabs-border gap-4">
-			<a href="/" role="tab" class="tab tab-active font-bold before:border-base-300 before:w-full before:left-0 before:bg-base-300 p-0">Recommended</a>
-			<a href="/newest" role="tab" class="tab before:w-full before:left-0 p-0">Newest</a>
+			<a href="/" role="tab" class="tab tab-active font-bold before:border-base-300 before:w-full before:left-0 before:bg-base-300 p-0">Articles</a>
 		</div>
 		<ul class="list mt-8 rounded-none">
 		{
@@ -28,14 +25,14 @@ const hasMore = data.hasMore;
 					title={article.title}
 					description={article.type === 'note' ? article.content : article.description} 
 					createdAt={article.createdAt} 
-					authorName={article.user.name} 
-					authorId={article.user.id}
+					authorName={article.author.name} 
+					authorId={article.author.id}
 					userId={Astro.locals.user?.id}
 				/>
 			))
 		}
 		</ul>
-		{hasMore ? <button id="load-more">Load more</button> : <></>}
+		<button id="load-more">Load more</button>
 	</main>
 </Layout>
 

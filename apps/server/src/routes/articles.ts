@@ -1,97 +1,45 @@
 import { zValidator } from "@hono/zod-validator";
 import { notes } from "../db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, getTableColumns, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { type Bindings } from "../index";
 import z from "zod";
 import * as schema from "../db/schema";
 
+import { auth } from "utils/auth";
+
 const articles = new Hono<{ Bindings: Bindings }>()
   // Get all articles
   .get(
-    "/recommended",
+    "/",
     zValidator(
       "query",
       z.object({
-        page: z.string().optional().default("1"),
+        page: z.string(),
         limit: z.string().optional().default("20"),
       })
     ),
     async (c) => {
-      const { page, limit } = c.req.valid("query");
-      const pageNum = parseInt(page);
-      const limitNum = parseInt(limit);
-      const offset = (pageNum - 1) * limitNum;
+      const { page: pageStr, limit: limitStr } = c.req.valid("query");
+      const page = parseInt(pageStr);
+      const limit = parseInt(limitStr);
+      const offset = (page - 1) * limit;
 
       const db = drizzle(c.env.finestdb, { schema: schema });
 
-      const articles = await db.query.notes.findMany({
-        with: {
-          user: true,
-        },
-        where: eq(notes.isPublic, true),
-      });
+      const notesData = await db.query.notes
+        .findMany({
+          offset,
+          limit,
+          with: {
+            author: true,
+          },
+          where: eq(notes.isPublic, true),
+        })
+        .then(normalizeNotes);
 
-      const normalizedArticles = normalizeNotes(articles);
-
-      // Apply pagination
-      const paginatedArticles = normalizedArticles.slice(
-        offset,
-        offset + limitNum
-      );
-      const hasMore = offset + limitNum < normalizedArticles.length;
-
-      return c.json({
-        articles: paginatedArticles,
-        hasMore,
-        total: normalizedArticles.length,
-        page: pageNum,
-        limit: limitNum,
-      });
-    }
-  )
-
-  .get(
-    "/newest",
-    zValidator(
-      "query",
-      z.object({
-        page: z.string().optional().default("1"),
-        limit: z.string().optional().default("20"),
-      })
-    ),
-    async (c) => {
-      const { page, limit } = c.req.valid("query");
-      const pageNum = parseInt(page);
-      const limitNum = parseInt(limit);
-      const offset = (pageNum - 1) * limitNum;
-
-      const db = drizzle(c.env.finestdb, { schema: schema });
-
-      const articles = await db.query.notes.findMany({
-        with: {
-          user: true,
-        },
-        where: eq(notes.isPublic, true),
-      });
-
-      const normalizedArticles = normalizeNotes(articles);
-
-      // Apply pagination
-      const paginatedArticles = normalizedArticles.slice(
-        offset,
-        offset + limitNum
-      );
-      const hasMore = offset + limitNum < normalizedArticles.length;
-
-      return c.json({
-        articles: paginatedArticles,
-        hasMore,
-        total: normalizedArticles.length,
-        page: pageNum,
-        limit: limitNum,
-      });
+      return c.json(notesData);
     }
   )
 
@@ -104,32 +52,94 @@ const articles = new Hono<{ Bindings: Bindings }>()
         id: z.string(),
       })
     ),
-    zValidator(
-      "query",
-      z.object({
-        userId: z.string().optional(),
-      })
-    ),
     async (c) => {
       const { id } = c.req.valid("param");
-      const { userId } = c.req.valid("query");
-      const db = drizzle(c.env.finestdb, { schema: schema });
+      const session = await auth(c.env).api.getSession({
+        headers: c.req.raw.headers,
+      });
+      const currentUser = session?.user;
 
-      let article = await db.query.notes.findFirst({
-        with: {
-          user: true,
-          highlights: true,
-          images: true,
-          projectNotes: {
-            with: {
-              project: {
-                with: { owner: true },
+      const db = drizzle(c.env.finestdb, { schema });
+
+      // OPTION: Number 1
+      // Problem: Couldn't figure out how to filter related and nested projects
+      // let article = await db.query.notes.findFirst({
+      //   with: {
+      //     author: true,
+      //     highlights: true,
+      //     images: true,
+      //     projectsToNotes: {
+      //       with: {
+      //         project: {
+      //           with: { author: true },
+      //         },
+      //       },
+      //       where: // filter projects that are public or owned by the user. Couldn't figure it out
+      //     },
+      //   },
+      //   where: and(eq(notes.id, id), eq(notes.isPublic, true)),
+      // });
+
+      // OPTION: Number 2
+      // Problem: Aggregation is super complex.
+      // https://orm.drizzle.team/docs/joins#aggregating-results
+      // const { notes, projectsToNotes, projects, user } = schema;
+      // const notesColumns = getTableColumns(notes);
+      // let article = await db
+      //   .select()
+      //   .from(notes)
+      //   .leftJoin(projectsToNotes, eq(notes.id, projectsToNotes.noteId))
+      //   .leftJoin(projects, eq(projectsToNotes.projectId, projects.id))
+      //   .leftJoin(user, eq(notes.authorId, user.id))
+      //   .where(
+      //     and(
+      //       eq(notes.id, id),
+      //       eq(notes.isPublic, true),
+      //       or(
+      //         eq(projects.isPublic, true),
+      //         eq(projects.authorId, currentUser?.id || "")
+      //       )
+      //     )
+      //   )
+      //   .limit(1);
+
+      // OPTION: Number 3
+      // Manual filtering after fetching the article
+      let article = await db.query.notes
+        .findFirst({
+          with: {
+            author: true,
+            highlights: true,
+            images: true,
+            projectsToNotes: {
+              with: {
+                project: {
+                  with: { author: true },
+                },
               },
             },
           },
-        },
-        where: and(eq(notes.id, id), eq(notes.isPublic, true)),
-      });
+          where: and(eq(notes.id, id), eq(notes.isPublic, true)),
+        })
+        .then((note) => {
+          if (!note) return null;
+          const { projectsToNotes, ...rest } = note;
+
+          // Return only public or projects owned by the current user
+          const publicOrMyProjects =
+            projectsToNotes
+              ?.filter(
+                (pn) =>
+                  pn.project.isPublic || pn.project.authorId === currentUser?.id
+              )
+              .map((pn) => pn.project) ?? [];
+
+          return {
+            ...rest,
+            projects: publicOrMyProjects,
+          };
+        })
+        .then((article) => article && normalizeNotes([article])[0]);
 
       if (!article) {
         return c.json(
@@ -141,23 +151,7 @@ const articles = new Hono<{ Bindings: Bindings }>()
         );
       }
 
-      const { projectNotes, ...rest } = article;
-
-      const publicProjects =
-        projectNotes
-          ?.filter(
-            (pn) => pn.project.isPublic || pn.project.ownerId === userId
-          )
-          .map((pn) => pn.project) ?? [];
-
-      const [normalizedArticle] = normalizeNotes([
-        {
-          ...rest,
-          projects: publicProjects,
-        },
-      ]);
-
-      return c.json(normalizedArticle!);
+      return c.json(article);
     }
   );
 

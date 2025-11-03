@@ -1,5 +1,4 @@
 ---
-import AnnotationViewer from "@components/Notes/editors-viewers/AnnotationViewer";
 import Badge from "@components/ui/Badge";
 import Layout from "@layouts/Layout.astro";
 import { createServerClient } from "@utils/api";
@@ -18,9 +17,7 @@ if (!id) {
 
 const response = await createServerClient(Astro.request.headers).api.articles[
   ":id"
-].$get({ param: { id: id }, query: { userId: user?.id } });
-
-console.log("Fetched article:", response);
+].$get({ param: { id: id } });
 const article = await parseResponse(response);
 
 if (!article) {
@@ -39,8 +36,8 @@ if (!article) {
     }
     <div class="text-xs text-gray-500 mb-4 mt-1">
       <AuthorName
-        ownerId={article.user.id}
-        ownerName={article.user.name}
+        ownerId={article.author.id}
+        ownerName={article.author.name}
         userId={user?.id}
         shouldAddBy={true}
       /> ·
@@ -52,7 +49,8 @@ if (!article) {
       article.type === "note" ? (
         <NoteViewer note={article} />
       ) : (
-        <AnnotationViewer annotation={article} />
+        // <AnnotationViewer annotation={article} />
+        <></>
       )
     }
 
@@ -62,8 +60,8 @@ if (!article) {
         article.projects.map((project) => (
           <Badge
             id={project.id}
-            ownerId={project.owner.id}
-            ownerName={project.owner.name}
+            ownerId={project.author.id}
+            ownerName={project.author.name}
             userId={Astro.locals.user?.id}
           >
             {project.name}

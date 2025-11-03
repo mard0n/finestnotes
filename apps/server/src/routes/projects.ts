@@ -1,5 +1,10 @@
 import { zValidator } from "@hono/zod-validator";
-import { projects, projectSubscribers, projectNotes } from "../db/schema";
+import {
+  projects,
+  projectsToSubscribers,
+  projectsToNotes,
+  user,
+} from "../db/schema";
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -8,6 +13,7 @@ import z from "zod";
 import { protect } from "middlewares/auth.middleware";
 import type { Session, User } from "better-auth";
 import * as schema from "../db/schema";
+import { normalizeNotes } from "./articles";
 
 const projectRoutes = new Hono<{
   Bindings: Bindings;
@@ -17,67 +23,19 @@ const projectRoutes = new Hono<{
   .get("/", protect, async (c) => {
     const db = drizzle(c.env.finestdb, { schema: schema });
 
-    // Get owned projects
-    const ownedProjects = await db.query.projects.findMany({
-      where: eq(projects.ownerId, c.var.user.id),
+    const userData = await db.query.user.findFirst({
+      where: eq(user.id, c.var.user.id),
       with: {
-        owner: true,
-      },
-    });
-
-    // Get subscribed projects (excluding owned projects, only public)
-    const subscribedProjects = await db.query.projectSubscribers
-      .findMany({
-        where: eq(projectSubscribers.userId, c.var.user.id),
-        with: {
-          project: {
-            with: {
-              owner: true,
-            },
+        projects: {
+          with: {
+            author: true,
           },
         },
-      })
-      .then((subs) =>
-        subs.filter(
-          (sub) => sub.project.ownerId !== c.var.user.id && sub.project.isPublic
-        )
-      );
-
-    const allProjects = [
-      ...ownedProjects.map((p) => ({ ...p, role: "owner" as const })),
-      ...subscribedProjects.map((s) => ({
-        ...s.project,
-        role: "subscriber" as const,
-      })),
-    ].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-
-    return c.json(allProjects);
-  })
-
-  // Get a single project with its items
-  .get("/:id", protect, async (c) => {
-    const { id } = c.req.param();
-    const db = drizzle(c.env.finestdb, { schema: schema });
-
-    const project = await db.query.projects.findFirst({
-      where: eq(projects.id, id),
-      with: {
-        owner: true,
-        subscribers: {
+        projectsToSubscribers: {
           with: {
-            user: true,
-          },
-        },
-        notes: {
-          with: {
-            note: {
+            project: {
               with: {
-                user: true,
-                projectNotes: {
-                  with: {
-                    project: true,
-                  },
-                },
+                author: true,
               },
             },
           },
@@ -85,33 +43,79 @@ const projectRoutes = new Hono<{
       },
     });
 
+    if (!userData) {
+      return c.json({ success: false, message: "User not found" }, 404);
+    }
+
+    const projects = [
+      ...userData.projects.map((p) => ({ ...p, role: "owner" as const })),
+      ...userData.projectsToSubscribers.map((s) => ({
+        ...s.project,
+        role: "subscriber" as const,
+      })),
+    ].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+
+    return c.json(projects);
+  })
+
+  // Get a single project with its items
+  .get("/:id", protect, async (c) => {
+    const { id } = c.req.param();
+    const db = drizzle(c.env.finestdb, { schema: schema });
+
+    const project = await db.query.projects
+      .findFirst({
+        where: eq(projects.id, id),
+        with: {
+          author: true,
+          projectsToSubscribers: {
+            with: {
+              author: true,
+            },
+          },
+          projectsToNotes: {
+            with: {
+              note: {
+                with: {
+                  author: true,
+                },
+              },
+            },
+          },
+        },
+      })
+      .then((project) => {
+        if (!project) return null;
+
+        const { projectsToNotes, projectsToSubscribers, ...rest } = project;
+
+        return {
+          ...rest,
+          notes: normalizeNotes(projectsToNotes.map((pn) => pn.note)),
+          subscribers: projectsToSubscribers.map((ps) => ps.author),
+        };
+      });
+
     if (!project) {
       return c.json({ success: false, message: "Project not found" }, 404);
     }
 
-    // Check if user has access
-    const isOwner = project.ownerId === c.var.user.id;
-    const isSubscriber = project.subscribers.some(
-      (sub) => sub.userId === c.var.user.id
-    );
-    const hasAccess = isOwner || isSubscriber || project.isPublic;
+    return c.json(project);
+  })
 
-    if (!hasAccess) {
-      return c.json({ success: false, message: "Access denied" }, 403);
-    }
+  // Is user subscribed to project
+  .get("/:id/is-subscribed", protect, async (c) => {
+    const { id: projectId } = c.req.param();
+    const db = drizzle(c.env.finestdb, { schema: schema });
 
-    const flattenedProject = {
-      ...project,
-      subscribers: project.subscribers.map((sub) => sub.user),
-      notes: project.notes
-        .filter((pn) => pn.note.isPublic || pn.note.userId === c.var.user.id)
-        .map((pn) => ({
-          ...pn.note,
-          projects: pn.note.projectNotes.map((pnn) => pnn.project),
-        })),
-    };
+    const existing = await db.query.projectsToSubscribers.findFirst({
+      where: and(
+        eq(projectsToSubscribers.projectId, projectId),
+        eq(projectsToSubscribers.authorId, c.var.user.id)
+      ),
+    });
 
-    return c.json(flattenedProject);
+    return c.json({ isSubscribed: !!existing });
   })
 
   // Create a new project
@@ -133,10 +137,10 @@ const projectRoutes = new Hono<{
       const result = await db
         .insert(projects)
         .values({
-          ownerId: c.var.user.id,
+          authorId: c.var.user.id,
           name,
-          description: description || null,
-          isPublic: isPublic || false,
+          description: description,
+          isPublic: isPublic,
         })
         .returning()
         .get();
@@ -175,7 +179,7 @@ const projectRoutes = new Hono<{
       const res = await db
         .update(projects)
         .set(updates)
-        .where(and(eq(projects.id, id), eq(projects.ownerId, c.var.user.id)))
+        .where(and(eq(projects.id, id), eq(projects.authorId, c.var.user.id)))
         .run();
 
       if (res.meta.changes === 0) {
@@ -212,7 +216,7 @@ const projectRoutes = new Hono<{
 
       const res = await db
         .delete(projects)
-        .where(and(eq(projects.id, id), eq(projects.ownerId, c.var.user.id)))
+        .where(and(eq(projects.id, id), eq(projects.authorId, c.var.user.id)))
         .run();
 
       if (res.meta.changes === 0) {
@@ -258,7 +262,7 @@ const projectRoutes = new Hono<{
       const project = await db.query.projects.findFirst({
         where: eq(projects.id, projectId),
         with: {
-          subscribers: true,
+          projectsToSubscribers: true,
         },
       });
 
@@ -266,9 +270,9 @@ const projectRoutes = new Hono<{
         return c.json({ success: false, message: "Project not found" }, 404);
       }
 
-      const isOwner = project.ownerId === c.var.user.id;
-      const isSubscriber = project.subscribers.some(
-        (sub) => sub.userId === c.var.user.id
+      const isOwner = project.authorId === c.var.user.id;
+      const isSubscriber = project.projectsToSubscribers.some(
+        (sub) => sub.authorId === c.var.user.id
       );
 
       if (!isOwner && !isSubscriber) {
@@ -276,10 +280,10 @@ const projectRoutes = new Hono<{
       }
 
       // Check if item already exists in project
-      const existingItem = await db.query.projectNotes.findFirst({
+      const existingItem = await db.query.projectsToNotes.findFirst({
         where: and(
-          eq(projectNotes.projectId, projectId),
-          eq(projectNotes.noteId, noteId)
+          eq(projectsToNotes.projectId, projectId),
+          eq(projectsToNotes.noteId, noteId)
         ),
       });
 
@@ -292,7 +296,7 @@ const projectRoutes = new Hono<{
 
       // Add item to project
       await db
-        .insert(projectNotes)
+        .insert(projectsToNotes)
         .values({
           projectId,
           noteId,
@@ -325,7 +329,7 @@ const projectRoutes = new Hono<{
       const project = await db.query.projects.findFirst({
         where: eq(projects.id, projectId),
         with: {
-          subscribers: true,
+          projectsToSubscribers: true,
         },
       });
 
@@ -333,9 +337,9 @@ const projectRoutes = new Hono<{
         return c.json({ success: false, message: "Project not found" }, 404);
       }
 
-      const isOwner = project.ownerId === c.var.user.id;
-      const isSubscriber = project.subscribers.some(
-        (sub) => sub.userId === c.var.user.id
+      const isOwner = project.authorId === c.var.user.id;
+      const isSubscriber = project.projectsToSubscribers.some(
+        (sub) => sub.authorId === c.var.user.id
       );
 
       if (!isOwner && !isSubscriber) {
@@ -343,11 +347,11 @@ const projectRoutes = new Hono<{
       }
 
       const res = await db
-        .delete(projectNotes)
+        .delete(projectsToNotes)
         .where(
           and(
-            eq(projectNotes.projectId, projectId),
-            eq(projectNotes.noteId, noteId)
+            eq(projectsToNotes.projectId, projectId),
+            eq(projectsToNotes.noteId, noteId)
           )
         )
         .run();
@@ -398,10 +402,10 @@ const projectRoutes = new Hono<{
         );
       }
 
-      const existing = await db.query.projectSubscribers.findFirst({
+      const existing = await db.query.projectsToSubscribers.findFirst({
         where: and(
-          eq(projectSubscribers.projectId, projectId),
-          eq(projectSubscribers.userId, userIdToSubscribe)
+          eq(projectsToSubscribers.projectId, projectId),
+          eq(projectsToSubscribers.authorId, userIdToSubscribe)
         ),
       });
 
@@ -413,10 +417,10 @@ const projectRoutes = new Hono<{
       }
 
       await db
-        .insert(projectSubscribers)
+        .insert(projectsToSubscribers)
         .values({
           projectId,
-          userId: userIdToSubscribe,
+          authorId: userIdToSubscribe,
         })
         .run();
 
@@ -462,11 +466,11 @@ const projectRoutes = new Hono<{
       }
 
       const res = await db
-        .delete(projectSubscribers)
+        .delete(projectsToSubscribers)
         .where(
           and(
-            eq(projectSubscribers.projectId, projectId),
-            eq(projectSubscribers.userId, userIdToUnsubscribe)
+            eq(projectsToSubscribers.projectId, projectId),
+            eq(projectsToSubscribers.authorId, userIdToUnsubscribe)
           )
         )
         .run();

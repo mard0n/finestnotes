@@ -67,14 +67,14 @@ const highlight = new Hono<{
       let page = await db
         .select()
         .from(notes)
-        .where(and(eq(notes.url, pageURL), eq(notes.userId, c.var.user.id)))
+        .where(and(eq(notes.url, pageURL), eq(notes.authorId, c.var.user.id)))
         .get();
 
       if (!page) {
         page = await db
           .insert(notes)
           .values({
-            userId: c.var.user.id,
+            authorId: c.var.user.id,
             url: pageURL,
             title: pageTitle,
             description: pageDescription,
@@ -87,7 +87,7 @@ const highlight = new Hono<{
       const [highlight] = await db
         .insert(highlights)
         .values({
-          userId: c.var.user.id,
+          authorId: c.var.user.id,
           noteId: page.id,
           text,
           position,
@@ -95,50 +95,6 @@ const highlight = new Hono<{
         .returning();
 
       return c.json(highlight);
-    }
-  )
-
-  // Update highlight comment
-  .put(
-    "/:id/comment",
-    protect,
-    zValidator(
-      "param",
-      z.object({
-        id: z.string(),
-      })
-    ),
-    zValidator(
-      "json",
-      z.object({
-        comment: z.string(),
-      })
-    ),
-    async (c) => {
-      const { id } = c.req.valid("param");
-      const { comment } = c.req.valid("json");
-      const db = drizzle(c.env.finestdb);
-
-      const res = await db
-        .update(highlights)
-        .set({ comment })
-        .where(and(eq(highlights.id, id), eq(highlights.userId, c.var.user.id)))
-        .run();
-
-      if (res.meta.changes === 0) {
-        return c.json(
-          {
-            success: false,
-            message: `Note ${id} not found or you don't have permission to update it`,
-          },
-          404
-        );
-      }
-
-      return c.json({
-        success: true,
-        message: `Note ${id} title is successfully updated`,
-      });
     }
   )
 
@@ -158,7 +114,7 @@ const highlight = new Hono<{
 
       const res = await db
         .delete(highlights)
-        .where(and(eq(highlights.id, id), eq(highlights.userId, c.var.user.id)))
+        .where(and(eq(highlights.id, id), eq(highlights.authorId, c.var.user.id)))
         .run();
 
       if (res.meta.changes === 0) {

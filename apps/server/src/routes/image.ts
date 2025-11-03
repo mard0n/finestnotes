@@ -41,7 +41,7 @@ const image = new Hono<{
         .select()
         .from(images)
         .where(
-          and(eq(images.noteId, page.id), eq(images.userId, c.var.user.id))
+          and(eq(images.noteId, page.id), eq(images.authorId, c.var.user.id))
         );
 
       return c.json(result);
@@ -59,25 +59,24 @@ const image = new Hono<{
         pageTitle: z.string(),
         pageDescription: z.string(),
         imageUrl: z.url(),
-        caption: z.string().optional(),
       })
     ),
     async (c) => {
-      const { pageURL, pageTitle, pageDescription, imageUrl, caption } =
+      const { pageURL, pageTitle, pageDescription, imageUrl } =
         c.req.valid("json");
       const db = drizzle(c.env.finestdb);
 
       let page = await db
         .select()
         .from(notes)
-        .where(and(eq(notes.url, pageURL), eq(notes.userId, c.var.user.id)))
+        .where(and(eq(notes.url, pageURL), eq(notes.authorId, c.var.user.id)))
         .get();
 
       if (!page) {
         page = await db
           .insert(notes)
           .values({
-            userId: c.var.user.id,
+            authorId: c.var.user.id,
             url: pageURL,
             title: pageTitle,
             description: pageDescription,
@@ -90,60 +89,15 @@ const image = new Hono<{
       await db
         .insert(images)
         .values({
-          userId: c.var.user.id,
+          authorId: c.var.user.id,
           noteId: page.id,
           imageUrl,
-          caption,
         })
         .run();
 
       return c.json({
         success: true,
         message: `Image is successfully saved`,
-      });
-    }
-  )
-
-  // Update image comment
-  .put(
-    "/:id/comment",
-    protect,
-    zValidator(
-      "param",
-      z.object({
-        id: z.string(),
-      })
-    ),
-    zValidator(
-      "json",
-      z.object({
-        comment: z.string(),
-      })
-    ),
-    async (c) => {
-      const { id } = c.req.valid("param");
-      const { comment } = c.req.valid("json");
-      const db = drizzle(c.env.finestdb);
-
-      const res = await db
-        .update(images)
-        .set({ comment })
-        .where(and(eq(images.id, id), eq(images.userId, c.var.user.id)))
-        .run();
-
-      if (res.meta.changes === 0) {
-        return c.json(
-          {
-            success: false,
-            message: `Note ${id} not found or you don't have permission to update it`,
-          },
-          404
-        );
-      }
-
-      return c.json({
-        success: true,
-        message: `Note ${id} title is successfully updated`,
       });
     }
   )
@@ -164,7 +118,7 @@ const image = new Hono<{
 
       const res = await db
         .delete(images)
-        .where(and(eq(images.id, id), eq(images.userId, c.var.user.id)))
+        .where(and(eq(images.id, id), eq(images.authorId, c.var.user.id)))
         .run();
 
       if (res.meta.changes === 0) {

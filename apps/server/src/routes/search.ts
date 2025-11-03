@@ -30,10 +30,10 @@ const search = new Hono<{ Bindings: Bindings }>().get(
     const searchPattern = `%${q}%`;
     const results = await db.query.notes.findMany({
       with: {
-        user: true,
+        author: true,
         highlights: true,
         images: true,
-        projectNotes: {
+        projectsToNotes: {
           with: {
             project: true,
           },
@@ -51,10 +51,10 @@ const search = new Hono<{ Bindings: Bindings }>().get(
 
     // Flatten project notes
     const flattenedResults = results.map((result) => {
-      const { projectNotes, ...rest } = result;
+      const { projectsToNotes, ...rest } = result;
       return {
         ...rest,
-        projects: projectNotes?.filter((pn) => pn.project.isPublic).map((pn) => pn.project) ?? [],
+        projects: projectsToNotes?.filter((pn) => pn.project.isPublic).map((pn) => pn.project) ?? [],
       };
     });
 

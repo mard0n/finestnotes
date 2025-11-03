@@ -66,8 +66,8 @@ if (searchQuery) {
                     result.type === "note" ? result.content : result.description
                   }
                   createdAt={result.createdAt}
-                  authorId={result.user.id}
-                  authorName={result.user.name}
+                  authorId={result.author.id}
+                  authorName={result.author.name}
                   userId={Astro.locals.user?.id}
                 />
               );

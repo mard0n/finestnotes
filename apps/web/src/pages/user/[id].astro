@@ -11,11 +11,9 @@ if (!id) {
 }
 
 const client = createServerClient(Astro.request.headers);
-
 const res = await client.api.user[":id"].$get({
   param: { id },
 });
-
 const userData = await parseResponse(res);
 
 if (!userData) {
@@ -31,10 +29,10 @@ if (!userData) {
       <h2 class="subheading mb-6">Projects</h2>
       <div class="space-y-3">
         {
-          userData.ownedProjects.length === 0 ? (
+          userData.projects.length === 0 ? (
             <p>No public projects user has created</p>
           ) : (
-            userData.ownedProjects.map((project) => (
+            userData.projects.map((project) => (
               <div>
                 <a href={`/project/${project.id}`} class="block">
                   <div class="flex justify-between items-start font-medium">
@@ -67,9 +65,9 @@ if (!userData) {
                 title={note.title}
                 description={note.type === 'note' ? note.content : note.description}
                 createdAt={note.createdAt}
-                userId={note.userId}
-                authorName={note.user.name}
-                authorId={note.user.id}
+                userId={Astro.locals.user?.id}
+                authorName={note.author.name}
+                authorId={note.author.id}
               />
             ))
           )

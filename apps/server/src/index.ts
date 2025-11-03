@@ -2,7 +2,6 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { D1Database } from "@cloudflare/workers-types";
 import articles from "./routes/articles";
-import collections from "./routes/collections";
 import note from "./routes/note";
 import page from "./routes/page";
 import image from "./routes/image";
@@ -59,7 +58,6 @@ app.on(['GET', 'POST'], '/api/auth/*', async (c) => {
 
 const routes = app
   .route("/api/articles", articles)
-  .route("/api/collections", collections)
   .route("/api/note", note)
   .route("/api/page", page)
   .route("/api/highlight", highlight)
