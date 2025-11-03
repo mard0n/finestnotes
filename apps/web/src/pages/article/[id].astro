@@ -7,8 +7,10 @@ import { formatDate } from "@utils/date";
 import { parseResponse } from "hono/client";
 import ArticleActionBar from "./_components/ArticleActionBar.tsx";
 import NoteViewer from "./_components/NoteViewer.astro";
+import AuthorName from "@components/ui/AuthorName";
 
 const { id } = Astro.params;
+const user = Astro.locals.user;
 
 if (!id) {
   throw new Error("Article ID is required");
@@ -16,7 +18,7 @@ if (!id) {
 
 const response = await createServerClient(Astro.request.headers).api.articles[
   ":id"
-].$get({ param: { id: id }, query: { userId: Astro.locals.user?.id } });
+].$get({ param: { id: id }, query: { userId: user?.id } });
 
 console.log("Fetched article:", response);
 const article = await parseResponse(response);
@@ -24,14 +26,11 @@ const article = await parseResponse(response);
 if (!article) {
   throw new Error("Article not found");
 }
-
-const isOwner = Astro.locals.user?.id === article.user.id;
-const authorName = isOwner ? "You" : article.user.name;
 ---
 
 <Layout>
   <main class="max-w-2xl mx-auto my-8 px-4">
-    <ArticleActionBar client:load article={article} user={Astro.locals.user} />
+    <ArticleActionBar client:load article={article} user={user} />
     <h1 class="font-serif text-2xl text-black">{article.title}</h1>
     {
       article.type === "page" && article.description && (
@@ -39,19 +38,15 @@ const authorName = isOwner ? "You" : article.user.name;
       )
     }
     <div class="text-xs text-gray-500 mb-4 mt-1">
-      by {
-        isOwner ? (
-          <span>You</span>
-        ) : (
-          <span>
-            <a class="link" href="/user/:id">
-              {authorName}
-            </a>
-          </span>
-        )
-      } · <span title={new Date(article.createdAt).toLocaleDateString()}
-        >{formatDate(article.createdAt)}</span
-      >
+      <AuthorName
+        ownerId={article.user.id}
+        ownerName={article.user.name}
+        userId={user?.id}
+        shouldAddBy={true}
+      /> ·
+      <span title={new Date(article.createdAt).toLocaleDateString()}>
+        {formatDate(article.createdAt)}
+      </span>
     </div>
     {
       article.type === "note" ? (

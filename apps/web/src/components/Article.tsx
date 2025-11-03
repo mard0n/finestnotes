@@ -1,20 +1,17 @@
 import { formatDate } from "@utils/date";
 import React from "react";
+import AuthorName from "./ui/AuthorName";
 
 export const Article: React.FC<{
   id: string;
   title: string;
   description: string | null;
-  authorName: string;
   createdAt: string;
-  userId?: string;
-  authorId?: string;
-}> = ({ id, title, description, authorName, createdAt, userId, authorId }) => {
-  const isOwner = userId && authorId && userId === authorId;
-  console.log("isOwner", isOwner);
-  console.log("userId", userId);
-  console.log("authorId", authorId);
-
+  userId: string | null | undefined;
+  authorName: string;
+  authorId: string | null | undefined;
+  shouldAddByToAuthorName?: boolean;
+}> = ({ id, title, description, authorName, createdAt, userId, authorId, shouldAddByToAuthorName = false }) => {
   return (
     <li className="list-row after:inset-x-[0px] px-0 gap-0 first:pt-0 last:pb-0">
       <div></div>
@@ -46,16 +43,17 @@ export const Article: React.FC<{
           ) : null}
         </a>
         <div className="text-sm text-content-light">
-          {isOwner ? (
-            <span>You · </span>
-          ) : authorName ? (
-            <span>
-              <a className="link" href="/user/:id">
-                {authorName}
-              </a>{" "}
-              ·
-            </span>
-          ) : null}{" "}
+          {authorId && (
+            <>
+              <AuthorName
+                ownerId={authorId || ""}
+                ownerName={authorName}
+                userId={userId}
+                shouldAddBy={shouldAddByToAuthorName}
+              />
+              {" "}·{" "}
+            </>
+          )}
           <span>{formatDate(createdAt)}</span> ·{" "}
           <span>
             <a>200 comments</a>
