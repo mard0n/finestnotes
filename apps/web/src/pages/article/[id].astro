@@ -31,7 +31,7 @@ if (!article) {
 <Layout>
   <main class="max-w-2xl mx-auto my-8 px-4">
     <ArticleActionBar client:load article={article} user={user} />
-    <h1 class="font-serif text-2xl text-black">{article.title}</h1>
+    <h1 class="heading">{article.title}</h1>
     {
       article.type === "page" && article.description && (
         <p class="text-sm mt-2 mb-3">{article.description}</p>

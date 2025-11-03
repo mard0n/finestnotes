@@ -1,0 +1,105 @@
+---
+import Article from "@components/Article";
+import Layout from "@layouts/Layout.astro";
+import { createServerClient } from "@utils/api";
+import { parseResponse } from "hono/client";
+
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect("/404");
+}
+
+const client = createServerClient(Astro.request.headers);
+
+const res = await client.api.user[":id"].$get({
+  param: { id },
+});
+
+const userData = await parseResponse(res);
+
+if (!userData) {
+  throw new Error("Project not found");
+}
+---
+
+<Layout>
+  <main class="article-container">
+    <h1 class="heading mb-15">{userData.name}</h1>
+
+    <section class="mb-15">
+      <h2 class="subheading mb-6">Projects</h2>
+      <div class="space-y-3">
+        {
+          userData.ownedProjects.length === 0 ? (
+            <p>No public projects user has created</p>
+          ) : (
+            userData.ownedProjects.map((project) => (
+              <div>
+                <a href={`/project/${project.id}`} class="block">
+                  <div class="flex justify-between items-start font-medium">
+                    <h3 class="whitespace-nowrap truncate">{project.name}</h3>
+                    <span class="whitespace-nowrap ml-4">
+                      {project.noteCount}{" "}
+                      {project.noteCount === 1 ? "note" : "notes"}
+                    </span>
+                  </div>
+                </a>
+              </div>
+            ))
+          )
+        }
+      </div>
+    </section>
+
+    <section>
+      <h2 class="subheading mb-6">
+        Public Notes
+      </h2>
+      <ul class="list">
+        {
+          userData.notes.length === 0 ? (
+            <p class="text-content-light">No public notes yet</p>
+          ) : (
+            userData.notes.map((note) => (
+              <Article
+                id={note.id}
+                title={note.title}
+                description={note.type === 'note' ? note.content : note.description}
+                createdAt={note.createdAt}
+                userId={note.userId}
+                authorName={note.user.name}
+                authorId={note.user.id}
+              />
+            ))
+          )
+        }
+      </ul>
+    </section>
+  </main>
+</Layout>
+
+<style>
+  /* .project-item {
+    @apply py-3 border-b border-base-content/10 last:border-b-0;
+  }
+
+  .project-item a {
+    @apply hover:text-primary transition-colors;
+  }
+
+  .note-card {
+    @apply pb-6 border-b border-base-content/10 last:border-b-0;
+  }
+
+  .note-card a:hover h3 {
+    @apply text-primary;
+  }
+
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  } */
+</style>

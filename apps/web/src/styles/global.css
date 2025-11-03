@@ -128,6 +128,14 @@ body {
     scrollbar-width: none;  /* Firefox */
   }
 
+  .heading {
+    @apply font-serif text-2xl text-black;
+  }
+
+  .subheading {
+    @apply font-serif text-xl text-content-light;
+  }
+
   .article-container {
     @apply mx-4 mt-8 md:mx-16 md:mt-8 xl:ml-24 xl:mr-0 xl:mt-16 xl:max-w-3xl
   }

@@ -27,8 +27,8 @@ const hasMore = data.hasMore;
 					id={article.id} 
 					title={article.title}
 					description={article.type === 'note' ? article.content : article.description} 
-					authorName={article.user.name} 
 					createdAt={article.createdAt} 
+					authorName={article.user.name} 
 					authorId={article.user.id}
 					userId={Astro.locals.user?.id}
 				/>

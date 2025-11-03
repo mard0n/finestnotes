@@ -197,7 +197,6 @@ export const userRelations = relations(user, ({ many }) => ({
   notes: many(notes),
   ownedProjects: many(projects),
   projectSubscriptions: many(projectSubscribers),
-  addedProjectNotes: many(projectNotes),
 }));
 
 export const session = sqliteTable("session", {
