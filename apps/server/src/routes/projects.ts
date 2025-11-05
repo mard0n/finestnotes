@@ -4,8 +4,9 @@ import {
   projectsToSubscribers,
   projectsToNotes,
   user,
+  notes,
 } from "../db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import type { Bindings } from "../index";
@@ -78,6 +79,12 @@ const projectRoutes = new Hono<{
               note: {
                 with: {
                   author: true,
+                  likes: true,
+                },
+                extras: {
+                  likeCount: sql<number>`(SELECT COUNT(*) FROM likes WHERE likes.note_id = ${notes.id})`.as(
+                    "like_count"
+                  ),
                 },
               },
             },

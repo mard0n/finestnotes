@@ -2,6 +2,8 @@ import AddToProjectDropdown from "@components/AddToProjectDropdown";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { Article } from "@utils/types";
 import type { User } from "better-auth";
+import { useState } from "react";
+import { client } from "@utils/api";
 
 export const queryClient = new QueryClient();
 
@@ -20,16 +22,62 @@ const ActionBar: React.FC<{ article: Article; user: User | null }> = ({
   article,
   user,
 }) => {
+  const [likeCount, setLikeCount] = useState(article.likeCount ?? 0);
+  const [isLiked, setIsLiked] = useState(article.isLikedByCurrentUser ?? false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleLikeClick = async () => {
+    if (!user) {
+      window.location.href = "/auth/signin";
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      if (isLiked) {
+        // Unlike
+        const response = await client.api.articles[":id"].like.$delete({
+          param: { id: article.id },
+        });
+        const data = await response.json();
+        if (data.success) {
+          setLikeCount(data.likeCount);
+          setIsLiked(false);
+        }
+      } else {
+        // Like
+        const response = await client.api.articles[":id"].like.$post({
+          param: { id: article.id },
+        });
+        const data = await response.json();
+        if (data.success) {
+          setLikeCount(data.likeCount);
+          setIsLiked(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error liking article:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="mb-4 flex justify-between items-center">
       <div className="flex gap-2 md:gap-4">
-        <button className="btn btn-ghost btn-sm rounded-full bg-white font-normal">
+        <button
+          className={`btn btn-ghost btn-sm rounded-full font-normal bg-white ${
+            isLiked ? "text-black" : ""
+          }`}
+          onClick={handleLikeClick}
+          disabled={isLoading}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="16"
             height="16"
             viewBox="0 0 24 24"
-            fill="none"
+            fill={isLiked ? "currentColor" : "none"}
             stroke="currentColor"
             strokeWidth="2"
             strokeLinecap="round"
@@ -38,7 +86,7 @@ const ActionBar: React.FC<{ article: Article; user: User | null }> = ({
           >
             <path d="M13.73 4a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
           </svg>
-          321
+          {likeCount}
         </button>
         {article.url ? (
           <a

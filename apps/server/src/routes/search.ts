@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { notes } from "../db/schema";
-import { eq, like, or, and } from "drizzle-orm";
+import { eq, like, or, and, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { type Bindings } from "../index";
@@ -33,11 +33,15 @@ const search = new Hono<{ Bindings: Bindings }>().get(
         author: true,
         highlights: true,
         images: true,
+        likes: true,
         projectsToNotes: {
           with: {
             project: true,
           },
         },
+      },
+      extras: {
+        likeCount: sql<number>`(SELECT COUNT(*) FROM likes WHERE likes.note_id = notes.id)`.as("like_count"),
       },
       where: and(
         eq(notes.isPublic, true),

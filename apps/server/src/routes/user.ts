@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { user, projects, notes } from "../db/schema";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import type { Bindings } from "../index";
@@ -46,6 +46,10 @@ const userRoutes = new Hono<{
                 },
               },
               author: true,
+              likes: true,
+            },
+            extras: {
+              likeCount: sql<number>`(SELECT COUNT(*) FROM likes WHERE likes.note_id = ${notes.id})`.as("like_count"),
             },
           },
         },

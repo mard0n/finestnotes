@@ -21,6 +21,7 @@ type ArticleProps = {
     name: string;
     id: string;
   };
+  likeCount: number;
 } & (PageProps | NoteProps);
 
 type ProjectProps = {
@@ -104,6 +105,12 @@ export const ArticleCard: React.FC<{
             ))}
           </div>
         ) : null}
+      </div>
+      <div>
+        <div className="inline-flex items-center gap-1 px-2 py-1 text-sm rounded-full">
+          <span>{note.likeCount}</span>
+          <span>{note.likeCount > 1 ? "upvotes" : "upvote"}</span>
+        </div>
       </div>
     </li>
   );

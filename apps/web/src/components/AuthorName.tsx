@@ -26,7 +26,7 @@ const AuthorName: React.FC<AuthorNameProps> = ({
       {skipOwnerName ? (
         <></>
       ) : isOwner ? (
-        <span>you</span>
+        <span>You</span>
       ) : (
         <a className="link link-hover" href={`/user/${ownerId}`}>
           {ownerName}

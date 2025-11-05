@@ -1,6 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
-import { notes } from "../db/schema";
-import { and, eq, getTableColumns, or } from "drizzle-orm";
+import { notes, likes } from "../db/schema";
+import { and, eq, getTableColumns, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import { type Bindings } from "../index";
@@ -8,8 +8,13 @@ import z from "zod";
 import * as schema from "../db/schema";
 
 import { auth } from "utils/auth";
+import { protect } from "../middlewares/auth.middleware";
+import type { Session, User } from "better-auth";
 
-const articles = new Hono<{ Bindings: Bindings }>()
+const articles = new Hono<{
+  Bindings: Bindings;
+  Variables: { user: User; session: Session };
+}>()
   // Get all articles
   .get(
     "/",
@@ -31,6 +36,10 @@ const articles = new Hono<{ Bindings: Bindings }>()
       const articles = await db.query.notes.findMany({
         with: {
           author: true,
+          likes: true,
+        },
+        extras: {
+          likeCount: sql<number>`(SELECT COUNT(*) FROM likes WHERE likes.note_id = notes.id)`.as("like_count"),
         },
         where: eq(notes.isPublic, true),
       });
@@ -122,6 +131,7 @@ const articles = new Hono<{ Bindings: Bindings }>()
             author: true,
             highlights: true,
             images: true,
+            likes: true,
             projectsToNotes: {
               with: {
                 project: {
@@ -130,11 +140,14 @@ const articles = new Hono<{ Bindings: Bindings }>()
               },
             },
           },
+          extras: {
+            likeCount: sql<number>`(SELECT COUNT(*) FROM likes WHERE likes.note_id = ${notes.id})`.as("like_count"),
+          },
           where: and(eq(notes.id, id), eq(notes.isPublic, true)),
         })
         .then((note) => {
           if (!note) return null;
-          const { projectsToNotes, ...rest } = note;
+          const { projectsToNotes, likes: noteLikes, ...rest } = note;
 
           // Return only public or projects owned by the current user
           const publicOrMyProjects =
@@ -145,9 +158,14 @@ const articles = new Hono<{ Bindings: Bindings }>()
               )
               .map((pn) => pn.project) ?? [];
 
+          const isLikedByCurrentUser = currentUser
+            ? noteLikes?.some((like) => like.userId === currentUser.id) ?? false
+            : false;
+
           return {
             ...rest,
             projects: publicOrMyProjects,
+            isLikedByCurrentUser,
           };
         })
         .then((article) => article && normalizeNotes([article])[0]);
@@ -164,6 +182,107 @@ const articles = new Hono<{ Bindings: Bindings }>()
 
       return c.json(article);
     }
+  )
+
+  // Like an article
+  .post(
+    "/:id/like",
+    protect,
+    zValidator(
+      "param",
+      z.object({
+        id: z.string(),
+      })
+    ),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const userId = c.var.user.id;
+
+      const db = drizzle(c.env.finestdb, { schema });
+
+      // Check if article exists and is public
+      const article = await db.query.notes.findFirst({
+        where: and(eq(notes.id, id), eq(notes.isPublic, true)),
+      });
+
+      if (!article) {
+        return c.json(
+          {
+            success: false,
+            message: "Article not found or is not public",
+          },
+          404
+        );
+      }
+
+      // Check if already liked
+      const existingLike = await db.query.likes.findFirst({
+        where: and(eq(likes.noteId, id), eq(likes.userId, userId)),
+      });
+
+      if (existingLike) {
+        return c.json(
+          {
+            success: false,
+            message: "Article already liked",
+          },
+          400
+        );
+      }
+
+      // Create like
+      await db.insert(likes).values({
+        noteId: id,
+        userId: userId,
+      });
+
+      // Get updated like count
+      const likeCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(likes)
+        .where(eq(likes.noteId, id))
+        .get();
+
+      return c.json({
+        success: true,
+        likeCount: likeCount?.count ?? 0,
+      });
+    }
+  )
+
+  // Unlike an article
+  .delete(
+    "/:id/like",
+    protect,
+    zValidator(
+      "param",
+      z.object({
+        id: z.string(),
+      })
+    ),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const userId = c.var.user.id;
+
+      const db = drizzle(c.env.finestdb, { schema });
+
+      // Delete like
+      const result = await db
+        .delete(likes)
+        .where(and(eq(likes.noteId, id), eq(likes.userId, userId)));
+
+      // Get updated like count
+      const likeCount = await db
+        .select({ count: sql<number>`count(*)` })
+        .from(likes)
+        .where(eq(likes.noteId, id))
+        .get();
+
+      return c.json({
+        success: true,
+        likeCount: likeCount?.count ?? 0,
+      });
+    }
   );
 
 export default articles;
@@ -172,18 +291,19 @@ type BaseNoteWithRelations<T extends Record<string, any> = {}> =
   typeof schema.notes.$inferSelect & {
     highlights?: (typeof schema.highlights.$inferSelect)[];
     images?: (typeof schema.images.$inferSelect)[];
+    likes?: (typeof schema.likes.$inferSelect)[];
   } & T;
 
 type NormalizedNote<T extends Record<string, any> = {}> = Omit<
   BaseNoteWithRelations<T>,
-  "highlights" | "images" | "description"
+  "highlights" | "images" | "description" | "likes"
 > & {
   type: "note";
 };
 
 type NormalizedPage<T extends Record<string, any> = {}> = Omit<
   BaseNoteWithRelations<T>,
-  "content" | "contentLexical" | "highlights" | "images"
+  "content" | "contentLexical" | "highlights" | "images" | "likes"
 > & {
   annotations: (
     | typeof schema.highlights.$inferSelect
@@ -201,14 +321,14 @@ export function normalizeNotes<T extends Record<string, any> = {}>(
 ): NormalizedArticle<T>[] {
   const notesData: NormalizedNote<T>[] = notes
     .filter((article) => article.type === "note")
-    .map(({ highlights, images, description, ...note }) => ({
+    .map(({ highlights, images, description, likes, ...note }) => ({
       ...note,
       type: "note" as const,
     }));
 
   const pagesData: NormalizedPage<T>[] = notes
     .filter((article) => article.type === "page")
-    .map(({ content, contentLexical, highlights, images, ...page }) => {
+    .map(({ content, contentLexical, highlights, images, likes, ...page }) => {
       const annotations = [
         ...((highlights ?? []) as (typeof schema.highlights.$inferSelect)[]),
         ...((images ?? []) as (typeof schema.images.$inferSelect)[]),

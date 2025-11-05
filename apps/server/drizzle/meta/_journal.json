@@ -127,6 +127,13 @@
       "when": 1762183018946,
       "tag": "0017_bright_luckman",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1762330959559,
+      "tag": "0018_curvy_pride",
+      "breakpoints": true
     }
   ]
 }

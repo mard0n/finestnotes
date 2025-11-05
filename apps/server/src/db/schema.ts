@@ -36,6 +36,7 @@ export const notesRelations = relations(notes, ({ one, many }) => ({
   highlights: many(highlights),
   images: many(images),
   projectsToNotes: many(projectsToNotes),
+  likes: many(likes),
 }));
 
 export const highlights = sqliteTable("highlights", {
@@ -169,6 +170,33 @@ export const projectsToSubscribersRelations = relations(
   })
 );
 
+export const likes = sqliteTable(
+  "likes",
+  {
+    noteId: text("note_id")
+      .notNull()
+      .references(() => notes.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    createdAt: text("created_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.noteId, t.userId] })]
+);
+
+export const likesRelations = relations(likes, ({ one }) => ({
+  note: one(notes, {
+    fields: [likes.noteId],
+    references: [notes.id],
+  }),
+  user: one(user, {
+    fields: [likes.userId],
+    references: [user.id],
+  }),
+}));
+
 export const user = sqliteTable("user", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
@@ -190,6 +218,7 @@ export const userRelations = relations(user, ({ many }) => ({
   notes: many(notes),
   projects: many(projects), // Authored projects
   projectsToSubscribers: many(projectsToSubscribers), // Subscribed projects
+  likes: many(likes),
 }));
 
 export const session = sqliteTable("session", {

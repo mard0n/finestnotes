@@ -1,7 +1,7 @@
 import { zValidator } from "@hono/zod-validator";
 import { notes } from "../db/schema";
 import * as schema from "../db/schema";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import type { Bindings } from "../index";
@@ -22,8 +22,12 @@ const note = new Hono<{
     const notesData = await db.query.notes.findMany({
       with: {
         author: true,
+        likes: true,
       },
       where: eq(notes.authorId, c.var.user.id),
+      extras: {
+        likeCount: sql<number>`(SELECT COUNT(*) FROM likes WHERE likes.note_id = notes.id)`.as("like_count"),
+      },
     });
     return c.json(notesData);
   })
