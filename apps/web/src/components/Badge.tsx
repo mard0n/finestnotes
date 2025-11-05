@@ -4,9 +4,9 @@ import AuthorName from "./AuthorName";
 interface BadgeProps {
   children: React.ReactNode;
   id: string;
-  ownerId: string;
-  ownerName: string;
-  userId?: string;
+  ownerId: string | null | undefined;
+  ownerName: string | null | undefined;
+  userId: string | null | undefined;
   className?: string;
 }
 

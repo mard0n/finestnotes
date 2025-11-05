@@ -1,6 +1,6 @@
 ---
-import Article from "@components/Article";
-import AuthorName from "@components/ui/AuthorName";
+import ArticleCard from "@components/ArticleCard";
+import AuthorName from "@components/AuthorName";
 import Layout from "@layouts/Layout.astro";
 import { createServerClient } from "@utils/api";
 import { parseResponse } from "hono/client";
@@ -70,14 +70,10 @@ if (!project) {
     <ul class="flex flex-col list rounded-box mt-8">
       {
         project.notes.map((note) => (
-          <Article
-            id={note.id}
-            title={note.title}
-            description={note.type === "note" ? note.content : note.description}
-            authorName={note.author.name}
-            createdAt={note.createdAt}
+          <ArticleCard
+            note={note}
+            projects={null}
             userId={user?.id}
-            authorId={note.author.id}
           />
         ))
       }

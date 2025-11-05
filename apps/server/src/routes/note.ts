@@ -1,5 +1,6 @@
 import { zValidator } from "@hono/zod-validator";
 import { notes } from "../db/schema";
+import * as schema from "../db/schema";
 import { and, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -16,13 +17,15 @@ const note = new Hono<{
 }>()
   // Get all saved notes
   .get("/", protect, async (c) => {
-    const db = drizzle(c.env.finestdb);
-    const result = await db
-      .select()
-      .from(notes)
-      .where(eq(notes.authorId, c.var.user.id))
-      .all();
-    return c.json(result);
+    const db = drizzle(c.env.finestdb, { schema: schema });
+
+    const notesData = await db.query.notes.findMany({
+      with: {
+        author: true,
+      },
+      where: eq(notes.authorId, c.var.user.id),
+    });
+    return c.json(notesData);
   })
 
   // Save a note

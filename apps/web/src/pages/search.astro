@@ -1,5 +1,5 @@
 ---
-import Article from "@components/Article";
+import ArticleCard from "@components/ArticleCard";
 import Layout from "@layouts/Layout.astro";
 import { createServerClient } from "@utils/api";
 import { parseResponse, type InferResponseType } from "hono/client";
@@ -59,15 +59,9 @@ if (searchQuery) {
           <ul class="list rounded-none">
             {searchResults.map((result) => {
               return (
-                <Article
-                  id={result.id}
-                  title={result.title}
-                  description={
-                    result.type === "note" ? result.content : result.description
-                  }
-                  createdAt={result.createdAt}
-                  authorId={result.author.id}
-                  authorName={result.author.name}
+                <ArticleCard
+                  note={result}
+                  projects={result.projects || null}
                   userId={Astro.locals.user?.id}
                 />
               );

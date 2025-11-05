@@ -2,14 +2,17 @@
 import Layout from "@layouts/Layout.astro";
 import { createServerClient } from "@utils/api";
 import { parseResponse } from "hono/client";
-import Article from "@components/Article";
+import ArticleCard from "@components/ArticleCard";
 
 const client = createServerClient(Astro.request.headers);
 const page = Astro.url.searchParams.get('page') || '1'
 const res = await client.api.articles.$get({query: {
 	page
 }})
-const articles = await parseResponse(res);
+const data = await parseResponse(res);
+const articles = data.articles;
+const hasMore = data.hasMore;
+const user = Astro.locals.user;
 ---
 
 <Layout>
@@ -17,22 +20,18 @@ const articles = await parseResponse(res);
 		<div role="tablist" class="tabs tabs-border gap-4">
 			<a href="/" role="tab" class="tab tab-active font-bold before:border-base-300 before:w-full before:left-0 before:bg-base-300 p-0">Articles</a>
 		</div>
-		<ul class="list mt-8 rounded-none">
+		<ul class="list my-8 rounded-none">
 		{
 			articles.map((article) => (
-				<Article 
-					id={article.id} 
-					title={article.title}
-					description={article.type === 'note' ? article.content : article.description} 
-					createdAt={article.createdAt} 
-					authorName={article.author.name} 
-					authorId={article.author.id}
-					userId={Astro.locals.user?.id}
+				<ArticleCard 
+					note={article}
+					userId={user?.id}
+					projects={null}
 				/>
 			))
 		}
 		</ul>
-		<button id="load-more">Load more</button>
+		{hasMore ? <button class="link link-hover" id="load-more">Load more</button> : <></>}
 	</main>
 </Layout>
 

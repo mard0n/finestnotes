@@ -1,5 +1,5 @@
 ---
-import Article from "@components/Article";
+import ArticleCard from "@components/ArticleCard";
 import Layout from "@layouts/Layout.astro";
 import { createServerClient } from "@utils/api";
 import { parseResponse } from "hono/client";
@@ -60,14 +60,10 @@ if (!userData) {
             <p class="text-content-light">No public notes yet</p>
           ) : (
             userData.notes.map((note) => (
-              <Article
-                id={note.id}
-                title={note.title}
-                description={note.type === 'note' ? note.content : note.description}
-                createdAt={note.createdAt}
+              <ArticleCard
+                note={note}
+                projects={null}
                 userId={Astro.locals.user?.id}
-                authorName={note.author.name}
-                authorId={note.author.id}
               />
             ))
           )

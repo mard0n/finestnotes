@@ -2,8 +2,8 @@ import React from "react";
 
 interface AuthorNameProps {
   className?: string;
-  ownerId: string;
-  ownerName: string;
+  ownerId: string | null | undefined;
+  ownerName: string | null | undefined;
   userId: string | null | undefined;
   shouldAddBy?: boolean;
 }
@@ -15,14 +15,17 @@ const AuthorName: React.FC<AuthorNameProps> = ({
   userId,
   shouldAddBy = false,
 }) => {
-  const baseStyles = "text-xs";
+  const baseStyles = "";
 
+  const skipOwnerName = !ownerId || !ownerName;
   const isOwner = ownerId === userId;
 
   return (
     <span className={`${baseStyles} ${className}`}>
       {shouldAddBy && <span>by </span>}
-      {isOwner ? (
+      {skipOwnerName ? (
+        <></>
+      ) : isOwner ? (
         <span>you</span>
       ) : (
         <a className="link link-hover" href={`/user/${ownerId}`}>

@@ -1,12 +1,12 @@
 ---
-import Badge from "@components/ui/Badge";
+import Badge from "@components/Badge.tsx";
 import Layout from "@layouts/Layout.astro";
 import { createServerClient } from "@utils/api";
 import { formatDate } from "@utils/date";
 import { parseResponse } from "hono/client";
 import ArticleActionBar from "./_components/ArticleActionBar.tsx";
 import NoteViewer from "./_components/NoteViewer.astro";
-import AuthorName from "@components/ui/AuthorName";
+import AuthorName from "@components/AuthorName.tsx";
 
 const { id } = Astro.params;
 const user = Astro.locals.user;

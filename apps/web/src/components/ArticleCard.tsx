@@ -1,17 +1,41 @@
 import { formatDate } from "@utils/date";
 import React from "react";
-import AuthorName from "./ui/AuthorName";
+import AuthorName from "./AuthorName";
+import Badge from "./Badge";
 
-export const Article: React.FC<{
+type PageProps = {
+  type: "page";
+  description: string | null;
+};
+
+type NoteProps = {
+  type: "note";
+  content: string | null;
+};
+
+type ArticleProps = {
   id: string;
   title: string;
-  description: string | null;
   createdAt: string;
+  author: {
+    name: string;
+    id: string;
+  };
+} & (PageProps | NoteProps);
+
+type ProjectProps = {
+  id: string;
+  name: string;
+};
+
+export const ArticleCard: React.FC<{
+  note: ArticleProps;
   userId: string | null | undefined;
-  authorName: string;
-  authorId: string | null | undefined;
-  shouldAddByToAuthorName?: boolean;
-}> = ({ id, title, description, authorName, createdAt, userId, authorId, shouldAddByToAuthorName = false }) => {
+  projects: ProjectProps[] | null | undefined;
+}> = ({ note, projects, userId }) => {
+  const { id, title, createdAt, author } = note;
+  const { name: authorName, id: authorId } = author || {};
+
   return (
     <li className="list-row after:inset-x-[0px] px-0 gap-0 first:pt-0 last:pb-0">
       <div></div>
@@ -33,12 +57,19 @@ export const Article: React.FC<{
         </svg>
         <a className="block" href={`/article/${id}`}>
           <div className="text-lg font-serif text-black">{title}</div>
-          {description ? (
+          {note.type === "page" && note.description ? (
             <div
               className="mb-1 text-sm truncate text-content-medium"
-              title={description.slice(0, 100)}
+              title={note.description.slice(0, 100)}
             >
-              {description}
+              {note.description}
+            </div>
+          ) : note.type === "note" && note.content ? (
+            <div
+              className="mb-1 text-sm truncate text-content-medium"
+              title={note.content.slice(0, 100)}
+            >
+              {note.content}
             </div>
           ) : null}
         </a>
@@ -49,9 +80,8 @@ export const Article: React.FC<{
                 ownerId={authorId || ""}
                 ownerName={authorName}
                 userId={userId}
-                shouldAddBy={shouldAddByToAuthorName}
-              />
-              {" "}·{" "}
+              />{" "}
+              ·{" "}
             </>
           )}
           <span>{formatDate(createdAt)}</span> ·{" "}
@@ -59,9 +89,24 @@ export const Article: React.FC<{
             <a>200 comments</a>
           </span>
         </div>
+        {projects ? (
+          <div>
+            {projects.map((project) => (
+              <Badge
+                key={project.id}
+                id={project.id}
+                ownerId={""}
+                ownerName={""}
+                userId={""}
+              >
+                {project.name}
+              </Badge>
+            ))}
+          </div>
+        ) : null}
       </div>
     </li>
   );
 };
 
-export default Article;
+export default ArticleCard;

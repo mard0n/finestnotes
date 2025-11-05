@@ -21,25 +21,36 @@ const articles = new Hono<{ Bindings: Bindings }>()
       })
     ),
     async (c) => {
-      const { page: pageStr, limit: limitStr } = c.req.valid("query");
-      const page = parseInt(pageStr);
-      const limit = parseInt(limitStr);
-      const offset = (page - 1) * limit;
+      const { page, limit } = c.req.valid("query");
+      const pageNum = parseInt(page);
+      const limitNum = parseInt(limit);
+      const offset = (pageNum - 1) * limitNum;
 
       const db = drizzle(c.env.finestdb, { schema: schema });
 
-      const notesData = await db.query.notes
-        .findMany({
-          offset,
-          limit,
-          with: {
-            author: true,
-          },
-          where: eq(notes.isPublic, true),
-        })
-        .then(normalizeNotes);
+      const articles = await db.query.notes.findMany({
+        with: {
+          author: true,
+        },
+        where: eq(notes.isPublic, true),
+      });
 
-      return c.json(notesData);
+      const normalizedArticles = normalizeNotes(articles);
+
+      // Apply pagination
+      const paginatedArticles = normalizedArticles.slice(
+        offset,
+        offset + limitNum
+      );
+      const hasMore = offset + limitNum < normalizedArticles.length;
+
+      return c.json({
+        articles: paginatedArticles,
+        hasMore,
+        total: normalizedArticles.length,
+        page: pageNum,
+        limit: limitNum,
+      });
     }
   )
 
