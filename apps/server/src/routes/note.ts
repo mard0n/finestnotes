@@ -10,26 +10,87 @@ import { protect } from "middlewares/auth.middleware";
 import type { Session, User } from "better-auth";
 import createDOMPurify from "dompurify";
 import { parseHTML } from "linkedom";
+import { normalizeNotes } from "./articles";
 
 const note = new Hono<{
   Bindings: Bindings;
   Variables: { user: User; session: Session };
 }>()
-  // Get all saved notes
+  // Get all notes (notes and pages)
   .get("/", protect, async (c) => {
     const db = drizzle(c.env.finestdb, { schema: schema });
 
-    const notesData = await db.query.notes.findMany({
-      with: {
-        author: true,
-        likes: true,
-      },
-      where: eq(notes.authorId, c.var.user.id),
-      extras: {
-        likeCount: sql<number>`(SELECT COUNT(*) FROM likes WHERE likes.note_id = notes.id)`.as("like_count"),
-      },
-    });
+    const notesData = await db.query.notes
+      .findMany({
+        with: {
+          author: true,
+          projectsToNotes: {
+            with: {
+              project: true,
+            },
+          },
+        },
+        where: eq(notes.authorId, c.var.user.id),
+      })
+      .then((notes) => {
+        const flattenedResults = notes.map((note) => {
+          const { projectsToNotes, ...rest } = note;
+          return {
+            ...rest,
+            projects: projectsToNotes.map((pn) => pn.project) ?? [],
+          };
+        });
+        return flattenedResults;
+      })
+      .then(normalizeNotes);
+
     return c.json(notesData);
+  })
+
+  // Get all notes of a project
+  .get("/project/:id", protect, async (c) => {
+    const { id } = c.req.param();
+    const db = drizzle(c.env.finestdb, { schema: schema });
+
+    const project = await db.query.projects
+      .findFirst({
+        with: {
+          projectsToNotes: {
+            with: {
+              note: {
+                with: {
+                  author: true,
+                  projectsToNotes: {
+                    with: {
+                      project: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        where: eq(schema.projects.id, id),
+      })
+      .then((project) => {
+        if (!project) return null;
+        const { projectsToNotes, ...rest } = project;
+
+        return {
+          ...rest,
+          notes: normalizeNotes(
+            projectsToNotes.map((pn) => {
+              const { projectsToNotes, ...rest } = pn.note;
+              return {
+                ...rest,
+                projects: projectsToNotes.map((pnn) => pnn.project) ?? [],
+              };
+            })
+          ),
+        };
+      });
+
+    return c.json(project);
   })
 
   // Save a note

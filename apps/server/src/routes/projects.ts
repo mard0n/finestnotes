@@ -82,9 +82,10 @@ const projectRoutes = new Hono<{
                   likes: true,
                 },
                 extras: {
-                  likeCount: sql<number>`(SELECT COUNT(*) FROM likes WHERE likes.note_id = ${notes.id})`.as(
-                    "like_count"
-                  ),
+                  likeCount:
+                    sql<number>`(SELECT COUNT(*) FROM likes WHERE likes.note_id = ${notes.id})`.as(
+                      "like_count"
+                    ),
                 },
               },
             },

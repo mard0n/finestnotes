@@ -16,25 +16,25 @@ export type Bindings = {
   finestdb: D1Database;
   BETTER_AUTH_SECRET: string;
   BETTER_AUTH_URL: string;
-  NODE_ENV: 'development' | 'production';
+  NODE_ENV: "development" | "production";
 };
 
 const app = new Hono<{
-  Bindings: Bindings
-}>()
+  Bindings: Bindings;
+}>();
 
-app.use(logger())
+app.use(logger());
 
 // CORS configuration for cross-origin cookies
 app.use(
   "/api/auth/*", // or replace with "*" to enable cors for all routes
   cors({
     origin: (origin, c) => {
-      const isDev = c.env.NODE_ENV !== 'production';
+      const isDev = c.env.NODE_ENV !== "production";
 
       if (isDev) {
         // In development, allow localhost on any port
-        if (origin && origin.startsWith('http://localhost:')) {
+        if (origin && origin.startsWith("http://localhost:")) {
           return origin;
         }
       }
@@ -46,10 +46,10 @@ app.use(
     exposeHeaders: ["Content-Length"],
     maxAge: 600,
     credentials: true,
-  }),
+  })
 );
 
-app.on(['GET', 'POST'], '/api/auth/*', async (c) => {
+app.on(["GET", "POST"], "/api/auth/*", async (c) => {
   // console.log('/api/auth/* req:', c.req);
   const res = await auth(c.env).handler(c.req.raw);
   // console.log('/api/auth/* res:', res);
@@ -64,9 +64,8 @@ const routes = app
   .route("/api/image", image)
   .route("/api/projects", projectRoutes)
   .route("/api/search", search)
-  .route("/api/user", userRoutes)
+  .route("/api/user", userRoutes);
 
-export type RouteType = typeof routes
+export type RouteType = typeof routes;
 
 export default app;
-
