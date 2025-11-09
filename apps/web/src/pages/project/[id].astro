@@ -22,6 +22,8 @@ const [isSubscribedResponse, projectResponse] = await Promise.all([
 const project = await parseResponse(projectResponse);
 const isSubscribed = await parseResponse(isSubscribedResponse);
 
+console.log('isSubscribed', isSubscribed);
+
 if (!project) {
   throw new Error("Project not found");
 }

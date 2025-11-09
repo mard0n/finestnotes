@@ -5,12 +5,11 @@ import Notes from "./_components/Notes";
 if (!Astro.locals.user) {
   return Astro.redirect("/auth/login");
 }
-
 ---
 
 <Layout>
   <Fragment slot="navbar"></Fragment>
-  <Notes client:load />
+  <Notes client:only={"react"} user={Astro.locals.user} />
   <style>
     html {
       height: 100vh;

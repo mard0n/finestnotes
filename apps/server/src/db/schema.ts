@@ -57,6 +57,7 @@ export const highlights = sqliteTable("highlights", {
     .notNull(),
   text: text("text").notNull(),
   position: text("position").notNull(),
+  comment: text("comment"),
 });
 
 export const highlightsRelations = relations(highlights, ({ one }) => ({
@@ -83,6 +84,7 @@ export const images = sqliteTable("images", {
     .default(sql`CURRENT_TIMESTAMP`)
     .notNull(),
   imageUrl: text("image_url").notNull(),
+  comment: text("comment"),
 });
 
 export const imagesRelations = relations(images, ({ one }) => ({

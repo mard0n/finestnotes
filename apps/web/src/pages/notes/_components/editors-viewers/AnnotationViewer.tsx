@@ -1,7 +1,7 @@
-import type { Collections } from "@utils/types";
 import React from "react";
+import type { Note } from "../Notes";
 
-type AnnotationType = Collections[number] & { type: "page" };
+type AnnotationType = Note & { type: "page" };
 
 interface AnnotationViewerProps {
   annotation: AnnotationType;
@@ -86,7 +86,7 @@ const ImageComponent: React.FC<{
 }> = ({ image }) => {
   return (
     <div className="image-annotation">
-      <img src={image.imageUrl} alt={image.caption || ""} />
+      <img src={image.imageUrl} />
     </div>
   );
 };

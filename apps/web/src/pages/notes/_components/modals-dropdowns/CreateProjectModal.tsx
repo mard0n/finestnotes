@@ -1,21 +1,62 @@
-import { useQueryClient, useMutation } from "@tanstack/react-query";
+import {
+  useQueryClient,
+  useMutation,
+  QueryClientProvider,
+  QueryClient,
+} from "@tanstack/react-query";
 import { client } from "@utils/api";
 import { parseResponse } from "hono/client";
 import { useState } from "react";
+import { createPortal } from "react-dom";
+import { queryClient } from "../../../article/_components/ArticleActionBar";
 
-interface CreateProjectModalProps {
+const CreateProjectModal: React.FC<{}> = ({}) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleSuccess = () => {
+    // window.location.reload();
+  };
+
+  return (
+    <>
+      <button
+        className="btn btn-ghost btn-xs p-0 @max-4xs/sidebar:tooltip @max-4xs/sidebar:tooltip-right flex items-center justify-center"
+        data-tip="Add project"
+        onClick={() => setIsOpen(true)}
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          strokeWidth="1.5"
+          stroke="currentColor"
+          className="size-6"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M12 4.5v15m7.5-7.5h-15"
+          ></path>
+        </svg>
+      </button>
+      <Modal
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        onSuccess={handleSuccess}
+      />
+    </>
+  );
+};
+
+const Modal: React.FC<{
   isOpen: boolean;
   onClose: () => void;
-}
-
-const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
-  isOpen,
-  onClose,
-}) => {
+  onSuccess: () => void;
+}> = ({ isOpen, onClose, onSuccess }) => {
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isPublic, setIsPublic] = useState(false);
-
+  
   const queryClient = useQueryClient();
 
   const {
@@ -32,11 +73,12 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
       return await parseResponse(response);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
       setName("");
       setDescription("");
       setIsPublic(false);
       onClose();
+      onSuccess();
+      queryClient.invalidateQueries({ queryKey: ["projects"] });
     },
   });
 
@@ -47,13 +89,13 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
 
   if (!isOpen) return null;
 
-  return (
+  return createPortal(
     <div className="modal modal-open">
       <div className="modal-box">
         <h3 className="font-bold text-lg mb-4">Create New Project</h3>
         <form onSubmit={handleSubmit}>
           <div className="form-control w-full mb-4">
-            <label className="label">
+            <label className="label text-sm mb-1">
               <span className="label-text">Project Name</span>
             </label>
             <input
@@ -67,7 +109,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
           </div>
 
           <div className="form-control w-full mb-4">
-            <label className="label">
+            <label className="label text-sm mb-1">
               <span className="label-text">Description (optional)</span>
             </label>
             <textarea
@@ -80,7 +122,7 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
           </div>
 
           <div className="form-control mb-4">
-            <label className="label cursor-pointer justify-start gap-2">
+            <label className="label text-sm mb-1 cursor-pointer justify-start gap-2">
               <input
                 type="checkbox"
                 className="checkbox"
@@ -117,7 +159,8 @@ const CreateProjectModal: React.FC<CreateProjectModalProps> = ({
         </form>
       </div>
       <div className="modal-backdrop" onClick={onClose}></div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

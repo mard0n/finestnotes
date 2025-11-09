@@ -44,6 +44,9 @@ const projectRoutes = new Hono<{
       },
     });
 
+    console.log('userData', userData);
+    
+
     if (!userData) {
       return c.json({ success: false, message: "User not found" }, 404);
     }
@@ -123,7 +126,10 @@ const projectRoutes = new Hono<{
       ),
     });
 
-    return c.json({ isSubscribed: !!existing });
+    console.log('existing', existing);
+    
+
+    return c.json(!!existing);
   })
 
   // Create a new project

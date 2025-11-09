@@ -3,10 +3,12 @@ import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
 import { getInitialEditorState, initialConfig } from "./NoteEditor";
-import type { Collections } from "@utils/types";
+import type { Note } from "../Notes";
+
+type NoteType = Note & { type: "note" };
 
 const NoteViewer: React.FC<{
-  note: Collections[number] & { type: "note" };
+  note: NoteType;
 }> = ({ note }) => {
   return (
     <LexicalComposer

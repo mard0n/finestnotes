@@ -1,54 +1,59 @@
-import {
-  QueryClient,
-  QueryClientProvider,
-  useQuery,
-} from "@tanstack/react-query";
-import { client } from "@utils/api";
-import { parseResponse } from "hono/client";
-import type { FilterType } from "./Notes";
+import type { FilterType, Note } from "./Notes";
 import { useState } from "react";
 import PublicNotesIcon from "@assets/globe.svg?react";
 import PrivateNotesIcon from "@assets/lock.svg?react";
 import AuthorName from "@components/AuthorName";
 import { formatDate } from "@utils/date";
 import type { User } from "better-auth";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { client } from "@utils/api";
+import { parseResponse } from "hono/client";
 
 const NoteList: React.FC<{
   filter: FilterType;
-  user: User | null | undefined;
+  setFilter: React.Dispatch<React.SetStateAction<FilterType>>;
+  user: User;
+  noteList: Note[] | undefined;
+  isLoadingNotes: boolean;
   selectedNoteId: string | null;
-  setSelectedNoteId: React.Dispatch<React.SetStateAction<string | null>>
-}> = ({ filter, user, selectedNoteId, setSelectedNoteId }) => {
-  const [searchValue, setSearchValue] = useState("");
-
-  const { data: notes, isLoading: isLoadingNotes } = useQuery({
-    queryKey: ["notes"],
-    queryFn: async () => {
-      const res = await client.api.note.$get();
-      return await parseResponse(res);
-    },
-    enabled:
-      filter.type === "all" ||
-      filter.type === "private" ||
-      filter.type === "public",
-  });
-
-  const { data: project, isLoading: isLoadingProject } = useQuery({
-    queryKey: ["project", (filter as FilterType & { type: "project" }).id],
-    queryFn: async () => {
-      const res = await client.api.note.project[":id"].$get({
-        param: { id: (filter as FilterType & { type: "project" }).id },
+  setSelectedNoteId: React.Dispatch<React.SetStateAction<string | null>>;
+}> = ({
+  filter,
+  setFilter,
+  user,
+  noteList: notes,
+  isLoadingNotes,
+  selectedNoteId,
+  setSelectedNoteId,
+}) => {
+  const queryClient = useQueryClient();
+  const { mutate: createNewNote } = useMutation({
+    mutationFn: async () => {
+      const res = await client.api.note.$post({
+        json: {
+          title: "",
+          content: "",
+          contentLexical: "",
+          contentHTML: "",
+        },
       });
       return await parseResponse(res);
     },
-    enabled: filter.type === "project" && !!filter.id,
+    onSuccess: ({ data }) => {
+      console.log("New note created:", data);
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+      setFilter({ type: "all", name: "All Notes" });
+      console.log("setSelectedNoteId(data.id)", data.id);
+      setSelectedNoteId(data.id);
+    },
   });
 
-  let filteredNotes =
-    filter.type === "project" && project ? project.notes : notes;
+  const [searchValue, setSearchValue] = useState("");
 
-  if (searchValue.trim() && filteredNotes?.length) {
-    filteredNotes = filteredNotes.filter((note) => {
+  let noteList = notes;
+
+  if (searchValue.trim() && noteList?.length) {
+    noteList = noteList.filter((note) => {
       const query = searchValue.trim().toLowerCase();
       const titleMatch = note.title.toLowerCase().includes(query);
       const contentMatch =
@@ -59,28 +64,27 @@ const NoteList: React.FC<{
     });
   }
 
-  const filteredNotesTitle =
-    filter.type === "project" && project
-      ? project.name
-      : filter.type === "all"
-      ? "All Notes"
-      : filter.type === "private"
-      ? "Private Notes"
-      : filter.type === "public"
-      ? "Public Notes"
-      : "";
-
   const handleNoteSelection = (noteId: string) => {
+    console.log("noteId", noteId);
+
     if (selectedNoteId === noteId) {
       setSelectedNoteId(null);
       return;
     }
+
     setSelectedNoteId(noteId);
+  };
+
+  const handleNewNoteCreation = () => {
+    createNewNote();
   };
 
   return (
     <>
-      <div className="w-full border-b border-neutral-300 px-6 py-4 flex gap-3 items-center justify-between">
+      <h1 className="block md:hidden font-medium text-xl mt-8 mb-5 px-6 min-h-[28px]">
+        {filter.name}
+      </h1>
+      <div className="w-full pb-4 px-6 md:py-4 flex gap-2 items-center justify-between md:border-b md:border-neutral-300">
         <label className="input input-ghost !outline-offset-0 w-full rounded-full bg-white h-10">
           <svg
             className="h-[1.2em] opacity-50"
@@ -107,7 +111,11 @@ const NoteList: React.FC<{
             onChange={(e) => setSearchValue(e.target.value)}
           />
         </label>
-        <button title="Create a new note" className="h-10 btn btn-ghost px-2">
+        <button
+          title="Create a new note"
+          className="h-10 btn btn-ghost px-2"
+          onClick={handleNewNoteCreation}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
             fill="none"
@@ -124,32 +132,33 @@ const NoteList: React.FC<{
           </svg>
         </button>
       </div>
-      <h1 className="font-medium text-xl my-6 px-6">{filteredNotesTitle}</h1>
-      {filteredNotes?.length ? (
+
+      <h1 className="hidden md:block font-medium text-xl my-6 px-6 min-h-[28px]">
+        {filter.name}
+      </h1>
+      <div className="hidden md:block border-b border-neutral-200" />
+      {noteList?.length ? (
         <>
-          <div className="divider m-0 h-[1px] before:h-[1px] after:h-[1px] before:border-neutral-200 after:border-neutral-200" />
           <ul className="space-y-4 list">
-            {filteredNotes.map((note) => (
+            {noteList.map((note) => (
               <NoteListItem
                 key={note.id}
                 note={note}
-                userId={user?.id}
+                userId={user.id}
                 selectedNoteId={selectedNoteId}
                 projectNames={note.projects.map((project) => project.name)}
                 handleNoteSelection={handleNoteSelection}
               />
             ))}
           </ul>
-          <div className="divider m-0 h-[1px] before:h-[1px] after:h-[1px] before:border-neutral-200 after:border-neutral-200" />
+          <div className="hidden md:block border-b border-neutral-200" />
         </>
       ) : isLoadingNotes ? (
         <>
-          <div className="divider m-0 h-[1px] before:h-[1px] after:h-[1px] before:border-neutral-200 after:border-neutral-200" />
           <p className="text-sm text-gray-content p-6">Loading notes...</p>
         </>
       ) : (
         <>
-          <div className="divider m-0 h-[1px] before:h-[1px] after:h-[1px] before:border-neutral-200 after:border-neutral-200" />
           <p className="text-sm text-gray-content p-6">
             No notes found in this project.
           </p>
@@ -184,7 +193,7 @@ const NoteListItem: React.FC<{
   note: NoteListProps;
   projectNames: string[];
   userId: string | null | undefined;
-  selectedNoteId: string | null;
+  selectedNoteId: string | null | undefined;
   handleNoteSelection: (id: string) => void;
 }> = ({ note, userId, selectedNoteId, projectNames, handleNoteSelection }) => {
   let description: string | null = null;

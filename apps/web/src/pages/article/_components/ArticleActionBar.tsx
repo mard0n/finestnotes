@@ -1,4 +1,4 @@
-import AddToProjectDropdown from "@components/AddToProjectDropdown";
+import AddToProjectDropdown from "../../notes/_components/modals-dropdowns/AddToProjectDropdown";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import type { Article } from "@utils/types";
 import type { User } from "better-auth";

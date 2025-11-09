@@ -21,7 +21,7 @@ import { client } from "@utils/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { parseResponse } from "hono/client";
 import { theme } from "@styles/lexical-theme";
-import type { Collections } from "@utils/types";
+import type { Note } from "../Notes";
 
 export const initialConfig = {
   namespace: "MyEditor",
@@ -40,7 +40,7 @@ export const initialConfig = {
   onError: console.error,
 };
 
-export const getInitialEditorState = (note: Note) => {
+export const getInitialEditorState = (note: NoteType) => {
   if (!note.contentLexical || note.contentLexical.trim() === "") {
     return undefined;
   }
@@ -57,10 +57,10 @@ export const getInitialEditorState = (note: Note) => {
   }
 };
 
-type Note = Collections[number] & { type: "note" };
+type NoteType = Note & { type: "note" };
 
 const NoteEditor: React.FC<{
-  note: Note;
+  note: NoteType;
 }> = ({ note }) => {
   const queryClient = useQueryClient();
 
@@ -83,7 +83,7 @@ const NoteEditor: React.FC<{
       return await parseResponse(res);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["collections"] });
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
     },
   });
 
@@ -91,6 +91,7 @@ const NoteEditor: React.FC<{
 
   return (
     <LexicalComposer
+      key={note.id}
       initialConfig={{
         ...initialConfig,
         editorState: getInitialEditorState(note),

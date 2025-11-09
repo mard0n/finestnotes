@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { client } from "@utils/api";
 import { parseResponse } from "hono/client";
-import type { Collections } from "@utils/types";
+import type { Note } from "../Notes";
 
-type AnnotationType = Collections[number] & { type: "page" };
+type AnnotationType = Note & { type: "page" };
 
 interface AnnotationEditorProps {
   annotation: AnnotationType;
@@ -28,7 +28,7 @@ const AnnotationEditor: React.FC<AnnotationEditorProps> = ({ annotation }) => {
       return await parseResponse(res);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["collections"] });
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
     },
   });
 
@@ -103,7 +103,7 @@ const HighlightComponent: React.FC<{
       return await parseResponse(res);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["collections"] });
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
     },
   });
 
@@ -136,7 +136,7 @@ const ImageComponent: React.FC<{
 }> = ({ image }) => {
   return (
     <div className="image-annotation">
-      <img src={image.imageUrl} alt={image.caption || ""} />
+      <img src={image.imageUrl} />
     </div>
   );
 };

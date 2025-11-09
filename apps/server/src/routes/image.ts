@@ -102,6 +102,50 @@ const image = new Hono<{
     }
   )
 
+  // Update image comment
+  .put(
+    "/:id/comment",
+    protect,
+    zValidator(
+      "param",
+      z.object({
+        id: z.string(),
+      })
+    ),
+    zValidator(
+      "json",
+      z.object({
+        comment: z.string(),
+      })
+    ),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const { comment } = c.req.valid("json");
+      const db = drizzle(c.env.finestdb);
+
+      const res = await db
+        .update(images)
+        .set({ comment })
+        .where(and(eq(images.id, id), eq(images.authorId, c.var.user.id)))
+        .run();
+
+      if (res.meta.changes === 0) {
+        return c.json(
+          {
+            success: false,
+            message: `Note ${id} not found or you don't have permission to update it`,
+          },
+          404
+        );
+      }
+
+      return c.json({
+        success: true,
+        message: `Note ${id} title is successfully updated`,
+      });
+    }
+  )
+
   // Delete a saved image
   .delete(
     "/:id",

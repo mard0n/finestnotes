@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import NoteList from "./NoteList";
 import Sidebar from "./Sidebar";
 import {
@@ -7,109 +7,90 @@ import {
   useQuery,
 } from "@tanstack/react-query";
 import { client } from "@utils/api";
-import { parseResponse } from "hono/client";
-import { authClient } from "@utils/auth";
+import { parseResponse, type InferResponseType } from "hono/client";
+import SelectedNoteEditor from "./SelectedNoteEditor";
+import type { User } from "better-auth";
+import NotesLayout from "./NotesLayout";
 
 export type FilterType =
-  | { type: "all" | "private" | "public" }
-  | { type: "project"; id: string };
+  | {
+      type: "all" | "private" | "public";
+      name: "Public Notes" | "Private Notes" | "All Notes";
+    }
+  | { type: "project"; id: string; name: string };
 
-export const queryClient = new QueryClient();
+export type Note = InferResponseType<typeof client.api.note.$get, 200>[number];
 
-const NotesWrapper: React.FC<{}> = () => {
+const queryClient = new QueryClient();
+
+const NotesWrapper: React.FC<{ user: User }> = ({ user }) => {
   return (
     <QueryClientProvider client={queryClient}>
-      <Notes />
+      <Notes user={user} />
     </QueryClientProvider>
   );
 };
 
-const Notes: React.FC<{}> = () => {
-  const [filter, setFilter] = useState<FilterType>({ type: "all" });
+const Notes: React.FC<{ user: User }> = ({ user }) => {
+  const [filter, setFilter] = useState<FilterType>({
+    type: "all",
+    name: "All Notes",
+  });
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
 
-  const { data: projects } = useQuery({
-    queryKey: ["projects"],
+  const { data: notes, isLoading: isLoadingNotes } = useQuery({
+    queryKey: ["notes", filter],
     queryFn: async () => {
-      const res = await client.api.projects.$get({
-        param: { id: (filter as FilterType & { type: "project" }).id },
-      });
-      return await parseResponse(res);
-    },
-  });
-
-  const { data: user } = useQuery({
-    queryKey: ["user"],
-    queryFn: async () => {
-      const res = await authClient.getSession();
-      if (res.data) {
-        return res.data.user;
+      if (filter.type !== "project") {
+        const res = await client.api.note.$get();
+        const notes = await parseResponse(res);
+        if (filter.type === "private") {
+          return notes.filter((note) => !note.isPublic);
+        } else if (filter.type === "public") {
+          return notes.filter((note) => note.isPublic);
+        }
+        return notes;
       } else {
-        return null;
+        const res = await client.api.note.project[":id"].$get({
+          param: { id: filter.id },
+        });
+        const project = await parseResponse(res);
+        return project?.notes;
       }
     },
   });
 
-  return (
-    <div className="drawer drawer-open">
-      <input
-        id="my-drawer-4"
-        type="checkbox"
-        className="drawer-toggle"
-        defaultChecked
-      />
-      <div className="drawer-side is-drawer-close:overflow-visible">
-        <label
-          htmlFor="my-drawer-4"
-          aria-label="close sidebar"
-          className="drawer-overlay"
-        ></label>
-        <div className="is-drawer-close:w-14 is-drawer-open:w-64 bg-base-200 flex flex-col items-start min-h-full border-r border-neutral-300">
-          <div className="w-full grow py-0">
-            <Sidebar
-              filter={filter}
-              setFilter={setFilter}
-              projects={projects}
-            />
-          </div>
+  console.log("notes", notes);
+  console.log("selectedNoteId", selectedNoteId);
 
-          <div
-            className="m-2 is-drawer-close:tooltip is-drawer-close:tooltip-right"
-            data-tip="Open"
-          >
-            <label
-              htmlFor="my-drawer-4"
-              className="btn btn-ghost btn-circle drawer-button is-drawer-open:rotate-y-180"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                stroke-linejoin="round"
-                stroke-linecap="round"
-                stroke-width="2"
-                fill="none"
-                stroke="currentColor"
-                className="inline-block size-4 my-1.5"
-              >
-                <path d="M4 4m0 2a2 2 0 0 1 2 -2h12a2 2 0 0 1 2 2v12a2 2 0 0 1 -2 2h-12a2 2 0 0 1 -2 -2z"></path>
-                <path d="M9 4v16"></path>
-                <path d="M14 10l2 2l-2 2"></path>
-              </svg>
-            </label>
-          </div>
-        </div>
-      </div>
-      <div className="drawer-content">
-        <div className="w-sm border-r border-neutral-300 h-full">
-          <NoteList
-            filter={filter}
-            user={user}
-            selectedNoteId={selectedNoteId}
-            setSelectedNoteId={setSelectedNoteId}
-          />
-        </div>
-      </div>
-    </div>
+  const selectedNote =
+    notes?.find((note) => note.id === selectedNoteId) || null;
+
+  return (
+    <NotesLayout
+      filter={filter}
+      selectedNoteId={selectedNoteId}
+      deselectNote={() => setSelectedNoteId(null)}
+      sidebar={<Sidebar filter={filter} setFilter={setFilter} user={user} />}
+      noteList={
+        <NoteList
+          filter={filter}
+          setFilter={setFilter}
+          user={user}
+          noteList={notes}
+          isLoadingNotes={isLoadingNotes}
+          selectedNoteId={selectedNoteId}
+          setSelectedNoteId={setSelectedNoteId}
+        />
+      }
+      editor={
+        <SelectedNoteEditor
+          user={user}
+          selectedNote={selectedNote}
+          setSelectedNoteId={setSelectedNoteId}
+        />
+      }
+    />
   );
 };
 

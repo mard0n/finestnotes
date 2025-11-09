@@ -6,8 +6,7 @@ import { parseResponse } from "hono/client";
 const AddToProjectDropdown: React.FC<{
   noteId: string;
   noteProjectIds: string[];
-  onProjectsChange?: () => void;
-}> = ({ noteId, noteProjectIds, onProjectsChange }) => {
+}> = ({ noteId, noteProjectIds }) => {
   const [search, setSearch] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(-1);
 
@@ -24,8 +23,6 @@ const AddToProjectDropdown: React.FC<{
     },
   });
 
-  console.log("projects", projects);
-
   const { mutate: addNoteToProject } = useMutation({
     mutationFn: async ({
       noteId,
@@ -41,9 +38,8 @@ const AddToProjectDropdown: React.FC<{
       return await parseResponse(res);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["collections"] });
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
       queryClient.invalidateQueries({ queryKey: ["projects"] });
-      onProjectsChange?.();
     },
   });
 
@@ -61,9 +57,8 @@ const AddToProjectDropdown: React.FC<{
       return await parseResponse(res);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["collections"] });
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
       queryClient.invalidateQueries({ queryKey: ["projects"] });
-      onProjectsChange?.();
     },
   });
 
