@@ -232,7 +232,7 @@ const AddToProjectDropdown: React.FC<{
             </li>
           ))
         ) : (
-          <li className="p-4 text-center text-gray-content">
+          <li className="p-4 text-center text-base-content">
             {search ? "No projects found" : "No projects available"}
           </li>
         )}

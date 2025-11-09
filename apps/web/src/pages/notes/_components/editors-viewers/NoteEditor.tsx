@@ -105,7 +105,7 @@ const NoteEditor: React.FC<{
               ref={contentEditableRef}
               aria-placeholder={"What's on your mind?"}
               placeholder={
-                <div className="absolute left-0 top-0 pointer-events-none text-gray-content">
+                <div className="absolute left-0 top-0 pointer-events-none text-content-light">
                   Take a note...
                 </div>
               }

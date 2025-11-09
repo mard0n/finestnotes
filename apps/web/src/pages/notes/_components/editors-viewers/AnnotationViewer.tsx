@@ -25,7 +25,7 @@ const AnnotationViewer: React.FC<AnnotationViewerProps> = ({ annotation }) => {
           })}
         </div>
       ) : (
-        <p className="pointer-events-none text-gray-content">
+        <p className="pointer-events-none text-base-content">
           No highlights. No annotations
         </p>
       )}

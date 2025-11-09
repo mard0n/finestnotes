@@ -77,7 +77,7 @@ const AnnotationEditor: React.FC<AnnotationEditorProps> = ({ annotation }) => {
           })}
         </div>
       ) : (
-        <p className="pointer-events-none text-gray-content">
+        <p className="pointer-events-none text-base-content">
           No highlights. No annotations
         </p>
       )}

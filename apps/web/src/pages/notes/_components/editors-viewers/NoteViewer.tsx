@@ -25,7 +25,7 @@ const NoteViewer: React.FC<{
               className="h-full outline-none text-sm"
               aria-placeholder={"What's on your mind?"}
               placeholder={
-                <div className="absolute left-0 top-0 pointer-events-none text-gray-content">
+                <div className="absolute left-0 top-0 pointer-events-none text-content-light">
                   Take a note...
                 </div>
               }

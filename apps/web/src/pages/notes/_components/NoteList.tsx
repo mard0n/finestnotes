@@ -155,11 +155,11 @@ const NoteList: React.FC<{
         </>
       ) : isNotesLoading ? (
         <>
-          <p className="text-sm text-gray-content p-6">Loading notes...</p>
+          <p className="text-sm text-base-content p-6">Loading notes...</p>
         </>
       ) : (
         <>
-          <p className="text-sm text-gray-content p-6">
+          <p className="text-sm text-base-content p-6">
             No notes found in this project.
           </p>
         </>
@@ -231,10 +231,10 @@ const NoteListItem: React.FC<{
             )}
           </div>
         </div>
-        <p className="text-sm text-gray-content mt-1 line-clamp-1">
+        <p className="text-sm text-content-medium mt-1 line-clamp-1">
           {description || <>&nbsp;</>}
         </p>
-        <p className="text-xs text-gray-content mt-1.5">
+        <p className="text-xs text-content-light mt-1.5">
           {note.author.id && (
             <>
               <AuthorName

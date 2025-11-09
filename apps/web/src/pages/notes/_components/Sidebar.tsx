@@ -10,6 +10,7 @@ import { client } from "@utils/api.ts";
 import { parseResponse } from "hono/client";
 import type { User } from "better-auth";
 import type { Projects } from "@utils/types.ts";
+import AuthorName from "@components/AuthorName.tsx";
 
 const Sidebar: React.FC<{
   filter: FilterType;
@@ -152,115 +153,131 @@ const Sidebar: React.FC<{
         </p>
         {projects ? (
           projects.map((project) => (
-            <div
-              key={project.id}
-              className="flex items-center justify-between gap-1 group"
-            >
-              <a
-                className={`link link-hover flex items-center justify-start gap-2 flex-1 min-w-0  @max-4xs/sidebar:tooltip @max-4xs/sidebar:tooltip-right ${
-                  filter.type === "project" && filter.id === project.id
-                    ? "font-bold"
-                    : ""
-                }`}
-                onClick={() => {
-                  setFilter({
-                    type: "project",
-                    id: project.id,
-                    name: project.name,
-                  });
-                }}
-                data-tip={project.name}
+            <div>
+              <div
+                key={project.id}
+                className="flex items-center justify-between gap-1 group"
               >
-                <div className="block @4xs/sidebar:hidden mx-auto">
-                  {project.name.charAt(0).toUpperCase()}
-                </div>
-                <div className="hidden @4xs/sidebar:flex flex-1 gap-1 items-center min-w-0">
-                  <div className="h-6 w-4 flex items-center justify-center flex-shrink-0">
-                    {project.isPublic ? (
-                      <PublicNotesIcon />
+                <a
+                  className={`link link-hover flex items-center justify-start gap-2 flex-1 min-w-0  @max-4xs/sidebar:tooltip @max-4xs/sidebar:tooltip-right ${
+                    filter.type === "project" && filter.id === project.id
+                      ? "font-bold"
+                      : ""
+                  }`}
+                  onClick={() => {
+                    setFilter({
+                      type: "project",
+                      id: project.id,
+                      name: project.name,
+                    });
+                  }}
+                  data-tip={project.name}
+                >
+                  <div className="block @4xs/sidebar:hidden mx-auto">
+                    {project.name.charAt(0).toUpperCase()}
+                  </div>
+                  <div className="hidden @4xs/sidebar:flex flex-1 gap-1 items-center min-w-0">
+                    <div className="h-6 w-4 flex items-center justify-center flex-shrink-0">
+                      {project.isPublic ? (
+                        <PublicNotesIcon />
+                      ) : (
+                        <PrivateNotesIcon />
+                      )}
+                    </div>
+                    <div className="truncate flex-1 min-w-0">
+                      {project.name}
+                    </div>
+                  </div>
+                </a>
+                <div className="hidden group-hover:block @max-4xs/sidebar:!hidden h-6 w-4 dropdown dropdown-end">
+                  <button
+                    role="link"
+                    className="btn btn-xs btn-ghost text-xs px-0"
+                    tabIndex={0}
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={1.5}
+                      stroke="currentColor"
+                      className="size-4"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
+                      />
+                    </svg>
+                  </button>
+                  <div className="menu dropdown-content z-1 w-52 p-2">
+                    {project.authorId !== user.id ? (
+                      <ul className="bg-base-100 p-2 shadow-sm" tabIndex={-1}>
+                        <li onClick={() => unsubscribe(project.id)}>
+                          <a>Unsubscribe</a>
+                        </li>
+                      </ul>
                     ) : (
-                      <PrivateNotesIcon />
+                      <ul className="bg-base-100 p-2 shadow-sm" tabIndex={-1}>
+                        <li
+                          onClick={() => {
+                            const newName = window.prompt(
+                              "Enter new project name:",
+                              project.name
+                            );
+                            if (newName && newName.trim() !== "") {
+                              renameProject({
+                                projectId: project.id,
+                                projectName: newName.trim(),
+                              });
+                            }
+                          }}
+                        >
+                          <a>Rename</a>
+                        </li>
+                        <li
+                          onClick={() =>
+                            handleChangeVisibility(project.id, project.isPublic)
+                          }
+                        >
+                          <a>
+                            Make it{" "}
+                            {project.isPublic ? (
+                              <>
+                                Private <PrivateNotesIcon />
+                              </>
+                            ) : (
+                              <>
+                                Public <PublicNotesIcon />
+                              </>
+                            )}
+                          </a>
+                        </li>
+                        <li
+                          className="text-red-400"
+                          onClick={() =>
+                            handleDeleteProject(project.id, project.name)
+                          }
+                        >
+                          <a>Delete</a>
+                        </li>
+                      </ul>
                     )}
                   </div>
-                  <div className="truncate flex-1 min-w-0">{project.name}</div>
-                </div>
-              </a>
-              <div className="hidden group-hover:block @max-4xs/sidebar:!hidden h-6 w-4 dropdown dropdown-end">
-                <button
-                  role="link"
-                  className="btn btn-xs btn-ghost text-xs px-0"
-                  tabIndex={0}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={1.5}
-                    stroke="currentColor"
-                    className="size-4"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M12 6.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 12.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5ZM12 18.75a.75.75 0 1 1 0-1.5.75.75 0 0 1 0 1.5Z"
-                    />
-                  </svg>
-                </button>
-                <div className="menu dropdown-content z-1 w-52 p-2">
-                  {project.authorId !== user.id ? (
-                    <ul className="bg-base-100 p-2 shadow-sm" tabIndex={-1}>
-                      <li onClick={() => unsubscribe(project.id)}>
-                        <a>Unsubscribe</a>
-                      </li>
-                    </ul>
-                  ) : (
-                    <ul className="bg-base-100 p-2 shadow-sm" tabIndex={-1}>
-                      <li
-                        onClick={() => {
-                          const newName = window.prompt(
-                            "Enter new project name:",
-                            project.name
-                          );
-                          if (newName && newName.trim() !== "") {
-                            renameProject({
-                              projectId: project.id,
-                              projectName: newName.trim(),
-                            });
-                          }
-                        }}
-                      >
-                        <a>Rename</a>
-                      </li>
-                      <li
-                        onClick={() =>
-                          handleChangeVisibility(project.id, project.isPublic)
-                        }
-                      >
-                        <a>
-                          Make it{" "}
-                          {project.isPublic ? (
-                            <>
-                              Private <PrivateNotesIcon />
-                            </>
-                          ) : (
-                            <>
-                              Public <PublicNotesIcon />
-                            </>
-                          )}
-                        </a>
-                      </li>
-                      <li
-                        className="text-red-400"
-                        onClick={() =>
-                          handleDeleteProject(project.id, project.name)
-                        }
-                      >
-                        <a>Delete</a>
-                      </li>
-                    </ul>
-                  )}
                 </div>
               </div>
+              {project.authorId !== user.id ? (
+                <div className="text-xs text-content-light">
+                  <AuthorName
+                    ownerId={project.authorId}
+                    ownerName={project.author.name}
+                    userId={user.id}
+                    shouldAddBy={true}
+                  />
+                </div>
+              ) : (
+                <></>
+              )}
             </div>
           ))
         ) : isProjectsLoading ? (
