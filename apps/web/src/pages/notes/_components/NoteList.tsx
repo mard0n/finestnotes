@@ -49,16 +49,18 @@ const NoteList: React.FC<{
   });
 
   const [searchValue, setSearchValue] = useState("");
-  const foundSearchedNotes = notes && searchValue.trim() ? notes.filter((note) => {
-      const query = searchValue.trim().toLowerCase();
-      const titleMatch = note.title.toLowerCase().includes(query);
-      const contentMatch =
-        note.type === "note"
-          ? note.content?.toLowerCase().includes(query)
-          : note.description?.toLowerCase().includes(query);
-      return titleMatch || contentMatch;
-    }) : []
-
+  const foundSearchedNotes =
+    notes && searchValue.trim()
+      ? notes.filter((note) => {
+          const query = searchValue.trim().toLowerCase();
+          const titleMatch = note.title.toLowerCase().includes(query);
+          const contentMatch =
+            note.type === "note"
+              ? note.content?.toLowerCase().includes(query)
+              : note.description?.toLowerCase().includes(query);
+          return titleMatch || contentMatch;
+        })
+      : undefined;
 
   const handleNoteSelection = (noteId: string) => {
     console.log("noteId", noteId);
