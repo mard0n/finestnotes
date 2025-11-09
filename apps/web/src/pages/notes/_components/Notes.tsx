@@ -38,7 +38,7 @@ const Notes: React.FC<{ user: User }> = ({ user }) => {
   });
   const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
 
-  const { data: notes, isLoading: isLoadingNotes } = useQuery({
+  const { data: notes, isLoading: isNotesLoading } = useQuery({
     queryKey: ["notes", filter],
     queryFn: async () => {
       if (filter.type !== "project") {
@@ -60,7 +60,7 @@ const Notes: React.FC<{ user: User }> = ({ user }) => {
     },
   });
 
-  const { data: projects, isLoading: isProjectLoading } = useQuery({
+  const { data: projects, isLoading: isProjectsLoading } = useQuery({
     queryKey: ["projects"],
     queryFn: async () => {
       const res = await client.api.projects.$get();
@@ -87,7 +87,7 @@ const Notes: React.FC<{ user: User }> = ({ user }) => {
     }
   }, [notes, projects]);
 
-  
+
   const selectedNote =
     notes?.find((note) => note.id === selectedNoteId) || null;
 
@@ -102,7 +102,7 @@ const Notes: React.FC<{ user: User }> = ({ user }) => {
           setFilter={setFilter}
           user={user}
           projects={projects}
-          isProjectLoading={isProjectLoading}
+          isProjectsLoading={isProjectsLoading}
         />
       }
       noteList={
@@ -111,7 +111,7 @@ const Notes: React.FC<{ user: User }> = ({ user }) => {
           setFilter={setFilter}
           user={user}
           noteList={notes}
-          isLoadingNotes={isLoadingNotes}
+          isNotesLoading={isNotesLoading}
           selectedNoteId={selectedNoteId}
           setSelectedNoteId={setSelectedNoteId}
         />

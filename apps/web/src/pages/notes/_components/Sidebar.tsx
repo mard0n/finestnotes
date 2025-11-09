@@ -15,9 +15,9 @@ const Sidebar: React.FC<{
   filter: FilterType;
   setFilter: React.Dispatch<React.SetStateAction<FilterType>>;
   projects: Projects | undefined;
-  isProjectLoading: boolean;
+  isProjectsLoading: boolean;
   user: User;
-}> = ({ filter, setFilter, user, projects, isProjectLoading }) => {
+}> = ({ filter, setFilter, user, projects, isProjectsLoading }) => {
   const queryClient = useQueryClient();
 
   console.log("projects", projects);
@@ -156,8 +156,8 @@ const Sidebar: React.FC<{
               key={project.id}
               className="flex items-center justify-between gap-1 group"
             >
-              <div
-                className={`flex items-center justify-start gap-2 flex-1 min-w-0 ${
+              <a
+                className={`link link-hover flex items-center justify-start gap-2 flex-1 min-w-0  @max-4xs/sidebar:tooltip @max-4xs/sidebar:tooltip-right ${
                   filter.type === "project" && filter.id === project.id
                     ? "font-bold"
                     : ""
@@ -169,8 +169,9 @@ const Sidebar: React.FC<{
                     name: project.name,
                   });
                 }}
+                data-tip={project.name}
               >
-                <div className="block @4xs/sidebar:hidden text-center">
+                <div className="block @4xs/sidebar:hidden mx-auto">
                   {project.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="hidden @4xs/sidebar:flex flex-1 gap-1 items-center min-w-0">
@@ -183,8 +184,8 @@ const Sidebar: React.FC<{
                   </div>
                   <div className="truncate flex-1 min-w-0">{project.name}</div>
                 </div>
-              </div>
-              <div className="hidden group-hover:block h-6 w-[18] dropdown dropdown-end">
+              </a>
+              <div className="hidden group-hover:block @max-4xs/sidebar:!hidden h-6 w-4 dropdown dropdown-end">
                 <button
                   role="link"
                   className="btn btn-xs btn-ghost text-xs px-0"
@@ -262,7 +263,7 @@ const Sidebar: React.FC<{
               </div>
             </div>
           ))
-        ) : isProjectLoading ? (
+        ) : isProjectsLoading ? (
           <div className="hidden @4xs/sidebar:block truncate">
             Loading projects...
           </div>

@@ -14,7 +14,7 @@ const NoteList: React.FC<{
   setFilter: React.Dispatch<React.SetStateAction<FilterType>>;
   user: User;
   noteList: Note[] | undefined;
-  isLoadingNotes: boolean;
+  isNotesLoading: boolean;
   selectedNoteId: string | null;
   setSelectedNoteId: React.Dispatch<React.SetStateAction<string | null>>;
 }> = ({
@@ -22,7 +22,7 @@ const NoteList: React.FC<{
   setFilter,
   user,
   noteList: notes,
-  isLoadingNotes,
+  isNotesLoading,
   selectedNoteId,
   setSelectedNoteId,
 }) => {
@@ -153,7 +153,7 @@ const NoteList: React.FC<{
           </ul>
           <div className="hidden md:block border-b border-neutral-200" />
         </>
-      ) : isLoadingNotes ? (
+      ) : isNotesLoading ? (
         <>
           <p className="text-sm text-gray-content p-6">Loading notes...</p>
         </>
