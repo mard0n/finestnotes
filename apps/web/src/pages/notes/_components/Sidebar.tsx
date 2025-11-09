@@ -9,21 +9,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { client } from "@utils/api.ts";
 import { parseResponse } from "hono/client";
 import type { User } from "better-auth";
+import type { Projects } from "@utils/types.ts";
 
 const Sidebar: React.FC<{
   filter: FilterType;
   setFilter: React.Dispatch<React.SetStateAction<FilterType>>;
+  projects: Projects | undefined;
+  isProjectLoading: boolean;
   user: User;
-}> = ({ filter, setFilter, user }) => {
+}> = ({ filter, setFilter, user, projects, isProjectLoading }) => {
   const queryClient = useQueryClient();
-
-  const { data: projects, isLoading: isProjectLoading } = useQuery({
-    queryKey: ["projects"],
-    queryFn: async () => {
-      const res = await client.api.projects.$get();
-      return await parseResponse(res);
-    },
-  });
 
   console.log("projects", projects);
 

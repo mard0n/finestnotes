@@ -60,9 +60,34 @@ const Notes: React.FC<{ user: User }> = ({ user }) => {
     },
   });
 
-  console.log("notes", notes);
-  console.log("selectedNoteId", selectedNoteId);
+  const { data: projects, isLoading: isProjectLoading } = useQuery({
+    queryKey: ["projects"],
+    queryFn: async () => {
+      const res = await client.api.projects.$get();
+      return await parseResponse(res);
+    },
+  });
 
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const noteId = urlParams.get("noteId");
+    const projectId = urlParams.get("projectId");
+
+    if (noteId) {
+      const noteExists = notes?.some((note) => note.id === noteId);
+      if (!noteExists) return;
+      setFilter({ type: "all", name: "All Notes" });
+      setSelectedNoteId(noteId);
+      window.history.replaceState({}, "", "/notes");
+    } else if (projectId) {
+      const foundProject = projects?.find((project) => project.id === projectId);
+      if (!foundProject) return;
+      setFilter({ type: "project", id: projectId, name: foundProject.name });
+      window.history.replaceState({}, "", "/notes");
+    }
+  }, [notes, projects]);
+
+  
   const selectedNote =
     notes?.find((note) => note.id === selectedNoteId) || null;
 
@@ -71,7 +96,15 @@ const Notes: React.FC<{ user: User }> = ({ user }) => {
       filter={filter}
       selectedNoteId={selectedNoteId}
       deselectNote={() => setSelectedNoteId(null)}
-      sidebar={<Sidebar filter={filter} setFilter={setFilter} user={user} />}
+      sidebar={
+        <Sidebar
+          filter={filter}
+          setFilter={setFilter}
+          user={user}
+          projects={projects}
+          isProjectLoading={isProjectLoading}
+        />
+      }
       noteList={
         <NoteList
           filter={filter}
