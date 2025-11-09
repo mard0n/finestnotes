@@ -13,7 +13,7 @@ const NoteList: React.FC<{
   filter: FilterType;
   setFilter: React.Dispatch<React.SetStateAction<FilterType>>;
   user: User;
-  noteList: Note[] | undefined;
+  notes: Note[] | undefined;
   isNotesLoading: boolean;
   selectedNoteId: string | null;
   setSelectedNoteId: React.Dispatch<React.SetStateAction<string | null>>;
@@ -21,7 +21,7 @@ const NoteList: React.FC<{
   filter,
   setFilter,
   user,
-  noteList: notes,
+  notes,
   isNotesLoading,
   selectedNoteId,
   setSelectedNoteId,
@@ -49,11 +49,7 @@ const NoteList: React.FC<{
   });
 
   const [searchValue, setSearchValue] = useState("");
-
-  let noteList = notes;
-
-  if (searchValue.trim() && noteList?.length) {
-    noteList = noteList.filter((note) => {
+  const foundSearchedNotes = notes && searchValue.trim() ? notes.filter((note) => {
       const query = searchValue.trim().toLowerCase();
       const titleMatch = note.title.toLowerCase().includes(query);
       const contentMatch =
@@ -61,8 +57,8 @@ const NoteList: React.FC<{
           ? note.content?.toLowerCase().includes(query)
           : note.description?.toLowerCase().includes(query);
       return titleMatch || contentMatch;
-    });
-  }
+    }) : []
+
 
   const handleNoteSelection = (noteId: string) => {
     console.log("noteId", noteId);
@@ -78,6 +74,8 @@ const NoteList: React.FC<{
   const handleNewNoteCreation = () => {
     createNewNote();
   };
+
+  const notesToDisplay = foundSearchedNotes ?? notes;
 
   return (
     <>
@@ -137,10 +135,10 @@ const NoteList: React.FC<{
         {filter.name}
       </h1>
       <div className="hidden md:block border-b border-neutral-200" />
-      {noteList?.length ? (
+      {notesToDisplay?.length ? (
         <>
           <ul className="space-y-4 list">
-            {noteList.map((note) => (
+            {notesToDisplay.map((note) => (
               <NoteListItem
                 key={note.id}
                 note={note}

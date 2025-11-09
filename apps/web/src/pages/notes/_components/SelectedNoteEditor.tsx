@@ -18,8 +18,6 @@ const SelectedNoteEditor: React.FC<{
   selectedNote: Note | null;
   setSelectedNoteId: React.Dispatch<React.SetStateAction<string | null>>;
 }> = ({ user, selectedNote, setSelectedNoteId }) => {
-  console.log('SelectedNoteEditor selectedNote', selectedNote);
-  
   const queryClient = useQueryClient();
 
   const updateNoteTitle = useMutation({
@@ -61,6 +59,25 @@ const SelectedNoteEditor: React.FC<{
     },
   });
 
+  const handleDeleteClick = () => {
+    if (
+      selectedNote &&
+      window.confirm(
+        `Are you sure you want to delete "${
+          selectedNote.title || "Untitled note"
+        }"?`
+      )
+    ) {
+      deleteNote.mutate(selectedNote.id);
+    }
+  };
+
+  const handleVisibilityChange = (isPublic: boolean) => {
+    if (selectedNote) {
+      updateNoteVisibility.mutate({ id: selectedNote.id, isPublic });
+    }
+  };
+
   if (!selectedNote) {
     return (
       <>
@@ -91,25 +108,6 @@ const SelectedNoteEditor: React.FC<{
       </>
     );
   }
-
-  const handleDeleteClick = () => {
-    if (
-      selectedNote &&
-      window.confirm(
-        `Are you sure you want to delete "${
-          selectedNote.title || "Untitled note"
-        }"?`
-      )
-    ) {
-      deleteNote.mutate(selectedNote.id);
-    }
-  };
-
-  const handleVisibilityChange = (isPublic: boolean) => {
-    if (selectedNote) {
-      updateNoteVisibility.mutate({ id: selectedNote.id, isPublic });
-    }
-  };
 
   return (
     <>
@@ -267,7 +265,11 @@ const NoteActionBar: React.FC<{
     <div className="flex justify-between items-center gap-3 mb-2 lg:mb-6">
       <div className="flex gap-3">
         <div className="dropdown dropdown-top md:dropdown-bottom">
-          <div tabIndex={0} role="button" className="btn btn-sm rounded-full bg-white font-normal truncate">
+          <div
+            tabIndex={0}
+            role="button"
+            className="btn btn-sm rounded-full bg-white font-normal truncate"
+          >
             <ProjectAddIcon />
             <span className="hidden xs:inline">Add to project</span>
           </div>
@@ -281,7 +283,11 @@ const NoteActionBar: React.FC<{
           </div>
         </div>
         <div className="dropdown dropdown-top md:dropdown-bottom">
-          <div tabIndex={0} role="button" className="btn btn-sm rounded-full bg-white font-normal truncate">
+          <div
+            tabIndex={0}
+            role="button"
+            className="btn btn-sm rounded-full bg-white font-normal truncate"
+          >
             <span>{selectedNote.isPublic ? <GlobeIcon /> : <LockIcon />}</span>
             <span className="hidden xs:inline">
               {selectedNote.isPublic ? "Public" : "Private"}
@@ -298,7 +304,7 @@ const NoteActionBar: React.FC<{
                 clipRule="evenodd"
               />
             </svg>
-          </div >
+          </div>
           <div tabIndex={-1} className="dropdown-content p-2 z-1">
             <ul className="menu p-2 bg-white border border-neutral-300">
               <li>
