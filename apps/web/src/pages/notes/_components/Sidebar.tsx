@@ -267,7 +267,7 @@ const Sidebar: React.FC<{
                 </div>
               </div>
               {project.authorId !== user.id ? (
-                <div className="text-xs text-content-light">
+                <div className="hidden @4xs:block text-xs text-content-light">
                   <AuthorName
                     ownerId={project.authorId}
                     ownerName={project.author.name}

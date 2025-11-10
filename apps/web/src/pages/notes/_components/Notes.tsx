@@ -111,6 +111,7 @@ const Notes: React.FC<{ user: User }> = ({ user }) => {
           setFilter={setFilter}
           user={user}
           notes={notes}
+          projects={projects}
           isNotesLoading={isNotesLoading}
           selectedNoteId={selectedNoteId}
           setSelectedNoteId={setSelectedNoteId}

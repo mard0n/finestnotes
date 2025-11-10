@@ -8,12 +8,14 @@ import type { User } from "better-auth";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { client } from "@utils/api";
 import { parseResponse } from "hono/client";
+import type { Projects } from "@utils/types";
 
 const NoteList: React.FC<{
   filter: FilterType;
   setFilter: React.Dispatch<React.SetStateAction<FilterType>>;
   user: User;
   notes: Note[] | undefined;
+  projects: Projects | undefined;
   isNotesLoading: boolean;
   selectedNoteId: string | null;
   setSelectedNoteId: React.Dispatch<React.SetStateAction<string | null>>;
@@ -22,6 +24,7 @@ const NoteList: React.FC<{
   setFilter,
   user,
   notes,
+  projects,
   isNotesLoading,
   selectedNoteId,
   setSelectedNoteId,
@@ -78,12 +81,26 @@ const NoteList: React.FC<{
   };
 
   const notesToDisplay = foundSearchedNotes ?? notes;
+  const selectedProject =
+    filter.type === "project"
+      ? projects?.find((project) => project.id === filter.id)
+      : undefined;
 
   return (
     <>
-      <h1 className="block md:hidden font-medium text-xl mt-8 mb-5 px-6 min-h-[28px]">
-        {filter.name}
-      </h1>
+      <div className="block md:hidden mt-8 mb-5 px-6">
+        <h1 className="font-medium text-xl min-h-[28px]">{filter.name}</h1>
+        {selectedProject ? (
+          <p className="text-sm text-content-light">
+            <AuthorName
+              ownerId={selectedProject?.author.id}
+              ownerName={selectedProject?.author.name}
+              userId={user.id}
+              shouldAddBy={true}
+            />
+          </p>
+        ) : null}
+      </div>
       <div className="w-full pb-4 px-6 md:py-4 flex gap-2 items-center justify-between md:border-b md:border-neutral-300">
         <label className="input input-ghost !outline-offset-0 w-full rounded-full bg-white h-10">
           <svg
@@ -133,9 +150,21 @@ const NoteList: React.FC<{
         </button>
       </div>
 
-      <h1 className="hidden md:block font-medium text-xl my-6 px-6 min-h-[28px]">
-        {filter.name}
-      </h1>
+      <div className="hidden md:block my-6 px-6">
+        <h1 className="hidden md:block font-medium text-xl min-h-[28px]">
+          {filter.name}
+        </h1>
+        {selectedProject ? (
+          <p className="text-sm text-content-light">
+            <AuthorName
+              ownerId={selectedProject?.author.id}
+              ownerName={selectedProject?.author.name}
+              userId={user.id}
+              shouldAddBy={true}
+            />
+          </p>
+        ) : null}
+      </div>
       <div className="hidden md:block border-b border-neutral-200" />
       {notesToDisplay?.length ? (
         <>
