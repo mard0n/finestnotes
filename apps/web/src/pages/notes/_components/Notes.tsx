@@ -9,8 +9,8 @@ import {
 import { client } from "@utils/api";
 import { parseResponse, type InferResponseType } from "hono/client";
 import SelectedNoteEditor from "./SelectedNoteEditor";
-import type { User } from "better-auth";
 import NotesLayout from "./NotesLayout";
+import type { User } from "@utils/types";
 
 export type FilterType =
   | {

@@ -1,4 +1,4 @@
-import type { User } from "better-auth";
+import type { User } from "@utils/types";;
 import { type Note } from "./Notes";
 import AnnotationViewer from "./editors-viewers/AnnotationViewer";
 import NoteViewer from "./editors-viewers/NoteViewer";

@@ -8,7 +8,7 @@ import type React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { client } from "@utils/api.ts";
 import { parseResponse } from "hono/client";
-import type { User } from "better-auth";
+import type { User } from "@utils/types";
 import type { Projects } from "@utils/types.ts";
 import AuthorName from "@components/AuthorName.tsx";
 
@@ -153,11 +153,8 @@ const Sidebar: React.FC<{
         </p>
         {projects ? (
           projects.map((project) => (
-            <div>
-              <div
-                key={project.id}
-                className="flex items-center justify-between gap-1 group"
-              >
+            <div key={project.id}>
+              <div className="flex items-center justify-between gap-1 group">
                 <a
                   className={`link link-hover flex items-center justify-start gap-2 flex-1 min-w-0  @max-4xs/sidebar:tooltip @max-4xs/sidebar:tooltip-right ${
                     filter.type === "project" && filter.id === project.id

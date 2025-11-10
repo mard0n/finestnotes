@@ -4,7 +4,7 @@ import PublicNotesIcon from "@assets/globe.svg?react";
 import PrivateNotesIcon from "@assets/lock.svg?react";
 import AuthorName from "@components/AuthorName";
 import { formatDate } from "@utils/date";
-import type { User } from "better-auth";
+import type { User } from "@utils/types";;
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { client } from "@utils/api";
 import { parseResponse } from "hono/client";
