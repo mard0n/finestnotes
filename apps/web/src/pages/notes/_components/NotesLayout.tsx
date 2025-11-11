@@ -9,14 +9,7 @@ const NotesLayout: React.FC<{
   selectedNoteId: string | null;
   deselectNote: () => void;
   filter: FilterType;
-}> = ({
-  sidebar,
-  noteList,
-  editor,
-  selectedNoteId,
-  deselectNote,
-  filter,
-}) => {
+}> = ({ sidebar, noteList, editor, selectedNoteId, deselectNote, filter }) => {
   const [screenSize, setScreenSize] = useState<
     "mobile" | "tablet" | "desktop" | null
   >(null);
@@ -100,12 +93,52 @@ const NotesLayout: React.FC<{
           </div>
         </div>
         <div className="drawer-content">
-          <label
-            htmlFor="my-finest-drawer-mobile"
-            className="btn drawer-button mt-4 ml-4 px-2"
-          >
-            <DrawerControllerIcon />
-          </label>
+          <div className="flex justify-between items-center mt-4 mx-4">
+            <label
+              htmlFor="my-finest-drawer-mobile"
+              className="btn drawer-button px-2"
+            >
+              <DrawerControllerIcon />
+            </label>
+            <div className="dropdown dropdown-end">
+              <span tabIndex={0} role="link" className="">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke-width="2"
+                  stroke="currentColor"
+                  className="size-6"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                  />
+                </svg>
+              </span>
+              <div className="dropdown-content menu z-1 w-52 p-2">
+                <ul className="bg-base-100 p-2 shadow-sm" tabIndex={-1}>
+                  <li>
+                    <a href="/notes">My notes</a>
+                  </li>
+                  <li>
+                    <a href="https://chromewebstore.google.com/">
+                      Browser Extension
+                    </a>
+                  </li>
+                  <li>
+                    <a href="/settings">Settings</a>
+                  </li>
+                  <li>
+                    <a href="/auth/signout" id="signout">
+                      Sign out
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
           {noteList}
         </div>
       </div>
