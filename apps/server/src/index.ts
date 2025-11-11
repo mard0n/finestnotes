@@ -9,6 +9,7 @@ import highlight from "./routes/highlight";
 import projectRoutes from "./routes/projects";
 import search from "./routes/search";
 import userRoutes from "./routes/user";
+import settingsRoutes from "./routes/settings";
 import { auth } from "./utils/auth";
 import { logger } from "hono/logger";
 
@@ -64,7 +65,8 @@ const routes = app
   .route("/api/image", image)
   .route("/api/projects", projectRoutes)
   .route("/api/search", search)
-  .route("/api/user", userRoutes);
+  .route("/api/user", userRoutes)
+  .route("/api/settings", settingsRoutes);
 
 export type RouteType = typeof routes;
 
