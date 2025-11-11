@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React, { useRef, useCallback } from "react";
 import { $getRoot } from "lexical";
 
 import { LexicalComposer } from "@lexical/react/LexicalComposer";
@@ -22,6 +22,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { parseResponse } from "hono/client";
 import { theme } from "@styles/lexical-theme";
 import type { Note } from "../Notes";
+import { useDebounce, useThrottle } from "@utils/hooks";
 
 export const initialConfig = {
   namespace: "MyEditor",
@@ -59,6 +60,10 @@ export const getInitialEditorState = (note: NoteType) => {
 
 type NoteType = Note & { type: "note" };
 
+// Configuration for debounce and throttle timing
+const DEBOUNCE_DELAY = 500; // Wait 500ms after user stops typing
+const THROTTLE_LIMIT = 2000; // At most once every 2 seconds
+
 const NoteEditor: React.FC<{
   note: NoteType;
 }> = ({ note }) => {
@@ -86,6 +91,25 @@ const NoteEditor: React.FC<{
       queryClient.invalidateQueries({ queryKey: ["notes"] });
     },
   });
+
+  // Create a stable callback for the mutation
+  const handleContentUpdate = useCallback(
+    (payload: {
+      id: string;
+      content: string;
+      contentLexical: string;
+      contentHTML: string;
+    }) => {
+      updateNoteContent.mutate(payload);
+    },
+    [updateNoteContent]
+  );
+
+  // Apply both debounce and throttle for optimal UX
+  // Debounce: Waits for user to stop typing
+  // Throttle: Ensures updates happen at regular intervals during continuous typing
+  const debouncedUpdate = useDebounce(handleContentUpdate, DEBOUNCE_DELAY);
+  const throttledUpdate = useThrottle(debouncedUpdate, THROTTLE_LIMIT);
 
   const contentEditableRef = useRef<HTMLDivElement>(null);
 
@@ -124,7 +148,7 @@ const NoteEditor: React.FC<{
             const htmlString = $generateHtmlFromNodes(editor, null);
             console.log("htmlString", htmlString);
 
-            updateNoteContent.mutate({
+            throttledUpdate({
               id: note.id,
               content: root.getTextContent(),
               contentLexical: JSON.stringify(editorStateJSON),
