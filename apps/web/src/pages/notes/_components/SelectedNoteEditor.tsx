@@ -1,4 +1,4 @@
-import type { User } from "@utils/types";;
+import type { User } from "@utils/types";
 import { type Note } from "./Notes";
 import AnnotationViewer from "./editors-viewers/AnnotationViewer";
 import NoteViewer from "./editors-viewers/NoteViewer";
@@ -59,6 +59,30 @@ const SelectedNoteEditor: React.FC<{
     },
   });
 
+  const likeNote = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await client.api.articles[":id"].like.$post({
+        param: { id },
+      });
+      return await parseResponse(res);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+    },
+  });
+
+  const unlikeNote = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await client.api.articles[":id"].like.$delete({
+        param: { id },
+      });
+      return await parseResponse(res);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+    },
+  });
+
   const handleDeleteClick = () => {
     if (
       selectedNote &&
@@ -75,6 +99,18 @@ const SelectedNoteEditor: React.FC<{
   const handleVisibilityChange = (isPublic: boolean) => {
     if (selectedNote) {
       updateNoteVisibility.mutate({ id: selectedNote.id, isPublic });
+    }
+  };
+
+  const handleLikeClick = () => {
+    if (!selectedNote) {
+      return;
+    }
+
+    if (selectedNote.isLikedByCurrentUser) {
+      unlikeNote.mutate(selectedNote.id);
+    } else {
+      likeNote.mutate(selectedNote.id);
     }
   };
 
@@ -96,6 +132,32 @@ const SelectedNoteEditor: React.FC<{
       <>
         <EditorNavBar user={user} />
         <div className="px-6 md:px-8 py-6">
+          {selectedNote.isPublic ? (
+            <button
+              className={`btn btn-ghost btn-sm rounded-full font-normal mb-6 bg-white ${
+                selectedNote.isLikedByCurrentUser ? "text-black" : ""
+              }`}
+              onClick={handleLikeClick}
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill={
+                  selectedNote.isLikedByCurrentUser ? "currentColor" : "none"
+                }
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className=""
+              >
+                <path d="M13.73 4a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+              </svg>
+              {selectedNote.likeCount}
+            </button>
+          ) : null}
           <h1 className="text-2xl font-serif outline-none text-black mb-2 grow">
             {selectedNote.title}
           </h1>
@@ -119,6 +181,7 @@ const SelectedNoteEditor: React.FC<{
             selectedNote={selectedNote}
             handleVisibilityChange={handleVisibilityChange}
             handleDeleteClick={handleDeleteClick}
+            handleLikeClick={handleLikeClick}
           />
         </div>
         <input
@@ -158,6 +221,7 @@ const SelectedNoteEditor: React.FC<{
             selectedNote={selectedNote}
             handleVisibilityChange={handleVisibilityChange}
             handleDeleteClick={handleDeleteClick}
+            handleLikeClick={handleLikeClick}
           />
         </div>
       </div>
@@ -251,11 +315,13 @@ const NoteActionBar: React.FC<{
   selectedNote: Note;
   handleVisibilityChange: (isPublic: boolean) => void;
   handleDeleteClick: () => void;
+  handleLikeClick: () => void;
 }> = ({
   idSuffix,
   selectedNote,
   handleVisibilityChange,
   handleDeleteClick,
+  handleLikeClick,
 }) => {
   if (!selectedNote) {
     return null;
@@ -346,6 +412,30 @@ const NoteActionBar: React.FC<{
             </ul>
           </div>
         </div>
+        {selectedNote.isPublic ? (
+          <button
+            className={`btn btn-ghost btn-sm rounded-full font-normal bg-white ${
+              selectedNote.isLikedByCurrentUser ? "text-black" : ""
+            }`}
+            onClick={handleLikeClick}
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill={selectedNote.isLikedByCurrentUser ? "currentColor" : "none"}
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              className=""
+            >
+              <path d="M13.73 4a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+            </svg>
+            {selectedNote.likeCount}
+          </button>
+        ) : null}
       </div>
       <button
         className="btn btn-error btn-sm rounded-full bg-white text-red-500 font-normal truncate"

@@ -4,7 +4,7 @@ import PublicNotesIcon from "@assets/globe.svg?react";
 import PrivateNotesIcon from "@assets/lock.svg?react";
 import AuthorName from "@components/AuthorName";
 import { formatDate } from "@utils/date";
-import type { User } from "@utils/types";;
+import type { User } from "@utils/types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { client } from "@utils/api";
 import { parseResponse } from "hono/client";
@@ -175,6 +175,8 @@ const NoteList: React.FC<{
                 note={note}
                 userId={user.id}
                 selectedNoteId={selectedNoteId}
+                upvoteCount={note.likeCount ?? 0}
+                commentCount={0}
                 projectNames={note.projects.map((project) => project.name)}
                 handleNoteSelection={handleNoteSelection}
               />
@@ -223,8 +225,18 @@ const NoteListItem: React.FC<{
   projectNames: string[];
   userId: string | null | undefined;
   selectedNoteId: string | null | undefined;
+  upvoteCount: number;
+  commentCount: number;
   handleNoteSelection: (id: string) => void;
-}> = ({ note, userId, selectedNoteId, projectNames, handleNoteSelection }) => {
+}> = ({
+  note,
+  userId,
+  selectedNoteId,
+  projectNames,
+  upvoteCount,
+  commentCount,
+  handleNoteSelection,
+}) => {
   let description: string | null = null;
   if (note.type === "note") {
     description = note.content;
@@ -270,11 +282,20 @@ const NoteListItem: React.FC<{
                 ownerId={note.author.id}
                 ownerName={note.author.name}
                 userId={userId}
-              />{" "}
-              ·{" "}
+              />{" "}·{" "}
             </>
           )}
           <span>{formatDate(note.createdAt)}</span>
+          {note.isPublic ? (
+            <>
+              <span>
+                {" "}· {upvoteCount} {upvoteCount > 1 ? "upvotes" : "upvote"}
+              </span>
+              <span>
+                {" "}· {commentCount} {commentCount > 1 ? " comments" : " comment"}
+              </span>
+            </>
+          ) : null}
         </p>
         <div className="mt-2 overflow-x-auto no-scrollbar">
           <ul className="flex gap-2 whitespace-nowrap">
