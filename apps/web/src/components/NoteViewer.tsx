@@ -2,8 +2,8 @@ import { LexicalComposer } from "@lexical/react/LexicalComposer";
 import { ContentEditable } from "@lexical/react/LexicalContentEditable";
 import { LexicalErrorBoundary } from "@lexical/react/LexicalErrorBoundary";
 import { RichTextPlugin } from "@lexical/react/LexicalRichTextPlugin";
-import { getInitialEditorState, initialConfig } from "./NoteEditor";
-import type { Note } from "../Notes";
+import { getInitialEditorState, initialConfig } from "../pages/notes/_components/editors-viewers/NoteEditor";
+import type { Note } from "../pages/notes/_components/Notes";
 
 type NoteType = Note & { type: "note" };
 

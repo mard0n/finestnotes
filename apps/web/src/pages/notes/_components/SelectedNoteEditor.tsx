@@ -1,7 +1,7 @@
 import type { User } from "@utils/types";
 import { type Note } from "./Notes";
-import AnnotationViewer from "./editors-viewers/AnnotationViewer";
-import NoteViewer from "./editors-viewers/NoteViewer";
+import AnnotationViewer from "../../../components/AnnotationViewer";
+import NoteViewer from "../../../components/NoteViewer";
 import AnnotationEditor from "./editors-viewers/AnnotationEditor";
 import NoteEditor from "./editors-viewers/NoteEditor";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -127,6 +127,8 @@ const SelectedNoteEditor: React.FC<{
     );
   }
 
+  console.log('selectedNote.author.id !== user.id', selectedNote.author.id !== user.id);
+  
   if (selectedNote.author.id !== user.id) {
     return (
       <>

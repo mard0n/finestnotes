@@ -83,6 +83,8 @@ const projectRoutes = new Hono<{
                 with: {
                   author: true,
                   likes: true,
+                  highlights: true,
+                  images: true,
                 },
                 extras: {
                   likeCount:

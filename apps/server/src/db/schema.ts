@@ -37,6 +37,7 @@ export const notesRelations = relations(notes, ({ one, many }) => ({
   images: many(images),
   projectsToNotes: many(projectsToNotes),
   likes: many(likes),
+  comments: many(comments),
 }));
 
 export const highlights = sqliteTable("highlights", {
@@ -221,6 +222,8 @@ export const userRelations = relations(user, ({ many }) => ({
   projects: many(projects), // Authored projects
   projectsToSubscribers: many(projectsToSubscribers), // Subscribed projects
   likes: many(likes),
+  comments: many(comments),
+  commentReactions: many(commentReactions),
 }));
 
 export const session = sqliteTable("session", {
@@ -279,3 +282,71 @@ export const verification = sqliteTable("verification", {
     .$onUpdate(() => /* @__PURE__ */ new Date())
     .notNull(),
 });
+
+export const comments = sqliteTable("comments", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  authorId: text("author_id")
+    .notNull()
+    .references(() => user.id, { onDelete: "cascade" }),
+  noteId: text("note_id")
+    .notNull()
+    .references(() => notes.id, { onDelete: "cascade" }),
+  parentCommentId: text("parent_comment_id"), // Self-reference for nested comments
+  content: text("content").notNull(),
+  createdAt: text("created_at")
+    .default(sql`CURRENT_TIMESTAMP`)
+    .notNull(),
+});
+
+export const commentsRelations = relations(comments, ({ one, many }) => ({
+  author: one(user, {
+    fields: [comments.authorId],
+    references: [user.id],
+  }),
+  note: one(notes, {
+    fields: [comments.noteId],
+    references: [notes.id],
+  }),
+  parentComment: one(comments, {
+    fields: [comments.parentCommentId],
+    references: [comments.id],
+    relationName: "comment_replies",
+  }),
+  replies: many(comments, {
+    relationName: "comment_replies",
+  }),
+  reactions: many(commentReactions),
+}));
+
+export const commentReactions = sqliteTable(
+  "comment_reactions",
+  {
+    commentId: text("comment_id")
+      .notNull()
+      .references(() => comments.id, { onDelete: "cascade" }),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    type: text("type", { enum: ["like", "dislike"] }).notNull(),
+    createdAt: text("created_at")
+      .default(sql`CURRENT_TIMESTAMP`)
+      .notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.commentId, t.userId] })]
+);
+
+export const commentReactionsRelations = relations(
+  commentReactions,
+  ({ one }) => ({
+    comment: one(comments, {
+      fields: [commentReactions.commentId],
+      references: [comments.id],
+    }),
+    user: one(user, {
+      fields: [commentReactions.userId],
+      references: [user.id],
+    }),
+  })
+);

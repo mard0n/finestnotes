@@ -30,6 +30,8 @@ const note = new Hono<{
               project: true,
             },
           },
+          highlights: true,
+          images: true,
         },
         extras: {
           likeCount:

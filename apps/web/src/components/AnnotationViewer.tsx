@@ -1,5 +1,5 @@
 import React from "react";
-import type { Note } from "../Notes";
+import type { Note } from "../pages/notes/_components/Notes";
 
 type AnnotationType = Note & { type: "page" };
 

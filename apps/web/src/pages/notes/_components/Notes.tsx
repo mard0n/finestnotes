@@ -44,6 +44,8 @@ const Notes: React.FC<{ user: User }> = ({ user }) => {
       if (filter.type !== "project") {
         const res = await client.api.note.$get();
         const notes = await parseResponse(res);
+        console.log('notes', notes);
+        
         if (filter.type === "private") {
           return notes.filter((note) => !note.isPublic);
         } else if (filter.type === "public") {

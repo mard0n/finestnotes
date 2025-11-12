@@ -173,7 +173,7 @@ const CommentComponent: React.FC<{
         }}
         onChange={(e) => setNewComment(e.target.value)}
       />
-      <div className="flex justify-end pt-2">
+      <div className="flex justify-end pt-2 gap-2">
         <button
           className="btn btn-xs btn-ghost"
           onClick={() => {

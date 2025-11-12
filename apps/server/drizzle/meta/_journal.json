@@ -134,6 +134,13 @@
       "when": 1762330959559,
       "tag": "0018_curvy_pride",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1762861128852,
+      "tag": "0019_natural_pride",
+      "breakpoints": true
     }
   ]
 }

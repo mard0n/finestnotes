@@ -7,6 +7,8 @@ import { parseResponse } from "hono/client";
 import ArticleActionBar from "./_components/ArticleActionBar.tsx";
 import NoteViewer from "./_components/NoteViewer.astro";
 import AuthorName from "@components/AuthorName.tsx";
+import CommentSection from "@components/CommentSection.tsx";
+import AnnotationViewer from "../../components/AnnotationViewer.tsx";
 
 const { id } = Astro.params;
 const user = Astro.locals.user;
@@ -49,12 +51,11 @@ if (!article) {
       article.type === "note" ? (
         <NoteViewer note={article} />
       ) : (
-        // <AnnotationViewer annotation={article} />
-        <></>
+        <AnnotationViewer annotation={article} />
       )
     }
 
-    <div class="divider mt-10">projects</div>
+    <div class="divider mt-10 mb-6">projects</div>
     <ul class="flex gap-2 flex-wrap">
       {
         article.projects.map((project) => (
@@ -69,5 +70,7 @@ if (!article) {
         ))
       }
     </ul>
+
+    <CommentSection client:load noteId={id} currentUser={user} />
   </main>
 </Layout>
