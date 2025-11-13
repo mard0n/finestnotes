@@ -1,7 +1,7 @@
 import type { User } from "@utils/types";
 import { type Note } from "./Notes";
-import AnnotationViewer from "../../../components/AnnotationViewer";
-import NoteViewer from "../../../components/NoteViewer";
+import AnnotationViewer from "@components/AnnotationViewer";
+import NoteViewer from "@components/NoteViewer";
 import AnnotationEditor from "./editors-viewers/AnnotationEditor";
 import NoteEditor from "./editors-viewers/NoteEditor";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -11,7 +11,7 @@ import ProjectAddIcon from "@assets/project-add.svg?react";
 import TrashIcon from "@assets/trash.svg?react";
 import GlobeIcon from "@assets/globe.svg?react";
 import LockIcon from "@assets/lock.svg?react";
-import AddToProjectDropdown from "./modals-dropdowns/AddToProjectDropdown";
+import AddToProjectDropdown from "@components/AddToProjectDropdown";
 
 const SelectedNoteEditor: React.FC<{
   user: User;
@@ -381,6 +381,8 @@ const NoteActionBar: React.FC<{
   handleDeleteClick,
   handleLikeClick,
 }) => {
+  const queryClient = useQueryClient();
+
   if (!selectedNote) {
     return null;
   }
@@ -400,9 +402,7 @@ const NoteActionBar: React.FC<{
           <div tabIndex={-1} className="dropdown-content menu z-1 p-2 w-xs">
             <AddToProjectDropdown
               noteId={selectedNote.id}
-              noteProjectIds={selectedNote.projects.map(
-                (project) => project.id
-              )}
+              queryClient={queryClient}
             />
           </div>
         </div>

@@ -1,7 +1,7 @@
 import React from "react";
-import type { Note } from "../pages/notes/_components/Notes";
+import type { NoteType } from "@finest/utils/types";
 
-type AnnotationType = Note & { type: "page" };
+type AnnotationType = NoteType & { type: "page" };
 
 interface AnnotationViewerProps {
   annotation: AnnotationType;

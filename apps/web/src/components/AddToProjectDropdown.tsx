@@ -1,13 +1,37 @@
 import React, { useRef, useState } from "react";
 import { client } from "@utils/api";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { parseResponse } from "hono/client";
+
+const AddToProjectDropdownWrapper: React.FC<{
+  noteId: string;
+  onProjectsChange?: () => void;
+  onNoteAddedOrRemoved?: () => void;
+  queryClient?: QueryClient;
+}> = ({ noteId, onProjectsChange, onNoteAddedOrRemoved, queryClient }) => {
+  const queryClientInstance = queryClient || new QueryClient();
+  return (
+    <QueryClientProvider client={queryClientInstance}>
+      <AddToProjectDropdown
+        noteId={noteId}
+        onProjectsChange={onProjectsChange}
+        onNoteAddedOrRemoved={onNoteAddedOrRemoved}
+      />
+    </QueryClientProvider>
+  );
+};
 
 const AddToProjectDropdown: React.FC<{
   noteId: string;
-  noteProjectIds: string[];
   onProjectsChange?: () => void;
-}> = ({ noteId, noteProjectIds, onProjectsChange }) => {
+  onNoteAddedOrRemoved?: () => void;
+}> = ({ noteId, onProjectsChange, onNoteAddedOrRemoved }) => {
   const [search, setSearch] = useState("");
   const [selectedIndex, setSelectedIndex] = useState(-1);
 
@@ -16,13 +40,27 @@ const AddToProjectDropdown: React.FC<{
 
   const queryClient = useQueryClient();
 
-  const { data: projects } = useQuery({
+  const { data: allProjects = [] } = useQuery({
     queryKey: ["projects"],
     queryFn: async () => {
-      const res = await client.api.projects.$get();
+      const res = await client.api.user.projects.$get();
       return await parseResponse(res);
     },
   });
+
+  console.log("allProjects", allProjects);
+
+  const { data: projectsWithThisNote = [] } = useQuery({
+    queryKey: ["projects", noteId],
+    queryFn: async () => {
+      const res = await client.api.projects.note[":noteId"].$get({
+        param: { noteId },
+      });
+      return await parseResponse(res);
+    },
+  });
+
+  console.log("projectsWithThisNote", projectsWithThisNote);
 
   const { mutate: addNoteToProject } = useMutation({
     mutationFn: async ({
@@ -39,9 +77,8 @@ const AddToProjectDropdown: React.FC<{
       return await parseResponse(res);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
       queryClient.invalidateQueries({ queryKey: ["projects"] });
-      onProjectsChange?.();
+      onNoteAddedOrRemoved?.();
     },
   });
 
@@ -59,9 +96,8 @@ const AddToProjectDropdown: React.FC<{
       return await parseResponse(res);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
       queryClient.invalidateQueries({ queryKey: ["projects"] });
-      onProjectsChange?.();
+      onNoteAddedOrRemoved?.();
     },
   });
 
@@ -79,15 +115,19 @@ const AddToProjectDropdown: React.FC<{
       // Automatically add the note to the newly created project
       addNoteToProject({ projectId: data.project.id, noteId });
       setSearch("");
+      onProjectsChange?.();
     },
   });
 
-  const filteredProjects = projects?.filter((project) =>
-    project.name.toLowerCase().includes(search.toLowerCase())
+  const filteredProjects = allProjects.filter((project) =>
+    project.name.toLowerCase().includes(search.trim().toLowerCase())
   );
 
-  const projectExists = projects?.some(
-    (project) => project.name.toLowerCase() === search.toLowerCase()
+  console.log('filteredProjects', filteredProjects);
+  
+
+  const projectExists = allProjects.some(
+    (project) => project.name.toLowerCase() === search.trim().toLowerCase()
   );
 
   const canCreateProject = search.trim() !== "" && !projectExists;
@@ -128,7 +168,7 @@ const AddToProjectDropdown: React.FC<{
   };
 
   const toggleProject = (projectId: string) => {
-    if (noteProjectIds.includes(projectId)) {
+    if (projectsWithThisNote.some((project) => project.id === projectId)) {
       deleteNoteFromProject({ projectId, noteId });
     } else {
       addNoteToProject({ projectId, noteId });
@@ -224,7 +264,9 @@ const AddToProjectDropdown: React.FC<{
                 <input
                   type="checkbox"
                   className="checkbox checkbox-sm"
-                  checked={noteProjectIds.includes(project.id)}
+                  checked={projectsWithThisNote.some(
+                    (p) => p.id === project.id
+                  )}
                   onChange={() => toggleProject(project.id)}
                 />
                 <span className="text-lg">
@@ -244,4 +286,4 @@ const AddToProjectDropdown: React.FC<{
   );
 };
 
-export default AddToProjectDropdown;
+export default AddToProjectDropdownWrapper;

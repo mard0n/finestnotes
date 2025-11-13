@@ -44,8 +44,6 @@ const projectRoutes = new Hono<{
       },
     });
 
-    console.log('userData', userData);
-    
 
     if (!userData) {
       return c.json({ success: false, message: "User not found" }, 404);
@@ -116,6 +114,46 @@ const projectRoutes = new Hono<{
     return c.json(project);
   })
 
+  // Get all projects that contain a specific note
+  .get(
+    "/note/:noteId",
+    protect,
+    zValidator(
+      "param",
+      z.object({
+        noteId: z.string(),
+      })
+    ),
+    async (c) => {
+      const { noteId } = c.req.valid("param");
+      const db = drizzle(c.env.finestdb, { schema: schema });
+
+      const projectsWithNote = await db.query.projectsToNotes.findMany({
+        where: eq(projectsToNotes.noteId, noteId),
+        with: {
+          project: {
+            with: { author: true },
+          },
+        },
+      });
+
+      const projects = projectsWithNote
+        .map((pn) => pn.project)
+        .map((project) => {
+          const { author, authorId, ...rest } = project;
+          return {
+            ...rest,
+            author: {
+              id: author.id,
+              name: author.name,
+            },
+          };
+        });
+
+      return c.json(projects);
+    }
+  )
+
   // Is user subscribed to project
   .get("/:id/is-subscribed", protect, async (c) => {
     const { id: projectId } = c.req.param();
@@ -127,9 +165,6 @@ const projectRoutes = new Hono<{
         eq(projectsToSubscribers.authorId, c.var.user.id)
       ),
     });
-
-    console.log('existing', existing);
-    
 
     return c.json(!!existing);
   })

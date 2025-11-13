@@ -8,7 +8,6 @@ import { client } from "@utils/api";
 import { parseResponse } from "hono/client";
 import { useState } from "react";
 import { createPortal } from "react-dom";
-import { queryClient } from "../../../article/_components/ArticleActionBar";
 
 const CreateProjectModal: React.FC<{}> = ({}) => {
   const [isOpen, setIsOpen] = useState(false);
