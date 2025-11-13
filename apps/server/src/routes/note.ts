@@ -12,6 +12,7 @@ import createDOMPurify from "dompurify";
 import { parseHTML } from "linkedom";
 import { normalizeNotes } from "./articles";
 import { normalizeNotesNew } from "../utils/normalizers";
+import { auth } from "utils/auth";
 
 const note = new Hono<{
   Bindings: Bindings;
@@ -65,6 +66,186 @@ const note = new Hono<{
         total: notesData.length,
         page: pageNum,
         limit: limitNum,
+      });
+    }
+  )
+
+  // Get a published note by id
+  .get(
+    "/published/:id",
+    zValidator(
+      "param",
+      z.object({
+        id: z.string(),
+      })
+    ),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const db = drizzle(c.env.finestdb, { schema: schema });
+
+      const noteData = await db.query.notes
+        .findFirst({
+          with: {
+            author: true,
+            highlights: true,
+            images: true,
+          },
+          where: and(eq(notes.id, id), eq(notes.isPublic, true)),
+        })
+        .then((notes) => {
+          if (!notes) return null;
+          return normalizeNotesNew([notes])[0];
+        });
+
+      if (!noteData) {
+        return c.json(
+          {
+            success: false,
+            message: `Note ${id} not found or is not public`,
+          },
+          404
+        );
+      }
+
+      return c.json(noteData);
+    }
+  )
+
+  // Get like status of a note
+  .get(
+    "/:id/like-status",
+    zValidator(
+      "param",
+      z.object({
+        id: z.string(),
+      })
+    ),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const db = drizzle(c.env.finestdb, { schema: schema });
+
+      const noteData = await db.query.notes.findFirst({
+        where: and(eq(notes.id, id), eq(notes.isPublic, true)),
+        with: {
+          likes: true,
+        },
+      });
+
+      if (!noteData) {
+        return c.json(
+          {
+            success: false,
+            message: `Note ${id} not found`,
+          },
+          404
+        );
+      }
+
+      const session = await auth(c.env).api.getSession({
+        headers: c.req.raw.headers,
+      });
+      const currentUser = session?.user;
+
+      console.log("currentUser", currentUser);
+
+      const isLiked = currentUser
+        ? noteData.likes.some((like) => like.userId === currentUser.id)
+        : false;
+      const likeCount = noteData.likes.length;
+
+      return c.json({
+        isLiked,
+        likeCount,
+      });
+    }
+  )
+
+  // Like an article
+  .post(
+    "/:id/like",
+    protect,
+    zValidator(
+      "param",
+      z.object({
+        id: z.string(),
+      })
+    ),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const userId = c.var.user.id;
+
+      const db = drizzle(c.env.finestdb, { schema });
+
+      // Check if article exists and is public
+      const article = await db.query.notes.findFirst({
+        where: and(eq(notes.id, id), eq(notes.isPublic, true)),
+      });
+
+      if (!article) {
+        return c.json(
+          {
+            success: false,
+            message: "Article not found or is not public",
+          },
+          404
+        );
+      }
+
+      // Check if already liked
+      const existingLike = await db.query.likes.findFirst({
+        where: and(
+          eq(schema.likes.noteId, id),
+          eq(schema.likes.userId, userId)
+        ),
+      });
+
+      if (existingLike) {
+        return c.json(
+          {
+            success: false,
+            message: "Article already liked",
+          },
+          400
+        );
+      }
+
+      // Create like
+      await db.insert(schema.likes).values({
+        noteId: id,
+        userId: userId,
+      });
+
+      return c.json({
+        success: true,
+      });
+    }
+  )
+
+  // Unlike an article
+  .delete(
+    "/:id/like",
+    protect,
+    zValidator(
+      "param",
+      z.object({
+        id: z.string(),
+      })
+    ),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const userId = c.var.user.id;
+
+      const db = drizzle(c.env.finestdb, { schema });
+
+      // Delete like
+      const result = await db
+        .delete(schema.likes)
+        .where(
+          and(eq(schema.likes.noteId, id), eq(schema.likes.userId, userId))
+        );
+
+      return c.json({
+        success: true,
       });
     }
   )

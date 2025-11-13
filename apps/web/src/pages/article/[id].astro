@@ -9,6 +9,7 @@ import NoteViewer from "./_components/NoteViewer.astro";
 import AuthorName from "@components/AuthorName.tsx";
 import CommentSection from "@components/CommentSection.tsx";
 import AnnotationViewer from "../../components/AnnotationViewer.tsx";
+import UpvoteButton from "@components/UpvoteButton.tsx";
 
 const { id } = Astro.params;
 const user = Astro.locals.user;
@@ -30,6 +31,7 @@ if (!article) {
 <Layout>
   <main class="max-w-2xl mx-auto my-8 px-4">
     <ArticleActionBar client:load article={article} user={user} />
+    <UpvoteButton client:load noteId={article.id} user={user} />
     <h1 class="heading">{article.title}</h1>
     {
       article.type === "page" && article.description && (

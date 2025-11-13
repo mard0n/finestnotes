@@ -16,8 +16,8 @@ type DBNoteType = typeof schema.notes.$inferSelect;
 type NoteBaseType = Prettify<
   Pick<DBNoteType, "id" | "title" | "createdAt" | "isPublic"> & {
     author: AuthorType;
-    likeCount: number;
-    commentCount: number;
+    likeCount?: number;
+    commentCount?: number;
     projects?: ProjectType[];
   }
 >;
@@ -41,9 +41,9 @@ type WritingType = Prettify<
 export type NoteType = AnnotationType | WritingType;
 
 type BaseNoteWithRelations = typeof schema.notes.$inferSelect & {
-  likes: (typeof schema.likes.$inferSelect)[];
-  comments: (typeof schema.comments.$inferSelect)[];
   author: typeof schema.user.$inferSelect;
+  likes?: (typeof schema.likes.$inferSelect)[];
+  comments?: (typeof schema.comments.$inferSelect)[];
   highlights?: (typeof schema.highlights.$inferSelect)[];
   images?: (typeof schema.images.$inferSelect)[];
   projectsToNotes?: (typeof schema.projectsToNotes.$inferSelect & {
@@ -56,8 +56,8 @@ type BaseNoteWithRelations = typeof schema.notes.$inferSelect & {
 export function normalizeNotesNew(notes: BaseNoteWithRelations[]): NoteType[] {
   const notesData = notes.map((note) => {
     const { projectsToNotes, ...rest } = note;
-    const likeCount = note.likes.length;
-    const commentCount = note.comments.length;
+    const likeCount = note.likes?.length;
+    const commentCount = note.comments?.length;
     const projects = projectsToNotes?.map(({ project }) => ({
       id: project.id,
       name: project.name,

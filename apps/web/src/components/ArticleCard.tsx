@@ -63,18 +63,22 @@ export const ArticleCard: React.FC<{
             </>
           )}
           <span>{formatDate(createdAt)}</span> ·{" "}
-          <span>
-            <a>
-              {note.commentCount}{" "}
-              {note.commentCount > 1 ? "comments" : "comment"}
-            </a>
-          </span>{" "}
-          ·{" "}
-          <span>
-            <a>
-              {note.likeCount} {note.likeCount > 1 ? "upvotes" : "upvote"}
-            </a>
-          </span>
+          {note.commentCount ? (
+            <span>
+              <a>
+                {note.commentCount}{" "}
+                {note.commentCount > 1 ? "comments" : "comment"}
+              </a>{" "}
+              ·{" "}
+            </span>
+          ) : null}
+          {note.likeCount ? (
+            <span>
+              <a>
+                {note.likeCount} {note.likeCount > 1 ? "upvotes" : "upvote"}
+              </a>
+            </span>
+          ) : null}
         </div>
         {projects ? (
           <div>
