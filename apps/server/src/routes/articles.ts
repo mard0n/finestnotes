@@ -37,9 +37,11 @@ const articles = new Hono<{
         with: {
           author: true,
           likes: true,
+          comments: true,
         },
         extras: {
           likeCount: sql<number>`(SELECT COUNT(*) FROM likes WHERE likes.note_id = notes.id)`.as("like_count"),
+          commentCount: sql<number>`(SELECT COUNT(*) FROM comments WHERE comments.note_id = notes.id)`.as("comment_count"),
         },
         where: eq(notes.isPublic, true),
       });

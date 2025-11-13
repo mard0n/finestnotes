@@ -22,6 +22,7 @@ type ArticleProps = {
     id: string;
   };
   likeCount: number;
+  commentCount: number;
 } & (PageProps | NoteProps);
 
 type ProjectProps = {
@@ -87,7 +88,16 @@ export const ArticleCard: React.FC<{
           )}
           <span>{formatDate(createdAt)}</span> ·{" "}
           <span>
-            <a>200 comments</a>
+            <a>
+              {note.commentCount}{" "}
+              {note.commentCount > 1 ? "comments" : "comment"}
+            </a>
+          </span> ·{" "}
+          <span>
+            <a>
+              {note.likeCount}{" "}
+              {note.likeCount > 1 ? "upvotes" : "upvote"}
+            </a>
           </span>
         </div>
         {projects ? (
@@ -106,12 +116,12 @@ export const ArticleCard: React.FC<{
           </div>
         ) : null}
       </div>
-      <div>
+      {/* <div>
         <div className="inline-flex items-center gap-1 px-2 py-1 text-sm rounded-full">
           <span>{note.likeCount}</span>
           <span>{note.likeCount > 1 ? "upvotes" : "upvote"}</span>
         </div>
-      </div>
+      </div> */}
     </li>
   );
 };
