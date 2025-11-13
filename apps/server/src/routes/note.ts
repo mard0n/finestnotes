@@ -11,11 +11,64 @@ import type { Session, User } from "better-auth";
 import createDOMPurify from "dompurify";
 import { parseHTML } from "linkedom";
 import { normalizeNotes } from "./articles";
+import { normalizeNotesNew } from "../utils/normalizers";
 
 const note = new Hono<{
   Bindings: Bindings;
   Variables: { user: User; session: Session };
 }>()
+
+  // Get all published notes
+  .get(
+    "/published",
+    zValidator(
+      "query",
+      z.object({
+        page: z.string(),
+        limit: z.string().optional().default("20"),
+      })
+    ),
+    async (c) => {
+      const { page, limit } = c.req.valid("query");
+      const pageNum = parseInt(page);
+      const limitNum = parseInt(limit);
+      const offset = (pageNum - 1) * limitNum;
+
+      const db = drizzle(c.env.finestdb, { schema: schema });
+
+      const notesData = await db.query.notes
+        .findMany({
+          with: {
+            author: true,
+            likes: true,
+            comments: true,
+            projectsToNotes: {
+              with: {
+                project: {
+                  with: {
+                    author: true,
+                  },
+                },
+              },
+            },
+          },
+          where: and(eq(notes.isPublic, true)),
+        })
+        .then(normalizeNotesNew);
+
+      const paginatedArticles = notesData.slice(offset, offset + limitNum);
+      const hasMore = offset + limitNum < notesData.length;
+
+      return c.json({
+        articles: paginatedArticles,
+        hasMore,
+        total: notesData.length,
+        page: pageNum,
+        limit: limitNum,
+      });
+    }
+  )
+
   // Get all notes (notes and pages)
   .get("/", protect, async (c) => {
     const db = drizzle(c.env.finestdb, { schema: schema });

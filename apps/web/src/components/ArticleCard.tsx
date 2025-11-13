@@ -2,39 +2,15 @@ import { formatDate } from "@utils/date";
 import React from "react";
 import AuthorName from "./AuthorName";
 import Badge from "./Badge";
+import type { NoteType } from "@finest/utils/types";
 
-type PageProps = {
-  type: "page";
-  description: string | null;
-};
-
-type NoteProps = {
-  type: "note";
-  content: string | null;
-};
-
-type ArticleProps = {
-  id: string;
-  title: string;
-  createdAt: string;
-  author: {
-    name: string;
-    id: string;
-  };
-  likeCount: number;
-  commentCount: number;
-} & (PageProps | NoteProps);
-
-type ProjectProps = {
-  id: string;
-  name: string;
-};
+type ProjectType = NoteType["projects"];
 
 export const ArticleCard: React.FC<{
-  note: ArticleProps;
+  note: NoteType;
   userId: string | null | undefined;
-  projects: ProjectProps[] | null | undefined;
-}> = ({ note, projects, userId }) => {
+  projects: ProjectType;
+}> = ({ note, userId, projects }) => {
   const { id, title, createdAt, author } = note;
   const { name: authorName, id: authorId } = author || {};
 
@@ -92,11 +68,11 @@ export const ArticleCard: React.FC<{
               {note.commentCount}{" "}
               {note.commentCount > 1 ? "comments" : "comment"}
             </a>
-          </span> ·{" "}
+          </span>{" "}
+          ·{" "}
           <span>
             <a>
-              {note.likeCount}{" "}
-              {note.likeCount > 1 ? "upvotes" : "upvote"}
+              {note.likeCount} {note.likeCount > 1 ? "upvotes" : "upvote"}
             </a>
           </span>
         </div>
@@ -116,12 +92,6 @@ export const ArticleCard: React.FC<{
           </div>
         ) : null}
       </div>
-      {/* <div>
-        <div className="inline-flex items-center gap-1 px-2 py-1 text-sm rounded-full">
-          <span>{note.likeCount}</span>
-          <span>{note.likeCount > 1 ? "upvotes" : "upvote"}</span>
-        </div>
-      </div> */}
     </li>
   );
 };

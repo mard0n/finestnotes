@@ -1,4 +1,5 @@
 export type { RouteType } from "../index";
+export type { NoteType } from "../utils/normalizers";
 
 export type Prettify<T> = {
   [K in keyof T]: T[K];
