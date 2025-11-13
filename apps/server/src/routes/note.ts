@@ -20,6 +20,7 @@ const note = new Hono<{
 }>()
 
   // Get all published notes
+  // MARK: Refactored
   .get(
     "/published",
     zValidator(
@@ -71,6 +72,7 @@ const note = new Hono<{
   )
 
   // Get a published note by id
+  // MARK: Refactored
   .get(
     "/published/:id",
     zValidator(
@@ -112,6 +114,7 @@ const note = new Hono<{
   )
 
   // Get like status of a note
+  // MARK: Refactored
   .get(
     "/:id/like-status",
     zValidator(
@@ -161,6 +164,7 @@ const note = new Hono<{
   )
 
   // Like an article
+  // MARK: Refactored
   .post(
     "/:id/like",
     protect,
@@ -222,6 +226,7 @@ const note = new Hono<{
   )
 
   // Unlike an article
+  // MARK: Refactored
   .delete(
     "/:id/like",
     protect,
@@ -251,6 +256,7 @@ const note = new Hono<{
   )
 
   // Get bookmark status of a note
+  // MARK: Refactored
   .get(
     "/:id/bookmark-status",
     protect,
@@ -292,6 +298,7 @@ const note = new Hono<{
   )
 
   // Bookmark an article
+  // MARK: Refactored
   .post(
     "/:id/bookmark",
     protect,
@@ -354,6 +361,7 @@ const note = new Hono<{
   )
 
   // Unbookmark an article
+  // MARK: Refactored
   .delete(
     "/:id/bookmark",
     protect,

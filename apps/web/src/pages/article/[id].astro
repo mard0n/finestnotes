@@ -136,8 +136,8 @@ if (!article) {
               {article.projects.map((project) => (
                 <Badge
                   id={project.id}
-                  ownerId={project.authorId}
-                  ownerName={project.authorName}
+                  ownerId={project.author.id}
+                  ownerName={project.author.name}
                   userId={Astro.locals.user?.id}
                 >
                   {project.name}

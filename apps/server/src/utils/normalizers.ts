@@ -6,8 +6,11 @@ type AuthorType = Prettify<
 >;
 
 type ProjectType = Prettify<
-  Pick<typeof schema.projects.$inferSelect, "id" | "name" | "authorId"> & {
-    authorName: string;
+  Pick<
+    typeof schema.projects.$inferSelect,
+    "id" | "name" | "isPublic" | "createdAt"
+  > & {
+    author: AuthorType;
   }
 >;
 
@@ -55,19 +58,32 @@ type BaseNoteWithRelations = typeof schema.notes.$inferSelect & {
 
 export function normalizeNotesNew(notes: BaseNoteWithRelations[]): NoteType[] {
   const notesData = notes.map((note) => {
-    const { projectsToNotes, ...rest } = note;
-    const likeCount = note.likes?.length;
-    const commentCount = note.comments?.length;
-    const projects = projectsToNotes?.map(({ project }) => ({
-      id: project.id,
-      name: project.name,
-      authorId: project.authorId,
-      authorName: project.author.name,
-    }));
+    const {
+      projectsToNotes,
+      likes,
+      comments,
+      author: authorData,
+      authorId,
+      ...rest
+    } = note;
+    const likeCount = likes?.length;
+    const commentCount = comments?.length;
+
+    const projects: ProjectType[] =
+      projectsToNotes?.map((pn) => ({
+        id: pn.project.id,
+        name: pn.project.name,
+        isPublic: pn.project.isPublic,
+        createdAt: pn.project.createdAt,
+        author: {
+          id: pn.project.author.id,
+          name: pn.project.author.name,
+        },
+      })) || [];
 
     const author = {
-      id: note.author.id,
-      name: note.author.name,
+      id: authorData.id,
+      name: authorData.name,
     };
 
     return {
@@ -82,7 +98,7 @@ export function normalizeNotesNew(notes: BaseNoteWithRelations[]): NoteType[] {
   type WritingType = NoteType & { type: "note" };
   const writingsData: WritingType[] = notesData
     .filter((article) => article.type === "note")
-    .map(({ highlights, images, description, likes, ...note }) => ({
+    .map(({ highlights, images, description, ...note }) => ({
       ...note,
       type: "note" as const,
     }));
@@ -90,25 +106,73 @@ export function normalizeNotesNew(notes: BaseNoteWithRelations[]): NoteType[] {
   type AnnotationType = NoteType & { type: "page" };
   const annotationsData: AnnotationType[] = notesData
     .filter((article) => article.type === "page")
-    .map(({ content, contentLexical, highlights, images, likes, ...page }) => {
-      const annotations = [
-        ...((highlights ?? []) as (typeof schema.highlights.$inferSelect)[]),
-        ...((images ?? []) as (typeof schema.images.$inferSelect)[]),
-      ].sort((a, b) => {
-        const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-        const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-        return aTime - bTime;
-      });
-      return {
-        ...page,
-        annotations,
-        type: "page" as const,
-      };
-    });
+    .map(
+      ({
+        content,
+        contentHTML,
+        contentLexical,
+        highlights,
+        images,
+        ...page
+      }) => {
+        const annotations = [
+          ...((highlights ?? []) as (typeof schema.highlights.$inferSelect)[]),
+          ...((images ?? []) as (typeof schema.images.$inferSelect)[]),
+        ].sort((a, b) => {
+          const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return aTime - bTime;
+        });
+        return {
+          ...page,
+          annotations,
+          type: "page" as const,
+        };
+      }
+    );
 
   const allArticles = [...writingsData, ...annotationsData];
   allArticles.sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
   return allArticles;
+}
+
+type BaseProject = typeof schema.projects.$inferSelect & {
+  author: typeof schema.user.$inferSelect;
+  projectsToNotes?: (typeof schema.projectsToNotes.$inferSelect & {
+    note: typeof schema.notes.$inferSelect & {
+      author: typeof schema.user.$inferSelect;
+      likes?: (typeof schema.likes.$inferSelect)[];
+      comments?: (typeof schema.comments.$inferSelect)[];
+    };
+  })[];
+};
+
+export type ProjectWithNotesType = Prettify<
+  ProjectType & {
+    notes?: NoteType[];
+  }
+>;
+
+export function normalizeProjectNew(
+  projects: BaseProject[]
+): ProjectWithNotesType[] {
+  const normalizedProjects = projects.map((project) => {
+    const { projectsToNotes, author, authorId, ...rest } = project;
+
+    const notes = projectsToNotes?.map((pn) => pn.note) || [];
+    notes[0]?.author;
+    const normalizeNotes = normalizeNotesNew(notes || []);
+
+    return {
+      ...rest,
+      author: {
+        id: author.id,
+        name: author.name,
+      },
+      notes: normalizeNotes,
+    };
+  });
+  return normalizedProjects;
 }

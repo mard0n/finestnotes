@@ -14,7 +14,7 @@ import z from "zod";
 import { protect } from "middlewares/auth.middleware";
 import type { Session, User } from "better-auth";
 import * as schema from "../db/schema";
-import { normalizeNotes } from "./articles";
+import { normalizeProjectNew } from "../utils/normalizers";
 
 const projectRoutes = new Hono<{
   Bindings: Bindings;
@@ -44,7 +44,6 @@ const projectRoutes = new Hono<{
       },
     });
 
-
     if (!userData) {
       return c.json({ success: false, message: "User not found" }, 404);
     }
@@ -58,60 +57,6 @@ const projectRoutes = new Hono<{
     ].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
     return c.json(projects);
-  })
-
-  // Get a single project with its items
-  .get("/:id", protect, async (c) => {
-    const { id } = c.req.param();
-    const db = drizzle(c.env.finestdb, { schema: schema });
-
-    const project = await db.query.projects
-      .findFirst({
-        where: eq(projects.id, id),
-        with: {
-          author: true,
-          projectsToSubscribers: {
-            with: {
-              author: true,
-            },
-          },
-          projectsToNotes: {
-            with: {
-              note: {
-                with: {
-                  author: true,
-                  likes: true,
-                  highlights: true,
-                  images: true,
-                },
-                extras: {
-                  likeCount:
-                    sql<number>`(SELECT COUNT(*) FROM likes WHERE likes.note_id = ${notes.id})`.as(
-                      "like_count"
-                    ),
-                },
-              },
-            },
-          },
-        },
-      })
-      .then((project) => {
-        if (!project) return null;
-
-        const { projectsToNotes, projectsToSubscribers, ...rest } = project;
-
-        return {
-          ...rest,
-          notes: normalizeNotes(projectsToNotes.map((pn) => pn.note)),
-          subscribers: projectsToSubscribers.map((ps) => ps.author),
-        };
-      });
-
-    if (!project) {
-      return c.json({ success: false, message: "Project not found" }, 404);
-    }
-
-    return c.json(project);
   })
 
   // Get all projects that contain a specific note
@@ -167,6 +112,42 @@ const projectRoutes = new Hono<{
     });
 
     return c.json(!!existing);
+  })
+
+  // Get a project with its items
+  // MARK: Refactored
+  .get("/:id", protect, async (c) => {
+    const { id } = c.req.param();
+    const db = drizzle(c.env.finestdb, { schema: schema });
+
+    const project = await db.query.projects
+      .findFirst({
+        where: eq(projects.id, id),
+        with: {
+          author: true,
+          projectsToNotes: {
+            with: {
+              note: {
+                with: {
+                  author: true,
+                  likes: true,
+                  comments: true,
+                },
+              },
+            },
+          },
+        },
+      })
+      .then((project) => {
+        if (!project) return null;
+        return normalizeProjectNew([project])[0];
+      });
+
+    if (!project) {
+      return c.json({ success: false, message: "Project not found" }, 404);
+    }
+
+    return c.json(project);
   })
 
   // Create a new project

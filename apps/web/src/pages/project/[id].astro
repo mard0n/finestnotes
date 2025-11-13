@@ -16,18 +16,15 @@ const client = createServerClient(Astro.request.headers);
 
 const [isSubscribedResponse, projectResponse] = await Promise.all([
   client.api.projects[":id"]["is-subscribed"].$get({ param: { id: id } }),
-  client.api.projects[":id"].$get({ param: { id: id } })
+  client.api.projects[":id"].$get({ param: { id: id } }),
 ]);
 
 const project = await parseResponse(projectResponse);
 const isSubscribed = await parseResponse(isSubscribedResponse);
 
-console.log('isSubscribed', isSubscribed);
-
 if (!project) {
   throw new Error("Project not found");
 }
-
 ---
 
 <Layout>
@@ -35,11 +32,6 @@ if (!project) {
     <div class="flex justify-between items-start">
       <div class="flex-1">
         <h1 class="heading">{project.name}</h1>
-        {
-          project.description && (
-            <p class="text-sm mt-2 mb-3">{project.description}</p>
-          )
-        }
         <div class="text-xs text-gray-500 mt-1">
           <AuthorName
             ownerId={project.author.id}
@@ -71,12 +63,8 @@ if (!project) {
     </div>
     <ul class="flex flex-col list rounded-box mt-8">
       {
-        project.notes.map((note) => (
-          <ArticleCard
-            note={note}
-            projects={undefined}
-            userId={user?.id}
-          />
+        project.notes?.map((note) => (
+          <ArticleCard note={note} projects={undefined} userId={user?.id} />
         ))
       }
     </ul>

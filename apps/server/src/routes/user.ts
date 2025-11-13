@@ -8,12 +8,14 @@ import z from "zod";
 import * as schema from "../db/schema";
 import { protect } from "middlewares/auth.middleware";
 import type { User, Session } from "better-auth";
+import { normalizeProjectNew } from "../utils/normalizers";
 
 const userRoutes = new Hono<{
   Bindings: Bindings;
   Variables: { user: User; session: Session };
 }>()
-  // Get all projects for a user
+  // Get all projects for a user.
+  // MARK: Refactored
   .get("/projects", protect, async (c) => {
     const db = drizzle(c.env.finestdb, { schema: schema });
 
@@ -48,20 +50,13 @@ const userRoutes = new Hono<{
       .map((user) => user.projectsToSubscribers.map((pts) => pts.project))
       .flat();
 
-    const projects = [...ownedProjects, ...subscribedProjects]
-      .map(({ author, authorId, description, ...rest }) => ({
-        ...rest,
-        author: {
-          id: author.id,
-          name: author.name,
-        },
-      }))
-      .sort(
-        (a, b) =>
-          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-      );
+    const projects = [...ownedProjects, ...subscribedProjects];
+    const normalizedProjects = normalizeProjectNew(projects).sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
 
-    return c.json(projects);
+    return c.json(normalizedProjects);
   })
   // Get user profile with projects and public notes
   .get(

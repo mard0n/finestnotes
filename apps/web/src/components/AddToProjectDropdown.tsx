@@ -123,8 +123,6 @@ const AddToProjectDropdown: React.FC<{
     project.name.toLowerCase().includes(search.trim().toLowerCase())
   );
 
-  console.log('filteredProjects', filteredProjects);
-  
 
   const projectExists = allProjects.some(
     (project) => project.name.toLowerCase() === search.trim().toLowerCase()
