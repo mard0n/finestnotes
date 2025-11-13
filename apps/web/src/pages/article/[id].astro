@@ -10,6 +10,7 @@ import AuthorName from "@components/AuthorName.tsx";
 import CommentSection from "@components/CommentSection.tsx";
 import AnnotationViewer from "../../components/AnnotationViewer.tsx";
 import UpvoteButton from "@components/UpvoteButton.tsx";
+import BookmarkButton from "@components/BookmarkButton.tsx";
 
 const { id } = Astro.params;
 const user = Astro.locals.user;
@@ -31,7 +32,48 @@ if (!article) {
 <Layout>
   <main class="max-w-2xl mx-auto my-8 px-4">
     <ArticleActionBar client:load article={article} user={user} />
-    <UpvoteButton client:load noteId={article.id} user={user} />
+    <div class="mb-4 flex justify-between items-center">
+      <div class="flex gap-2 md:gap-4 items-center">
+        <UpvoteButton client:load noteId={article.id} user={user} />
+        {
+          article.url ? (
+            <a
+              href={article.url}
+              class="link link-hover btn btn-ghost btn-sm rounded-full bg-white font-normal"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-arrow-up-right-icon lucide-arrow-up-right"
+              >
+                <>
+                  <path d="M7 7h10v10" />
+                  <path d="M7 17 17 7" />
+                </>
+              </svg>
+              <span class="hidden md:inline">Visit</span>
+            </a>
+          ) : null
+        }
+      </div>
+      <div class="flex gap-2 md:gap-4 items-center">
+        <BookmarkButton
+          client:load
+          noteId={article.id}
+          authorId={article.author.id}
+          userId={user?.id}
+        />
+      </div>
+    </div>
     <h1 class="heading">{article.title}</h1>
     {
       article.type === "page" && article.description && (
@@ -59,7 +101,9 @@ if (!article) {
 
     <div class="collapse collapse-arrow px-0 mt-10">
       <input id="projects-collapse" type="checkbox" checked={true} />
-      <div class="collapse-title font-semibold px-0">Projects ({article.projects.length})</div>
+      <div class="collapse-title font-semibold px-0">
+        Projects ({article.projects.length})
+      </div>
       <div class="collapse-content text-sm px-0">
         <ul class="flex gap-2 flex-wrap">
           {
@@ -78,7 +122,12 @@ if (!article) {
       </div>
     </div>
     <div class="mt-10">
-      <CommentSection client:load noteId={id} currentUser={user} isOpen={true} />
+      <CommentSection
+        client:load
+        noteId={id}
+        currentUser={user}
+        isOpen={true}
+      />
     </div>
   </main>
 </Layout>

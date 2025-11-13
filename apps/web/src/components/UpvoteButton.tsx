@@ -11,23 +11,23 @@ import { parseResponse } from "hono/client";
 
 const UpvoteButtonWrapper: React.FC<{
   noteId: string;
-  user: User | null | undefined;
+  userId: string | null | undefined;
   onSuccess?: () => void;
   queryClient?: QueryClient;
-}> = ({ noteId, user, onSuccess, queryClient }) => {
+}> = ({ noteId, userId, onSuccess, queryClient }) => {
   const queryClientInstance = queryClient || new QueryClient();
   return (
     <QueryClientProvider client={queryClientInstance}>
-      <UpvoteButton noteId={noteId} user={user} onSuccess={onSuccess} />
+      <UpvoteButton noteId={noteId} userId={userId} onSuccess={onSuccess} />
     </QueryClientProvider>
   );
 };
 
 const UpvoteButton: React.FC<{
   noteId: string;
-  user: User | null | undefined;
+  userId: string | null | undefined;
   onSuccess?: () => void;
-}> = ({ noteId, user, onSuccess }) => {
+}> = ({ noteId, userId, onSuccess }) => {
   const queryClient = useQueryClient();
 
   const { data: likeStatus, isLoading: isLikeStatusLoading } = useQuery({
@@ -74,7 +74,7 @@ const UpvoteButton: React.FC<{
   });
 
   const handleLikeClick = () => {
-    if (!user) {
+    if (!userId) {
       window.location.href = "/auth/login";
       return;
     }
