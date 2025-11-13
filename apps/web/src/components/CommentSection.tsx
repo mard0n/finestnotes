@@ -11,6 +11,16 @@ import {
 } from "@tanstack/react-query";
 import { parseResponse, type InferResponseType } from "hono/client";
 
+const $comments = client.api.comments.article[":noteId"].$get;
+export type CommentsResponse = InferResponseType<typeof $comments, 200>;
+export type Comment = CommentsResponse["comments"][0];
+
+interface CommentSectionProps {
+  noteId: string;
+  currentUser: { id: string; name: string } | null | undefined;
+  isOpen?: boolean;
+}
+
 const queryClient = new QueryClient();
 
 const CommentSectionWrapper: React.FC<CommentSectionProps> = (props) => {
@@ -21,18 +31,10 @@ const CommentSectionWrapper: React.FC<CommentSectionProps> = (props) => {
   );
 };
 
-const $comments = client.api.comments.article[":noteId"].$get;
-export type CommentsResponse = InferResponseType<typeof $comments, 200>;
-export type Comment = CommentsResponse["comments"][0];
-
-interface CommentSectionProps {
-  noteId: string;
-  currentUser?: { id: string; name: string } | null;
-}
-
 const CommentSection: React.FC<CommentSectionProps> = ({
   noteId,
   currentUser,
+  isOpen = true,
 }) => {
   const [content, setContent] = useState("");
 
@@ -109,53 +111,53 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   }
 
   return (
-    <div className="py-8">
-      <div className="divider mt-10 mb-6">
-        {totalCount} {totalCount === 1 ? "comment" : "comments"}
-      </div>
-
-      {createCommentMutation.isError && (
-        <div className="alert alert-error alert-soft border border-red-400 text-sm">
-          Failed to post comment. Please try again.
-        </div>
-      )}
-
-      {currentUser ? (
-        <CommentInput
-          placeholder={"Write a comment..."}
-          content={content}
-          setContent={setContent}
-          onSubmit={handleCommentSubmit}
-          onCancel={() => {}}
-          isPending={createCommentMutation.isPending}
-        />
-      ) : (
-        <div className="p-4 bg-base-200 border border-neutral-300 text-center">
-          <p className="text-sm text-content-medium">
-            Please{" "}
-            <a href="/auth/login" className="link">
-              login
-            </a>{" "}
-            to leave a comment
-          </p>
-        </div>
-      )}
-
-      <div className="mt-8 space-y-6">
-        {comments.map((comment) => (
-          <CommentComponent
-            key={comment.id}
-            comment={comment}
-            noteId={noteId}
-            currentUser={currentUser}
-          />
-        ))}
-
-        {comments.length === 0 && !isLoading && (
-          <div className="text-center py-8 text-gray-500">
-            No comments yet. Be the first to comment!
+    <div className="collapse collapse-arrow px-0">
+      <input id="comments-collapse" type="checkbox" defaultChecked={isOpen} />
+      <div className="collapse-title font-semibold px-0">Comments ({totalCount})</div>
+      <div className="collapse-content text-sm px-0">
+        {createCommentMutation.isError && (
+          <div className="alert alert-error alert-soft border border-red-400 text-sm">
+            Failed to post comment. Please try again.
           </div>
         )}
+
+        {currentUser ? (
+          <CommentInput
+            placeholder={"Write a comment..."}
+            content={content}
+            setContent={setContent}
+            onSubmit={handleCommentSubmit}
+            onCancel={() => {}}
+            isPending={createCommentMutation.isPending}
+          />
+        ) : (
+          <div className="p-4 bg-base-200 border border-neutral-300 text-center">
+            <p className="text-sm text-content-medium">
+              Please{" "}
+              <a href="/auth/login" className="link">
+                login
+              </a>{" "}
+              to leave a comment
+            </p>
+          </div>
+        )}
+
+        <div className="mt-8 space-y-6">
+          {comments.map((comment) => (
+            <CommentComponent
+              key={comment.id}
+              comment={comment}
+              noteId={noteId}
+              currentUser={currentUser}
+            />
+          ))}
+
+          {comments.length === 0 && !isLoading && (
+            <div className="text-center py-8 text-content-medium">
+              No comments yet. Be the first to comment!
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

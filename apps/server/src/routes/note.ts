@@ -32,26 +32,26 @@ const note = new Hono<{
           },
           highlights: true,
           images: true,
-        },
-        extras: {
-          likeCount:
-            sql<number>`(SELECT COUNT(*) FROM likes WHERE likes.note_id = ${notes.id})`.as(
-              "like_count"
-            ),
+          comments: true,
         },
         where: eq(notes.authorId, c.var.user.id),
       })
       .then((notes) => {
         const flattenedResults = notes.map((note) => {
-          const { projectsToNotes, likes, ...rest } = note;
+          const { projectsToNotes, likes, comments, ...rest } = note;
 
           const currentUser = c.var.user;
           const isLikedByCurrentUser = currentUser
             ? likes?.some((like) => like.userId === currentUser.id) ?? false
             : false;
 
+          const likeCount = likes?.length ?? 0;
+          const commentCount = comments?.length ?? 0;
+
           return {
             ...rest,
+            likeCount,
+            commentCount,
             projects: projectsToNotes.map((pn) => pn.project) ?? [],
             isLikedByCurrentUser,
           };
@@ -77,17 +77,14 @@ const note = new Hono<{
                 with: {
                   author: true,
                   likes: true,
+                  comments: true,
+                  images: true,
+                  highlights: true,
                   projectsToNotes: {
                     with: {
                       project: true,
                     },
                   },
-                },
-                extras: {
-                  likeCount:
-                    sql<number>`(SELECT COUNT(*) FROM likes WHERE likes.note_id = ${notes.id})`.as(
-                      "like_count"
-                    ),
                 },
               },
             },
@@ -103,14 +100,19 @@ const note = new Hono<{
           ...rest,
           notes: normalizeNotes(
             projectsToNotes.map((pn) => {
-              const { projectsToNotes, likes, ...rest } = pn.note;
+              const { projectsToNotes, likes, comments, ...rest } = pn.note;
               const currentUser = c.var.user;
               const isLikedByCurrentUser = currentUser
                 ? likes?.some((like) => like.userId === currentUser.id) ?? false
                 : false;
 
+              const likeCount = likes?.length ?? 0;
+              const commentCount = comments?.length ?? 0;
+
               return {
                 ...rest,
+                likeCount,
+                commentCount,
                 projects: projectsToNotes.map((pnn) => pnn.project) ?? [],
                 isLikedByCurrentUser,
               };

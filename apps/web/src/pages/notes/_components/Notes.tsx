@@ -11,6 +11,7 @@ import { parseResponse, type InferResponseType } from "hono/client";
 import SelectedNoteEditor from "./SelectedNoteEditor";
 import NotesLayout from "./NotesLayout";
 import type { User } from "@utils/types";
+import CommentSection from "@components/CommentSection";
 
 export type FilterType =
   | {
@@ -44,8 +45,8 @@ const Notes: React.FC<{ user: User }> = ({ user }) => {
       if (filter.type !== "project") {
         const res = await client.api.note.$get();
         const notes = await parseResponse(res);
-        console.log('notes', notes);
-        
+        console.log("notes", notes);
+
         if (filter.type === "private") {
           return notes.filter((note) => !note.isPublic);
         } else if (filter.type === "public") {
@@ -82,13 +83,14 @@ const Notes: React.FC<{ user: User }> = ({ user }) => {
       setSelectedNoteId(noteId);
       window.history.replaceState({}, "", "/notes");
     } else if (projectId) {
-      const foundProject = projects?.find((project) => project.id === projectId);
+      const foundProject = projects?.find(
+        (project) => project.id === projectId
+      );
       if (!foundProject) return;
       setFilter({ type: "project", id: projectId, name: foundProject.name });
       window.history.replaceState({}, "", "/notes");
     }
   }, [notes, projects]);
-
 
   const selectedNote =
     notes?.find((note) => note.id === selectedNoteId) || null;
@@ -120,11 +122,22 @@ const Notes: React.FC<{ user: User }> = ({ user }) => {
         />
       }
       editor={
-        <SelectedNoteEditor
-          user={user}
-          selectedNote={selectedNote}
-          setSelectedNoteId={setSelectedNoteId}
-        />
+        <>
+          <SelectedNoteEditor
+            user={user}
+            selectedNote={selectedNote}
+            setSelectedNoteId={setSelectedNoteId}
+          />
+          {selectedNote ? (
+            <div className="px-8 mt-20">
+              <CommentSection
+                noteId={selectedNote.id}
+                currentUser={user}
+                isOpen={false}
+              />
+            </div>
+          ) : null}
+        </>
       }
     />
   );

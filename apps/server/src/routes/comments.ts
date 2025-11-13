@@ -38,7 +38,7 @@ const commentsRouter = new Hono<{
         where: eq(schema.notes.id, noteId),
       });
 
-      if (!article || !article.isPublic) {
+      if (!article) {
         return c.json(
           {
             success: false,

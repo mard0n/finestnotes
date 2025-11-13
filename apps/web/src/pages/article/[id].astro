@@ -55,22 +55,28 @@ if (!article) {
       )
     }
 
-    <div class="divider mt-10 mb-6">projects</div>
-    <ul class="flex gap-2 flex-wrap">
-      {
-        article.projects.map((project) => (
-          <Badge
-            id={project.id}
-            ownerId={project.author.id}
-            ownerName={project.author.name}
-            userId={Astro.locals.user?.id}
-          >
-            {project.name}
-          </Badge>
-        ))
-      }
-    </ul>
-
-    <CommentSection client:load noteId={id} currentUser={user} />
+    <div class="collapse collapse-arrow px-0 mt-10">
+      <input id="projects-collapse" type="checkbox" checked={true} />
+      <div class="collapse-title font-semibold px-0">Projects ({article.projects.length})</div>
+      <div class="collapse-content text-sm px-0">
+        <ul class="flex gap-2 flex-wrap">
+          {
+            article.projects.map((project) => (
+              <Badge
+                id={project.id}
+                ownerId={project.author.id}
+                ownerName={project.author.name}
+                userId={Astro.locals.user?.id}
+              >
+                {project.name}
+              </Badge>
+            ))
+          }
+        </ul>
+      </div>
+    </div>
+    <div class="mt-10">
+      <CommentSection client:load noteId={id} currentUser={user} isOpen={true} />
+    </div>
   </main>
 </Layout>

@@ -176,7 +176,7 @@ const NoteList: React.FC<{
                 userId={user.id}
                 selectedNoteId={selectedNoteId}
                 upvoteCount={note.likeCount ?? 0}
-                commentCount={0}
+                commentCount={note.commentCount ?? 0}
                 projectNames={note.projects.map((project) => project.name)}
                 handleNoteSelection={handleNoteSelection}
               />
@@ -282,20 +282,20 @@ const NoteListItem: React.FC<{
                 ownerId={note.author.id}
                 ownerName={note.author.name}
                 userId={userId}
-              />{" "}·{" "}
+              />{" "}
+              ·{" "}
             </>
           )}
           <span>{formatDate(note.createdAt)}</span>
-          {note.isPublic ? (
-            <>
-              <span>
-                {" "}· {upvoteCount} {upvoteCount > 1 ? "upvotes" : "upvote"}
-              </span>
-              <span>
-                {" "}· {commentCount} {commentCount > 1 ? " comments" : " comment"}
-              </span>
-            </>
-          ) : null}
+
+          <span>
+            {" "}
+            · {upvoteCount} {upvoteCount > 1 ? "upvotes" : "upvote"}
+          </span>
+          <span>
+            {" "}
+            · {commentCount} {commentCount > 1 ? " comments" : " comment"}
+          </span>
         </p>
         <div className="mt-2 overflow-x-auto no-scrollbar">
           <ul className="flex gap-2 whitespace-nowrap">
