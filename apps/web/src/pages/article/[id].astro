@@ -4,14 +4,13 @@ import Layout from "@layouts/Layout.astro";
 import { createServerClient } from "@utils/api";
 import { formatDate } from "@utils/date";
 import { parseResponse } from "hono/client";
-import NoteViewer from "./_components/NoteViewer.astro";
 import AuthorName from "@components/AuthorName.tsx";
 import CommentSection from "@components/CommentSection.tsx";
 import AnnotationViewer from "@components/AnnotationViewer.tsx";
 import UpvoteButton from "@components/UpvoteButton.tsx";
 import BookmarkButton from "@components/BookmarkButton.tsx";
 import AddToProjectDropdown from "@components/AddToProjectDropdown.tsx";
-import "@styles/lexical-theme.css"
+import "@styles/lexical-theme.css";
 
 const { id } = Astro.params;
 const user = Astro.locals.user;
@@ -20,9 +19,9 @@ if (!id) {
   throw new Error("Article ID is required");
 }
 
-const response = await createServerClient(Astro.request.headers).api.articles[
-  ":id"
-].$get({ param: { id: id } });
+const response = await createServerClient(
+  Astro.request.headers
+).api.note.published[":id"].$get({ param: { id: id } });
 const article = await parseResponse(response);
 
 if (!article) {
@@ -34,9 +33,9 @@ if (!article) {
   <main class="max-w-2xl mx-auto my-8 px-4">
     <div class="mb-4 flex justify-between items-center">
       <div class="flex gap-2 md:gap-4 items-center">
-        <UpvoteButton client:load noteId={article.id} user={user} />
+        <UpvoteButton client:load noteId={article.id} userId={user?.id} />
         {
-          article.url ? (
+          article.type === "page" && article.url ? (
             <a
               href={article.url}
               class="link link-hover btn btn-ghost btn-sm rounded-full bg-white font-normal"
@@ -119,34 +118,36 @@ if (!article) {
     </div>
     {
       article.type === "note" ? (
-        <article set:html={article.contentHTML}></article>
+        <article set:html={article.contentHTML} />
       ) : (
         <AnnotationViewer annotation={article} />
       )
     }
 
-    <div class="collapse collapse-arrow px-0 mt-10">
-      <input id="projects-collapse" type="checkbox" checked={true} />
-      <div class="collapse-title font-semibold px-0">
-        Projects ({article.projects.length})
-      </div>
-      <div class="collapse-content text-sm px-0">
-        <ul class="flex gap-2 flex-wrap">
-          {
-            article.projects.map((project) => (
-              <Badge
-                id={project.id}
-                ownerId={project.author.id}
-                ownerName={project.author.name}
-                userId={Astro.locals.user?.id}
-              >
-                {project.name}
-              </Badge>
-            ))
-          }
-        </ul>
-      </div>
-    </div>
+    {
+      article.projects ? (
+        <div class="collapse collapse-arrow px-0 mt-10">
+          <input id="projects-collapse" type="checkbox" checked={true} />
+          <div class="collapse-title font-semibold px-0">
+            Projects ({article.projects.length})
+          </div>
+          <div class="collapse-content text-sm px-0">
+            <ul class="flex gap-2 flex-wrap">
+              {article.projects.map((project) => (
+                <Badge
+                  id={project.id}
+                  ownerId={project.authorId}
+                  ownerName={project.authorName}
+                  userId={Astro.locals.user?.id}
+                >
+                  {project.name}
+                </Badge>
+              ))}
+            </ul>
+          </div>
+        </div>
+      ) : null
+    }
     <div class="mt-10">
       <CommentSection
         client:load

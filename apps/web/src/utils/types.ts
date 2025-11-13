@@ -3,6 +3,4 @@ import { client } from "./api";
 import type { User as BetterAuthUser } from "better-auth";
 
 export type Projects = InferResponseType<typeof client.api.projects.$get, 200>;
-const $article = client.api.articles[":id"].$get;
-export type Article = InferResponseType<typeof $article, 200>;
 export type User = Pick<BetterAuthUser, "id" | "name">;

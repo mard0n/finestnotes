@@ -6,7 +6,6 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { client } from "@utils/api";
-import type { User } from "@utils/types";
 import { parseResponse } from "hono/client";
 
 const UpvoteButtonWrapper: React.FC<{
