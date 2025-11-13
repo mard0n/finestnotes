@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { client } from "@utils/api";
 import { formatDate } from "@utils/date";
 import AuthorName from "./AuthorName";
@@ -10,7 +10,6 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { parseResponse, type InferResponseType } from "hono/client";
-import type { User } from "@utils/types";
 
 const queryClient = new QueryClient();
 
@@ -22,7 +21,6 @@ const CommentSectionWrapper: React.FC<CommentSectionProps> = (props) => {
   );
 };
 
-// Comment types
 const $comments = client.api.comments.article[":noteId"].$get;
 export type CommentsResponse = InferResponseType<typeof $comments, 200>;
 export type Comment = CommentsResponse["comments"][0];
@@ -36,6 +34,8 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   noteId,
   currentUser,
 }) => {
+  const [content, setContent] = useState("");
+
   const {
     data: commentsData,
     isLoading,
@@ -50,15 +50,49 @@ const CommentSection: React.FC<CommentSectionProps> = ({
     },
   });
 
+  const queryClient = useQueryClient();
+
+  const createCommentMutation = useMutation({
+    mutationFn: async (data: {
+      noteId: string;
+      content: string;
+      parentCommentId?: string;
+    }) => {
+      const response = await client.api.comments.$post({
+        json: data,
+      });
+      return await parseResponse(response);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", noteId] });
+    },
+  });
+
   const comments = commentsData?.comments || [];
   const totalCount = commentsData?.total || 0;
+
+  const handleCommentSubmit = async (content: string) => {
+    if (!content.trim()) {
+      return;
+    }
+
+    if (!currentUser) {
+      return;
+    }
+
+    createCommentMutation.mutate({
+      noteId,
+      content: content.trim(),
+    });
+  };
 
   if (isLoading) {
     return (
       <div className="py-8">
         <div className="animate-pulse space-y-4">
-          <div className="h-4 bg-gray-200 rounded w-1/4"></div>
-          <div className="h-20 bg-gray-200 rounded"></div>
+          <div className="h-0.5 bg-content-light/20 mt-10 mb-6"></div>
+          <div className="h-20 bg-content-light/20 rounded"></div>
+          <div className="h-4 bg-content-light/20 rounded w-1/4"></div>
         </div>
       </div>
     );
@@ -80,7 +114,32 @@ const CommentSection: React.FC<CommentSectionProps> = ({
         {totalCount} {totalCount === 1 ? "comment" : "comments"}
       </div>
 
-      <CommentInput noteId={noteId} currentUser={currentUser} />
+      {createCommentMutation.isError && (
+        <div className="alert alert-error alert-soft border border-red-400 text-sm">
+          Failed to post comment. Please try again.
+        </div>
+      )}
+
+      {currentUser ? (
+        <CommentInput
+          placeholder={"Write a comment..."}
+          content={content}
+          setContent={setContent}
+          onSubmit={handleCommentSubmit}
+          onCancel={() => {}}
+          isPending={createCommentMutation.isPending}
+        />
+      ) : (
+        <div className="p-4 bg-base-200 border border-neutral-300 text-center">
+          <p className="text-sm text-content-medium">
+            Please{" "}
+            <a href="/auth/login" className="link">
+              login
+            </a>{" "}
+            to leave a comment
+          </p>
+        </div>
+      )}
 
       <div className="mt-8 space-y-6">
         {comments.map((comment) => (
@@ -103,42 +162,36 @@ const CommentSection: React.FC<CommentSectionProps> = ({
 };
 
 interface CommentInputProps {
-  noteId: string;
-  currentUser?: { id: string; name: string } | null;
-  parentCommentId?: string;
-  onCancel?: () => void;
+  placeholder: string;
+  content: string;
+  setContent: React.Dispatch<React.SetStateAction<string>>;
+  onSubmit: (content: string) => void;
+  onCancel: () => void;
+  isPending: boolean;
   autoFocus?: boolean;
 }
 
 const CommentInput: React.FC<CommentInputProps> = ({
-  noteId,
-  currentUser,
-  parentCommentId,
+  placeholder,
+  content,
+  setContent,
+  onSubmit,
   onCancel,
+  isPending,
   autoFocus = false,
 }) => {
-  const [content, setContent] = useState("");
-  const queryClient = useQueryClient();
-
-  const createCommentMutation = useMutation({
-    mutationFn: async (data: {
-      noteId: string;
-      content: string;
-      parentCommentId?: string;
-    }) => {
-      const response = await client.api.comments.$post({
-        json: data,
-      });
-      return await parseResponse(response);
-    },
-    onSuccess: () => {
-      setContent("");
-      queryClient.invalidateQueries({ queryKey: ["comments", noteId] });
-      if (onCancel) {
+  useEffect(() => {
+    const handleEscKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
         onCancel();
       }
-    },
-  });
+    };
+
+    document.addEventListener("keydown", handleEscKey);
+    return () => {
+      document.removeEventListener("keydown", handleEscKey);
+    };
+  }, [onCancel]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,50 +200,21 @@ const CommentInput: React.FC<CommentInputProps> = ({
       return;
     }
 
-    if (!currentUser) {
-      return;
-    }
-
-    createCommentMutation.mutate({
-      noteId,
-      content: content.trim(),
-      ...(parentCommentId && { parentCommentId }),
-    });
+    onSubmit(content.trim());
+    setContent("");
   };
-
-  if (!currentUser) {
-    return (
-      <div className="p-4 bg-gray-50 border border-neutral-300 text-center">
-        <p className="text-sm text-content-dark">
-          Please{" "}
-          <a href="/auth/login" className="link">
-            sign in
-          </a>{" "}
-          to leave a comment
-        </p>
-      </div>
-    );
-  }
 
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
-      {createCommentMutation.isError && (
-        <div className="alert alert-error alert-soft border border-red-400 text-sm">
-          Failed to post comment. Please try again.
-        </div>
-      )}
-
       <textarea
         id="comment-content"
         name="comment-content"
         value={content}
         onChange={(e) => setContent(e.target.value)}
-        placeholder={
-          parentCommentId ? "Write a reply..." : "Write a comment..."
-        }
+        placeholder={placeholder}
         className="textarea w-full"
         rows={3}
-        disabled={createCommentMutation.isPending}
+        disabled={isPending}
         autoFocus={autoFocus}
         maxLength={5000}
       />
@@ -205,21 +229,17 @@ const CommentInput: React.FC<CommentInputProps> = ({
               type="button"
               onClick={onCancel}
               className="btn btn-xs"
-              disabled={createCommentMutation.isPending}
+              disabled={isPending}
             >
               Cancel
             </button>
           )}
           <button
             type="submit"
-            disabled={createCommentMutation.isPending || !content.trim()}
+            disabled={isPending || !content.trim()}
             className="btn btn-xs btn-primary"
           >
-            {createCommentMutation.isPending
-              ? "Posting..."
-              : parentCommentId
-              ? "Reply"
-              : "Comment"}
+            {isPending ? "Posting..." : "Submit"}
           </button>
         </div>
       </div>
@@ -240,13 +260,17 @@ const CommentComponent: React.FC<CommentComponentProps> = ({
   currentUser,
   depth = 0,
 }) => {
-  const [isEditing, setIsEditing] = useState(false);
   const [isReplying, setIsReplying] = useState(false);
+  const [replyContent, setReplyContent] = useState("");
+
+  const [isEditing, setIsEditing] = useState(false);
   const [editContent, setEditContent] = useState(comment.content);
 
-  const queryClient = useQueryClient();
   const isAuthor = currentUser?.id === comment.author.id;
 
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  const queryClient = useQueryClient();
   const updateCommentMutation = useMutation({
     mutationFn: async (data: { id: string; content: string }) => {
       const response = await client.api.comments[":id"].$patch({
@@ -286,6 +310,25 @@ const CommentComponent: React.FC<CommentComponentProps> = ({
     },
   });
 
+  const createReplyMutation = useMutation({
+    mutationFn: async (data: {
+      noteId: string;
+      content: string;
+      parentCommentId?: string;
+    }) => {
+      const response = await client.api.comments.$post({
+        json: data,
+      });
+      return await parseResponse(response);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["comments", noteId] });
+
+      setReplyContent("");
+      setIsReplying(false);
+    },
+  });
+
   const handleEdit = async () => {
     if (!editContent.trim()) {
       return;
@@ -294,6 +337,18 @@ const CommentComponent: React.FC<CommentComponentProps> = ({
     updateCommentMutation.mutate({
       id: comment.id,
       content: editContent.trim(),
+    });
+  };
+
+  const handleReply = async () => {
+    if (!replyContent.trim()) {
+      return;
+    }
+
+    createReplyMutation.mutate({
+      noteId,
+      content: replyContent.trim(),
+      parentCommentId: comment.id,
     });
   };
 
@@ -315,141 +370,188 @@ const CommentComponent: React.FC<CommentComponentProps> = ({
   };
 
   return (
-    <div className={`${depth > 0 ? "ml-8 mt-4" : ""}`}>
-      <div className="flex gap-3">
-        <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2 mb-1">
+    <div className={`${depth % 2 === 0 ? "bg-base-200" : "bg-black/3"}`}>
+      <div className="flex flex-col gap-4 border border-neutral-300 rounded-none px-4 py-3">
+        <div className="flex items-center gap-4 text-sm text-content-medium">
+          <span className="flex items-center gap-1">
+            {isCollapsed ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                className="size-4 cursor-pointer"
+                onClick={() => {
+                  setIsCollapsed(false);
+                }}
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 0 1 0-1.06Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            ) : (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 16 16"
+                fill="currentColor"
+                className="size-4 cursor-pointer"
+                onClick={() => {
+                  setIsCollapsed(true);
+                }}
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            )}
             <AuthorName
               ownerId={comment.author.id}
               ownerName={comment.author.name}
               userId={currentUser?.id}
             />
-            <span className="text-xs text-gray-500">
-              {formatDate(comment.createdAt)}
-            </span>
-          </div>
-
-          {isEditing ? (
-            <div className="space-y-2">
-              {updateCommentMutation.isError && (
-                <div className="p-2 bg-red-50 border border-red-200 rounded text-red-600 text-xs">
-                  Failed to update comment
-                </div>
-              )}
-              <textarea
-                value={editContent}
-                onChange={(e) => setEditContent(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm resize-none"
-                rows={3}
-                disabled={updateCommentMutation.isPending}
-                maxLength={5000}
-              />
-              <div className="flex gap-2">
-                <button
-                  onClick={handleEdit}
-                  disabled={updateCommentMutation.isPending}
-                  className="px-3 py-1 bg-black text-white text-xs rounded hover:bg-gray-800 disabled:bg-gray-300"
-                >
-                  {updateCommentMutation.isPending ? "Saving..." : "Save"}
-                </button>
-                <button
-                  onClick={() => {
-                    setIsEditing(false);
-                    setEditContent(comment.content);
-                  }}
-                  disabled={updateCommentMutation.isPending}
-                  className="px-3 py-1 text-gray-700 text-xs hover:bg-gray-100 rounded"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          ) : (
-            <p className="text-sm text-gray-800 mb-2 whitespace-pre-wrap break-words">
-              {comment.content}
-            </p>
-          )}
-
-          <div className="flex items-center gap-4 text-xs">
+          </span>
+          <span className="text-content-light">
+            {formatDate(comment.createdAt)}
+          </span>
+          <span className="flex items-center gap-2 text-content-light">
             <button
               onClick={() => handleReact("like")}
               disabled={!currentUser}
-              className={`flex items-center gap-1 ${
-                comment.userReaction === "like"
-                  ? "text-blue-600 font-medium"
-                  : "text-gray-600 hover:text-blue-600"
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
+              className="disabled:opacity-50 disabled:cursor-not-allowed hover:text-black"
             >
-              <span>👍</span>
-              <span>{comment.likeCount}</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill={comment.userReaction === "like" ? "currentColor" : "none"}
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className=""
+              >
+                <path d="M13.73 4a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+              </svg>
             </button>
+
+            <span className="text-content-medium">
+              {comment.likeCount - comment.dislikeCount}
+            </span>
 
             <button
               onClick={() => handleReact("dislike")}
               disabled={!currentUser}
-              className={`flex items-center gap-1 ${
-                comment.userReaction === "dislike"
-                  ? "text-red-600 font-medium"
-                  : "text-gray-600 hover:text-red-600"
-              } disabled:opacity-50 disabled:cursor-not-allowed`}
+              className="disabled:opacity-50 disabled:cursor-not-allowed hover:text-black"
             >
-              <span>👎</span>
-              <span>{comment.dislikeCount}</span>
-            </button>
-
-            {currentUser && (
-              <button
-                onClick={() => setIsReplying(!isReplying)}
-                className="text-gray-600 hover:text-black"
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill={
+                  comment.userReaction === "dislike" ? "currentColor" : "none"
+                }
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="rotate-180"
               >
-                Reply
-              </button>
-            )}
-
-            {isAuthor && !isEditing && (
-              <>
-                <button
-                  onClick={() => setIsEditing(true)}
-                  className="text-gray-600 hover:text-black"
+                <path d="M13.73 4a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
+              </svg>
+            </button>
+          </span>
+          {isAuthor ? (
+            <span className="ml-auto dropdown dropdown-end">
+              <span tabIndex={0} role="link" className="">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 16 16"
+                  fill="currentColor"
+                  className="size-4"
                 >
-                  Edit
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="text-red-600 hover:text-red-700"
-                >
-                  Delete
-                </button>
-              </>
-            )}
-          </div>
+                  <path d="M8 2a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM8 6.5a1.5 1.5 0 1 1 0 3 1.5 1.5 0 0 1 0-3ZM9.5 12.5a1.5 1.5 0 1 0-3 0 1.5 1.5 0 0 0 3 0Z" />
+                </svg>
+              </span>
+              <div className="dropdown-content menu z-1 w-52 p-2">
+                <ul className="bg-base-100 p-2 shadow-sm" tabIndex={-1}>
+                  <li
+                    onClick={() => {
+                      setIsEditing(true);
+                      setIsReplying(false);
+                    }}
+                  >
+                    <a>Edit</a>
+                  </li>
+                  <li onClick={handleDelete} className="text-red-600">
+                    <a>Delete</a>
+                  </li>
+                </ul>
+              </div>
+            </span>
+          ) : null}
+        </div>
 
-          {isReplying && (
-            <div className="mt-3">
-              <CommentInput
-                noteId={noteId}
-                currentUser={currentUser}
-                parentCommentId={comment.id}
-                onCancel={() => setIsReplying(false)}
-                autoFocus={true}
-              />
-            </div>
-          )}
+        {isEditing ? (
+          <CommentInput
+            content={editContent}
+            setContent={setEditContent}
+            placeholder="Write a comment..."
+            onCancel={() => setIsEditing(false)}
+            autoFocus={true}
+            isPending={updateCommentMutation.isPending}
+            onSubmit={(content) => {
+              setEditContent(content);
+              handleEdit();
+            }}
+          />
+        ) : (
+          <p className="text-sm whitespace-pre-wrap break-words">
+            {comment.content}
+          </p>
+        )}
 
-          {comment.replies && comment.replies.length > 0 && (
-            <div className="mt-4">
-              {comment.replies.map((reply) => (
-                <CommentComponent
-                  key={reply.id}
-                  comment={reply}
-                  noteId={noteId}
-                  currentUser={currentUser}
-                  depth={depth + 1}
-                />
-              ))}
-            </div>
+        <div className="flex items-center gap-4 text-xs text-content-light">
+          {currentUser && (
+            <button
+              onClick={() => {
+                setIsReplying(!isReplying);
+                setIsEditing(false);
+              }}
+              className="link link-hover"
+            >
+              Reply
+            </button>
           )}
         </div>
+
+        {isReplying && (
+          <div className="ml-8 mt-4">
+            <CommentInput
+              placeholder="Write a reply..."
+              content={replyContent}
+              setContent={setReplyContent}
+              isPending={createReplyMutation.isPending}
+              onCancel={() => setIsReplying(false)}
+              onSubmit={handleReply}
+              autoFocus={true}
+            />
+          </div>
+        )}
+
+        {comment.replies?.map((reply) => (
+          <CommentComponent
+            key={reply.id}
+            comment={reply}
+            noteId={noteId}
+            currentUser={currentUser}
+            depth={depth + 1}
+          />
+        ))}
       </div>
     </div>
   );

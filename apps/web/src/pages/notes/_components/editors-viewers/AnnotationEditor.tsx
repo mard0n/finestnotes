@@ -109,7 +109,7 @@ const HighlightComponent: React.FC<{
 
   return (
     <div>
-      <blockquote className="text-md pl-5 text-content-dark/90 italic relative before:content-[''] before:absolute before:left-0 before:top-0 before:w-0.5 before:h-full before:bg-content-light">
+      <blockquote className="text-md pl-5 text-content-medium/90 italic relative before:content-[''] before:absolute before:left-0 before:top-0 before:w-0.5 before:h-full before:bg-content-light">
         {highlight.text}
       </blockquote>
       <div className="pl-5 pt-2 flex">
