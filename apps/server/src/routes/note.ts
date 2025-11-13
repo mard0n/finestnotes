@@ -25,14 +25,15 @@ const note = new Hono<{
         with: {
           author: true,
           likes: true,
+          highlights: true,
+          images: true,
+          comments: true,
+          bookmarks: true,
           projectsToNotes: {
             with: {
               project: true,
             },
           },
-          highlights: true,
-          images: true,
-          comments: true,
         },
         where: eq(notes.authorId, c.var.user.id),
       })
@@ -44,6 +45,11 @@ const note = new Hono<{
           const isLikedByCurrentUser = currentUser
             ? likes?.some((like) => like.userId === currentUser.id) ?? false
             : false;
+          const isBookmarkedByCurrentUser = currentUser
+            ? note.bookmarks?.some(
+                (bookmark) => bookmark.userId === currentUser.id
+              ) ?? false
+            : false;
 
           const likeCount = likes?.length ?? 0;
           const commentCount = comments?.length ?? 0;
@@ -54,6 +60,7 @@ const note = new Hono<{
             commentCount,
             projects: projectsToNotes.map((pn) => pn.project) ?? [],
             isLikedByCurrentUser,
+            isBookmarkedByCurrentUser,
           };
         });
         return flattenedResults;
@@ -122,6 +129,57 @@ const note = new Hono<{
       });
 
     return c.json(project);
+  })
+
+  // Get all saved notes
+  .get("/saved", protect, async (c) => {
+    const db = drizzle(c.env.finestdb, { schema: schema });
+
+    const notesData = await db.query.bookmarks
+      .findMany({
+        where: eq(schema.bookmarks.userId, c.var.user.id),
+        with: {
+          note: {
+            with: {
+              author: true,
+              likes: true,
+              comments: true,
+              images: true,
+              highlights: true,
+              projectsToNotes: {
+                with: {
+                  project: true,
+                },
+              },
+            },
+          },
+        },
+      })
+      .then((bookmarks) => {
+        const notes = bookmarks.map((bookmark) => bookmark.note);
+        const flattenedResults = notes.map((note) => {
+          const { projectsToNotes, likes, comments, ...rest } = note;
+          const currentUser = c.var.user;
+          const isLikedByCurrentUser = currentUser
+            ? likes?.some((like) => like.userId === currentUser.id) ?? false
+            : false;
+          const likeCount = likes?.length ?? 0;
+          const commentCount = comments?.length ?? 0;
+
+          return {
+            ...rest,
+            likeCount,
+            commentCount,
+            projects: projectsToNotes.map((pn) => pn.project) ?? [],
+            isLikedByCurrentUser,
+            isBookmarkedByCurrentUser: true,
+          };
+        });
+        return flattenedResults;
+      })
+      .then(normalizeNotes);
+
+    return c.json(notesData);
   })
 
   // Save a note

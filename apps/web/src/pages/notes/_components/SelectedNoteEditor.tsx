@@ -83,6 +83,30 @@ const SelectedNoteEditor: React.FC<{
     },
   });
 
+  const unbookmarkMutation = useMutation({
+    mutationFn: async () => {
+      const response = await client.api.articles[":id"].bookmark.$delete({
+        param: { id: selectedNote!.id }, // TODO: Fix non-null assertion. Should not be possible to call when selectedNote is null
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      // TODO: Invalidate queries to reflect unbookmarking
+    },
+    onError: (error) => {
+      console.error("Error unbookmarking article:", error);
+    },
+  });
+
+  const handleBookmarkClick = () => {
+    if (!user) {
+      window.location.href = "/auth/signin";
+      return;
+    }
+
+    unbookmarkMutation.mutate();
+  };
+
   const handleDeleteClick = () => {
     if (
       selectedNote &&
@@ -137,9 +161,9 @@ const SelectedNoteEditor: React.FC<{
       <>
         <EditorNavBar user={user} />
         <div className="px-6 md:px-8 py-6">
-          {selectedNote.isPublic ? (
+          <div className="mb-6 flex gap-3">
             <button
-              className={`btn btn-ghost btn-sm rounded-full font-normal mb-6 bg-white ${
+              className={`btn btn-ghost btn-sm rounded-full font-normal bg-white ${
                 selectedNote.isLikedByCurrentUser ? "text-black" : ""
               }`}
               onClick={handleLikeClick}
@@ -162,7 +186,36 @@ const SelectedNoteEditor: React.FC<{
               </svg>
               {selectedNote.likeCount}
             </button>
-          ) : null}
+            {selectedNote.isBookmarkedByCurrentUser ? (
+              <button
+                className={`btn btn-ghost btn-sm rounded-full bg-white font-normal ${
+                  selectedNote.isBookmarkedByCurrentUser ? "text-black" : ""
+                }`}
+                onClick={handleBookmarkClick}
+                disabled={unbookmarkMutation.isPending}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill={
+                    selectedNote.isBookmarkedByCurrentUser
+                      ? "currentColor"
+                      : "none"
+                  }
+                  viewBox="0 0 24 24"
+                  strokeWidth="2"
+                  stroke="currentColor"
+                  className="size-4"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
+                  ></path>
+                </svg>
+                <span className="hidden md:inline">Unsave</span>
+              </button>
+            ) : null}
+          </div>
           <h1 className="text-2xl font-serif outline-none text-black mb-2 grow">
             {selectedNote.title}
           </h1>

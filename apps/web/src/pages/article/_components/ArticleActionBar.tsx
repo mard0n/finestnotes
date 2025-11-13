@@ -1,5 +1,5 @@
 import AddToProjectDropdown from "../../notes/_components/modals-dropdowns/AddToProjectDropdown";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider, useMutation, useQueryClient } from "@tanstack/react-query";
 import type { Article } from "@utils/types";
 import type { User } from "@utils/types";;
 import { useState } from "react";
@@ -22,43 +22,104 @@ const ActionBar: React.FC<{ article: Article; user: User | null }> = ({
   article,
   user,
 }) => {
+  const queryClient = useQueryClient();
   const [likeCount, setLikeCount] = useState(article.likeCount ?? 0);
   const [isLiked, setIsLiked] = useState(article.isLikedByCurrentUser ?? false);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isBookmarked, setIsBookmarked] = useState(article.isBookmarkedByCurrentUser ?? false);
 
-  const handleLikeClick = async () => {
+  const likeMutation = useMutation({
+    mutationFn: async () => {
+      const response = await client.api.articles[":id"].like.$post({
+        param: { id: article.id },
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        setLikeCount(data.likeCount);
+        setIsLiked(true);
+      }
+    },
+    onError: (error) => {
+      console.error("Error liking article:", error);
+    },
+  });
+
+  const unlikeMutation = useMutation({
+    mutationFn: async () => {
+      const response = await client.api.articles[":id"].like.$delete({
+        param: { id: article.id },
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        setLikeCount(data.likeCount);
+        setIsLiked(false);
+      }
+    },
+    onError: (error) => {
+      console.error("Error unliking article:", error);
+    },
+  });
+
+  const bookmarkMutation = useMutation({
+    mutationFn: async () => {
+      const response = await client.api.articles[":id"].bookmark.$post({
+        param: { id: article.id },
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        setIsBookmarked(true);
+      }
+    },
+    onError: (error) => {
+      console.error("Error bookmarking article:", error);
+    },
+  });
+
+  const unbookmarkMutation = useMutation({
+    mutationFn: async () => {
+      const response = await client.api.articles[":id"].bookmark.$delete({
+        param: { id: article.id },
+      });
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        setIsBookmarked(false);
+      }
+    },
+    onError: (error) => {
+      console.error("Error unbookmarking article:", error);
+    },
+  });
+
+  const handleLikeClick = () => {
     if (!user) {
       window.location.href = "/auth/signin";
       return;
     }
 
-    setIsLoading(true);
-    try {
-      if (isLiked) {
-        // Unlike
-        const response = await client.api.articles[":id"].like.$delete({
-          param: { id: article.id },
-        });
-        const data = await response.json();
-        if (data.success) {
-          setLikeCount(data.likeCount);
-          setIsLiked(false);
-        }
-      } else {
-        // Like
-        const response = await client.api.articles[":id"].like.$post({
-          param: { id: article.id },
-        });
-        const data = await response.json();
-        if (data.success) {
-          setLikeCount(data.likeCount);
-          setIsLiked(true);
-        }
-      }
-    } catch (error) {
-      console.error("Error liking article:", error);
-    } finally {
-      setIsLoading(false);
+    if (isLiked) {
+      unlikeMutation.mutate();
+    } else {
+      likeMutation.mutate();
+    }
+  };
+
+  const handleBookmarkClick = () => {
+    if (!user) {
+      window.location.href = "/auth/signin";
+      return;
+    }
+
+    if (isBookmarked) {
+      unbookmarkMutation.mutate();
+    } else {
+      bookmarkMutation.mutate();
     }
   };
 
@@ -70,7 +131,7 @@ const ActionBar: React.FC<{ article: Article; user: User | null }> = ({
             isLiked ? "text-black" : ""
           }`}
           onClick={handleLikeClick}
-          disabled={isLoading}
+          disabled={likeMutation.isPending || unlikeMutation.isPending}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -119,10 +180,16 @@ const ActionBar: React.FC<{ article: Article; user: User | null }> = ({
         ) : null}
       </div>
       <div className="flex gap-2 md:gap-4">
-        <button className="btn btn-ghost btn-sm rounded-full bg-white font-normal">
+        <button 
+          className={`btn btn-ghost btn-sm rounded-full bg-white font-normal ${
+            isBookmarked ? "text-black" : ""
+          }`}
+          onClick={handleBookmarkClick}
+          disabled={bookmarkMutation.isPending || unbookmarkMutation.isPending}
+        >
           <svg
             xmlns="http://www.w3.org/2000/svg"
-            fill="none"
+            fill={isBookmarked ? "currentColor" : "none"}
             viewBox="0 0 24 24"
             strokeWidth="2"
             stroke="currentColor"

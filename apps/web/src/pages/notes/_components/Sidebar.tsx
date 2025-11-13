@@ -2,7 +2,7 @@ import CreateProjectModal from "./modals-dropdowns/CreateProjectModal.tsx";
 import AllNotesIcon from "@assets/all-notes-icon.svg?react";
 import PublicNotesIcon from "@assets/globe.svg?react";
 import PrivateNotesIcon from "@assets/lock.svg?react";
-import SavedNotesIcon from "@assets/bookmark.svg";
+import SavedNotesIcon from "@assets/bookmark.svg?react";
 import type { FilterType } from "./Notes.tsx";
 import type React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -128,18 +128,18 @@ const Sidebar: React.FC<{
             <a
               key={list.type}
               onClick={() => {
-                setFilter({ type: list.type, name: list.text });
+                setFilter(list);
               }}
               className={`link link-hover ${
                 filter.type === list.type ? "font-bold" : ""
               } flex items-center justify-center @4xs/sidebar:justify-start gap-2 @max-4xs/sidebar:tooltip @max-4xs/sidebar:tooltip-right`}
-              data-tip={list.text}
+              data-tip={list.name}
             >
               <span className="h-6 w-4 flex items-center justify-center">
                 {list.icon}
               </span>
               <span className="whitespace-nowrap hidden @4xs/sidebar:inline">
-                {list.text}
+                {list.name}
               </span>
             </a>
           );
@@ -291,21 +291,26 @@ const Sidebar: React.FC<{
   );
 };
 
-const filterList = [
+const filterList: Array<FilterType & { icon: React.ReactNode }> = [
   {
-    type: "all" as const,
-    text: "All Notes" as const,
+    type: "all",
+    name: "All Notes",
     icon: <AllNotesIcon />,
   },
   {
-    type: "public" as const,
-    text: "Public Notes" as const,
+    type: "public",
+    name: "Public Notes",
     icon: <PublicNotesIcon />,
   },
   {
-    type: "private" as const,
-    text: "Private Notes" as const,
+    type: "private",
+    name: "Private Notes",
     icon: <PrivateNotesIcon />,
+  },
+  {
+    type: "saved",
+    name: "Saved Notes",
+    icon: <SavedNotesIcon />,
   },
 ];
 

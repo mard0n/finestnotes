@@ -15,8 +15,20 @@ import CommentSection from "@components/CommentSection";
 
 export type FilterType =
   | {
-      type: "all" | "private" | "public";
-      name: "Public Notes" | "Private Notes" | "All Notes";
+      type: "all";
+      name: "All Notes";
+    }
+  | {
+      type: "private";
+      name: "Private Notes";
+    }
+  | {
+      type: "public";
+      name: "Public Notes";
+    }
+  | {
+      type: "saved";
+      name: "Saved Notes";
     }
   | { type: "project"; id: string; name: string };
 
@@ -42,16 +54,22 @@ const Notes: React.FC<{ user: User }> = ({ user }) => {
   const { data: notes, isLoading: isNotesLoading } = useQuery({
     queryKey: ["notes", filter],
     queryFn: async () => {
+      if (filter.type === "saved") {
+        const res = await client.api.note.saved.$get();
+        const notes = await parseResponse(res);
+        return notes;
+      }
       if (filter.type !== "project") {
         const res = await client.api.note.$get();
         const notes = await parseResponse(res);
-        console.log("notes", notes);
 
         if (filter.type === "private") {
           return notes.filter((note) => !note.isPublic);
         } else if (filter.type === "public") {
           return notes.filter((note) => note.isPublic);
         }
+        console.log("reached", notes);
+
         return notes;
       } else {
         const res = await client.api.note.project[":id"].$get({
@@ -62,6 +80,8 @@ const Notes: React.FC<{ user: User }> = ({ user }) => {
       }
     },
   });
+
+  console.log("notes", notes);
 
   const { data: projects, isLoading: isProjectsLoading } = useQuery({
     queryKey: ["projects"],

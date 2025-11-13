@@ -1,5 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
-import { notes, likes } from "../db/schema";
+import { notes, likes, bookmarks } from "../db/schema";
 import { and, eq, getTableColumns, or, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -134,6 +134,7 @@ const articles = new Hono<{
             highlights: true,
             images: true,
             likes: true,
+            bookmarks: true,
             projectsToNotes: {
               with: {
                 project: {
@@ -149,7 +150,7 @@ const articles = new Hono<{
         })
         .then((note) => {
           if (!note) return null;
-          const { projectsToNotes, likes: noteLikes, ...rest } = note;
+          const { projectsToNotes, likes: noteLikes, bookmarks: noteBookmarks, ...rest } = note;
 
           // Return only public or projects owned by the current user
           const publicOrMyProjects =
@@ -164,10 +165,15 @@ const articles = new Hono<{
             ? noteLikes?.some((like) => like.userId === currentUser.id) ?? false
             : false;
 
+          const isBookmarkedByCurrentUser = currentUser
+            ? noteBookmarks?.some((bookmark) => bookmark.userId === currentUser.id) ?? false
+            : false;
+
           return {
             ...rest,
             projects: publicOrMyProjects,
             isLikedByCurrentUser,
+            isBookmarkedByCurrentUser,
           };
         })
         .then((article) => article && normalizeNotes([article])[0]);
@@ -283,6 +289,93 @@ const articles = new Hono<{
       return c.json({
         success: true,
         likeCount: likeCount?.count ?? 0,
+      });
+    }
+  )
+
+  // Bookmark an article
+  .post(
+    "/:id/bookmark",
+    protect,
+    zValidator(
+      "param",
+      z.object({
+        id: z.string(),
+      })
+    ),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const userId = c.var.user.id;
+
+      const db = drizzle(c.env.finestdb, { schema });
+
+      // Check if article exists and is public
+      const article = await db.query.notes.findFirst({
+        where: and(eq(notes.id, id), eq(notes.isPublic, true)),
+      });
+
+      if (!article) {
+        return c.json(
+          {
+            success: false,
+            message: "Article not found or is not public",
+          },
+          404
+        );
+      }
+
+      // Check if already bookmarked
+      const existingBookmark = await db.query.bookmarks.findFirst({
+        where: and(eq(bookmarks.noteId, id), eq(bookmarks.userId, userId)),
+      });
+
+      if (existingBookmark) {
+        return c.json(
+          {
+            success: false,
+            message: "Article already bookmarked",
+          },
+          400
+        );
+      }
+
+      // Create bookmark
+      await db.insert(bookmarks).values({
+        noteId: id,
+        userId: userId,
+      });
+
+      return c.json({
+        success: true,
+        message: "Article bookmarked successfully",
+      });
+    }
+  )
+
+  // Unbookmark an article
+  .delete(
+    "/:id/bookmark",
+    protect,
+    zValidator(
+      "param",
+      z.object({
+        id: z.string(),
+      })
+    ),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const userId = c.var.user.id;
+
+      const db = drizzle(c.env.finestdb, { schema });
+
+      // Delete bookmark
+      const result = await db
+        .delete(bookmarks)
+        .where(and(eq(bookmarks.noteId, id), eq(bookmarks.userId, userId)));
+
+      return c.json({
+        success: true,
+        message: "Article unbookmarked successfully",
       });
     }
   );
