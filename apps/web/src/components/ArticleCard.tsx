@@ -2,14 +2,12 @@ import { formatDate } from "@utils/date";
 import React from "react";
 import AuthorName from "./AuthorName";
 import Badge from "./Badge";
-import type { NoteType } from "@finest/utils/types";
-
-type ProjectType = NoteType["projects"];
+import type { NoteType, ProjectType } from "@finest/utils/types";
 
 export const ArticleCard: React.FC<{
   note: NoteType;
   userId: string | null | undefined;
-  projects: ProjectType;
+  projects: ProjectType[];
 }> = ({ note, userId, projects }) => {
   const { id, title, createdAt, author } = note;
   const { name: authorName, id: authorId } = author || {};
