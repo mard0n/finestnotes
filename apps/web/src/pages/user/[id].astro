@@ -11,10 +11,16 @@ if (!id) {
 }
 
 const client = createServerClient(Astro.request.headers);
-const res = await client.api.user[":id"].$get({
-  param: { id: id },
-});
-const userData = await parseResponse(res);
+
+const [userDataResponse, projectsResponse, notesResponse] = await Promise.all([
+  client.api.user[":id"].$get({ param: { id: id } }),
+  client.api.user[":id"].projects.$get({ param: { id: id } }),
+  client.api.user[":id"].notes.$get({ param: { id: id } }),
+]);
+
+const userData = await parseResponse(userDataResponse);
+const projects = await parseResponse(projectsResponse);
+const notes = await parseResponse(notesResponse);
 
 if (!userData) {
   throw new Error("Project not found");
@@ -29,10 +35,10 @@ if (!userData) {
       <h2 class="subheading mb-6">Projects</h2>
       <div class="space-y-3">
         {
-          userData.projects.length === 0 ? (
+          projects.length === 0 ? (
             <p>No public projects user has created</p>
           ) : (
-            userData.projects.map((project) => (
+            projects.map((project) => (
               <div>
                 <a href={`/project/${project.id}`} class="block">
                   <div class="flex justify-between items-start font-medium">
@@ -54,13 +60,13 @@ if (!userData) {
       <h2 class="subheading mb-6">Public Notes</h2>
       <ul class="list">
         {
-          userData.notes.length === 0 ? (
+          notes.length === 0 ? (
             <p class="text-content-light">No public notes yet</p>
           ) : (
-            userData.notes.map((note) => (
+            notes.map((note) => (
               <ArticleCard
-                note={note}
-                projects={undefined}
+                note={{...note, projects: []}}
+                projects={[]}
                 userId={Astro.locals.user?.id}
               />
             ))

@@ -21,8 +21,8 @@ import { client } from "@utils/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { parseResponse } from "hono/client";
 import { theme } from "@styles/lexical-theme";
-import type { Note } from "../Notes";
 import { useDebounce, useThrottle } from "@utils/hooks";
+import type { WritingType } from "@finest/utils/types";
 
 export const initialConfig = {
   namespace: "MyEditor",
@@ -41,7 +41,7 @@ export const initialConfig = {
   onError: console.error,
 };
 
-export const getInitialEditorState = (note: NoteType) => {
+export const getInitialEditorState = (note: WritingType) => {
   if (!note.contentLexical || note.contentLexical.trim() === "") {
     return undefined;
   }
@@ -58,14 +58,12 @@ export const getInitialEditorState = (note: NoteType) => {
   }
 };
 
-type NoteType = Note & { type: "note" };
-
 // Configuration for debounce and throttle timing
 const DEBOUNCE_DELAY = 500; // Wait 500ms after user stops typing
 const THROTTLE_LIMIT = 2000; // At most once every 2 seconds
 
 const NoteEditor: React.FC<{
-  note: NoteType;
+  note: WritingType;
 }> = ({ note }) => {
   const queryClient = useQueryClient();
 

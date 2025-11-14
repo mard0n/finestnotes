@@ -64,7 +64,7 @@ if (!project) {
     <ul class="flex flex-col list rounded-box mt-8">
       {
         project.notes?.map((note) => (
-          <ArticleCard note={note} projects={undefined} userId={user?.id} />
+          <ArticleCard note={note} projects={[]} userId={user?.id} />
         ))
       }
     </ul>

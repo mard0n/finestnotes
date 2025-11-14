@@ -18,11 +18,15 @@ type NoteBaseType = {
   projects: ProjectType[];
 };
 
-type AnnotationType = NoteBaseType & {
+export type AnnotationType = NoteBaseType & {
   type: "page";
+  annotations?: (
+    | typeof schema.highlights.$inferSelect
+    | typeof schema.images.$inferSelect
+  )[];
 } & Pick<DBNoteType, "url" | "description">;
 
-type WritingType = NoteBaseType & {
+export type WritingType = NoteBaseType & {
   type: "note";
 } & Pick<DBNoteType, "content" | "contentHTML" | "contentLexical">;
 

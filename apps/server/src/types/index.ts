@@ -1,5 +1,5 @@
 export type { RouteType } from "../index";
-export type { NoteType, ProjectType } from "../utils/normalizers";
+export type { NoteType, ProjectType, AnnotationType, WritingType } from "../utils/normalizers";
 
 export type Prettify<T> = {
   [K in keyof T]: T[K];

@@ -1,10 +1,9 @@
 import React from "react";
-import type { NoteType } from "@finest/utils/types";
+import type { AnnotationType } from "@finest/utils/types";
 
-type AnnotationType = NoteType & { type: "page" };
 
 interface AnnotationViewerProps {
-  annotation: AnnotationType;
+  annotation: Omit<AnnotationType, "likeCount" | "commentCount" | "projects">;
 }
 
 const AnnotationViewer: React.FC<AnnotationViewerProps> = ({ annotation }) => {
@@ -33,7 +32,7 @@ const AnnotationViewer: React.FC<AnnotationViewerProps> = ({ annotation }) => {
   );
 };
 
-type HighlightContentType = AnnotationType["annotations"][number] & {
+type HighlightContentType = NonNullable<AnnotationType["annotations"]>[number] & {
   type: "highlight";
 };
 
@@ -77,7 +76,7 @@ const HighlightComponent: React.FC<{
   );
 };
 
-type ImageContentType = AnnotationType["annotations"][number] & {
+type ImageContentType = NonNullable<AnnotationType["annotations"]>[number] & {
   type: "image";
 };
 

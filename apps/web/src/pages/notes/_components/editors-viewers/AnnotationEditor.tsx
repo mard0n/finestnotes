@@ -2,15 +2,11 @@ import React, { useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { client } from "@utils/api";
 import { parseResponse } from "hono/client";
-import type { Note } from "../Notes";
+import type { AnnotationType } from "@finest/utils/types";
 
-type AnnotationType = Note & { type: "page" };
-
-interface AnnotationEditorProps {
+const AnnotationEditor: React.FC<{
   annotation: AnnotationType;
-}
-
-const AnnotationEditor: React.FC<AnnotationEditorProps> = ({ annotation }) => {
+}> = ({ annotation }) => {
   const queryClient = useQueryClient();
 
   const updateAnnotationDescription = useMutation({
@@ -31,8 +27,6 @@ const AnnotationEditor: React.FC<AnnotationEditorProps> = ({ annotation }) => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
     },
   });
-
-  console.log("annotation", annotation);
 
   return (
     <div className="flex flex-col">
@@ -85,7 +79,7 @@ const AnnotationEditor: React.FC<AnnotationEditorProps> = ({ annotation }) => {
   );
 };
 
-type HighlightContentType = AnnotationType["annotations"][number] & {
+type HighlightContentType = NonNullable<AnnotationType["annotations"]>[number] & {
   type: "highlight";
 };
 
@@ -127,7 +121,7 @@ const HighlightComponent: React.FC<{
   );
 };
 
-type ImageContentType = AnnotationType["annotations"][number] & {
+type ImageContentType = NonNullable<AnnotationType["annotations"]>[number] & {
   type: "image";
 };
 

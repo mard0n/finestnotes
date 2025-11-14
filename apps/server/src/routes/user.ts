@@ -75,7 +75,7 @@ const userRoutes = new Hono<{
     return c.json(normalizedProjects);
   })
 
-  // Get user profile with projects and public notes
+  // Get user profile not me
   // MARK: Refactored
   .get(
     "/:id",
@@ -90,58 +90,109 @@ const userRoutes = new Hono<{
       const db = drizzle(c.env.finestdb, { schema: schema });
 
       // Get user
-      // MARK: Refactored
-      const userData = await db.query.user
-        .findFirst({
-          columns: {
-            id: true,
-            name: true,
-          },
-          where: eq(user.id, id),
-          with: {
-            projects: {
-              where: eq(projects.isPublic, true),
-              with: {
-                author: true,
-                projectsToNotes: {
-                  with: {
-                    note: {
-                      with: { author: true, likes: true, comments: true },
-                    },
-                  },
-                },
-              },
-            },
-            notes: {
-              where: eq(notes.isPublic, true),
-              with: {
-                author: true,
-                likes: true,
-                comments: true,
-              },
-            },
-          },
-        })
-        .then((user) => {
-          if (!user) return null;
-
-          const normalizedProjects = normalizeProjectNew(user.projects);
-
-          const normalizedNotes = normalizeNotesNew(user.notes);
-          return {
-            ...user,
-            projects: normalizedProjects,
-            notes: normalizedNotes,
-          };
-        });
-
-      console.log("userData", userData);
+      const userData = await db.query.user.findFirst({
+        columns: {
+          id: true,
+          name: true,
+        },
+        where: eq(user.id, id),
+      });
 
       if (!userData) {
         return c.json({ success: false, message: "User not found" }, 404);
       }
 
       return c.json(userData);
+    }
+  )
+
+  // Get public projects for a user
+  // MARK: Refactored v2
+  .get(
+    "/:id/projects",
+    zValidator(
+      "param",
+      z.object({
+        id: z.string(),
+      })
+    ),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const db = drizzle(c.env.finestdb, { schema: schema });
+
+      const userData = await db.query.user.findFirst({
+        with: {
+          projects: {
+            with: {
+              author: true,
+              projectsToNotes: {
+                with: {
+                  note: {
+                    with: { author: true, likes: true, comments: true },
+                  },
+                },
+              },
+            },
+            where: eq(projects.isPublic, true),
+          },
+        },
+        where: eq(user.id, id),
+      });
+
+      if (!userData) {
+        return c.json({ success: false, message: "Projects not found" }, 404);
+      }
+
+      const normalizedProjects = normalizeProjectNew(userData.projects).sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      );
+
+      return c.json(normalizedProjects);
+    }
+  )
+
+  // Get public notes for a user
+  // MARK: Refactored v2
+  .get(
+    "/:id/notes",
+    zValidator(
+      "param",
+      z.object({
+        id: z.string(),
+      })
+    ),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const db = drizzle(c.env.finestdb, { schema: schema });
+
+      const userData = await db.query.user.findFirst({
+        with: {
+          notes: {
+            with: { author: true, likes: true, comments: true },
+            where: eq(notes.isPublic, true),
+          },
+        },
+        where: eq(user.id, id),
+      });
+
+      if (!userData) {
+        return c.json({ success: false, message: "Notes not found" }, 404);
+      }
+
+      const notesData = userData.notes.map((note) => ({
+        ...note,
+        projectsToNotes: [], // HACK: to satisfy normalizer
+      }));
+
+      const normalizedNotes = normalizeNotesNew(notesData)
+        .map(({ projects, ...rest }) => ({ ...rest }))
+        .sort(
+          (a, b) =>
+            new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+
+      return c.json(normalizedNotes);
     }
   );
 
