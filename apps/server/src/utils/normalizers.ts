@@ -1,4 +1,3 @@
-import { Prettify } from "types";
 import * as schema from "../db/schema";
 
 type AuthorType = {
@@ -19,17 +18,13 @@ type NoteBaseType = {
   projects: ProjectType[];
 };
 
-type AnnotationType = Prettify<
-  NoteBaseType & {
-    type: "page";
-  } & Pick<DBNoteType, "url" | "description">
->;
+type AnnotationType = NoteBaseType & {
+  type: "page";
+} & Pick<DBNoteType, "url" | "description">;
 
-type WritingType = Prettify<
-  NoteBaseType & {
-    type: "note";
-  } & Pick<DBNoteType, "content" | "contentHTML" | "contentLexical">
->;
+type WritingType = NoteBaseType & {
+  type: "note";
+} & Pick<DBNoteType, "content" | "contentHTML" | "contentLexical">;
 
 export type NoteType = AnnotationType | WritingType;
 export type ProjectType = {

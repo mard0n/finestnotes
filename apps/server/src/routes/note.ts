@@ -1,7 +1,7 @@
 import { zValidator } from "@hono/zod-validator";
 import { notes } from "../db/schema";
 import * as schema from "../db/schema";
-import { and, eq, or, } from "drizzle-orm";
+import { and, eq, or } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import type { Bindings } from "../index";
@@ -296,7 +296,10 @@ const note = new Hono<{
 
       // Check if article exists and is public
       const article = await db.query.notes.findFirst({
-        where: and(eq(notes.id, id), eq(notes.isPublic, true)),
+        where: and(
+          eq(notes.id, id),
+          or(eq(notes.isPublic, true), eq(notes.authorId, userId))
+        ),
       });
 
       if (!article) {
@@ -505,6 +508,63 @@ const note = new Hono<{
         success: true,
         message: "Article unbookmarked successfully",
       });
+    }
+  )
+
+  // Get a specific note by id (owned by user or public)
+  // MARK: Refactored. v2
+  .get(
+    "/:id",
+    protect,
+    zValidator(
+      "param",
+      z.object({
+        id: z.string(),
+      })
+    ),
+    async (c) => {
+      const { id } = c.req.valid("param");
+      const db = drizzle(c.env.finestdb, { schema: schema });
+
+      const noteData = await db.query.notes
+        .findFirst({
+          with: {
+            author: true,
+            highlights: true,
+            images: true,
+            likes: true,
+            comments: true,
+            projectsToNotes: {
+              with: {
+                project: {
+                  with: {
+                    author: true,
+                  },
+                },
+              },
+            },
+          },
+          where: and(
+            eq(notes.id, id),
+            or(eq(notes.isPublic, true), eq(notes.authorId, c.var.user.id))
+          ),
+        })
+        .then((note) => {
+          if (!note) return null;
+          return normalizeNotesNew([note])[0]!;
+        });
+
+      if (!noteData) {
+        return c.json(
+          {
+            success: false,
+            message: `Note ${id} not found or you don't have permission to view it`,
+          },
+          404
+        );
+      }
+
+      return c.json(noteData);
     }
   )
 

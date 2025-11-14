@@ -4,16 +4,16 @@ import AnnotationViewer from "@components/AnnotationViewer";
 import NoteViewer from "@components/NoteViewer";
 import AnnotationEditor from "./editors-viewers/AnnotationEditor";
 import NoteEditor from "./editors-viewers/NoteEditor";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { client } from "@utils/api";
 import { parseResponse } from "hono/client";
 import ProjectAddIcon from "@assets/project-add.svg?react";
 import AddToProjectDropdown from "@components/AddToProjectDropdown";
-import { useNotes } from "./hooks/useNotes";
 import UpvoteButton from "@components/UpvoteButton";
 import BookmarkButton from "@components/BookmarkButton";
 import NoteVisibilityButton from "@components/NoteVisibilityButton";
 import NoteDeleteButton from "@components/NoteDeleteButton";
+import type { NoteType } from "@finest/utils/types";
 
 const SelectedNoteEditor: React.FC<{
   user: User;
@@ -21,11 +21,19 @@ const SelectedNoteEditor: React.FC<{
   selectedNoteId: string | null;
   setSelectedNoteId: React.Dispatch<React.SetStateAction<string | null>>;
 }> = ({ user, filter, selectedNoteId, setSelectedNoteId }) => {
-  const { notes } = useNotes({ filter });
-
   const queryClient = useQueryClient();
+  const { data: selectedNote, isLoading: isNotesLoading } = useQuery({
+    queryKey: ["notes", selectedNoteId],
+    queryFn: async (): Promise<NoteType> => {
+      const allNotesRes = await client.api.note[":id"].$get({
+        param: { id: selectedNoteId! },
+      });
+      return await parseResponse(allNotesRes);
+    },
+    enabled: !!selectedNoteId,
+  });
 
-  if (!selectedNoteId || !notes) {
+  if (!selectedNote) {
     return (
       <>
         <EditorNavBar user={user} />
@@ -38,8 +46,6 @@ const SelectedNoteEditor: React.FC<{
     );
   }
 
-  const selectedNote = notes.find((note) => note.id === selectedNoteId)!;
-
   if (selectedNote.author.id !== user.id) {
     return (
       <>
@@ -47,7 +53,7 @@ const SelectedNoteEditor: React.FC<{
         <div className="px-6 md:px-8 py-6">
           <div className="mb-6 flex gap-3">
             <UpvoteButton
-              noteId={selectedNoteId}
+              noteId={selectedNote.id}
               userId={user.id}
               queryClient={queryClient}
               onSuccess={() => {
@@ -55,7 +61,7 @@ const SelectedNoteEditor: React.FC<{
               }}
             />
             <BookmarkButton
-              noteId={selectedNoteId}
+              noteId={selectedNote.id}
               authorId={selectedNote.author.id}
               userId={user.id}
               queryClient={queryClient}
@@ -102,7 +108,7 @@ const SelectedNoteEditor: React.FC<{
                     queryClient.invalidateQueries({ queryKey: ["notes"] });
                   }}
                   onProjectsChange={() => {
-                    queryClient.invalidateQueries({ queryKey: ["projects"] })
+                    queryClient.invalidateQueries({ queryKey: ["projects"] });
                   }}
                 />
               </div>

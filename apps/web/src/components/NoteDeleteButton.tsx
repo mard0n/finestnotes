@@ -36,7 +36,7 @@ const NoteDeleteButton: React.FC<{
   const deleteNote = useMutation({
     mutationFn: async (id: string) => {
       const res = await client.api.note[":id"].$delete({
-        param: { id: id.toString() },
+        param: { id: id },
       });
       return await parseResponse(res);
     },
