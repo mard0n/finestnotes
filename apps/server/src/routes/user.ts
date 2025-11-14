@@ -15,17 +15,25 @@ const userRoutes = new Hono<{
   Variables: { user: User; session: Session };
 }>()
   // Get all projects for a user.
-  // MARK: Refactored
+  // MARK: Refactored v2
   .get("/projects", protect, async (c) => {
     const db = drizzle(c.env.finestdb, { schema: schema });
 
     const userId = c.var.user.id;
 
-    const userProjects = await db.query.user.findMany({
+    const userData = await db.query.user.findFirst({
       with: {
         projects: {
           with: {
             author: true,
+            projectsToNotes: {
+              // HACK: unnecessary. Required for normalization
+              with: {
+                note: {
+                  with: { author: true, likes: true, comments: true },
+                },
+              },
+            },
           },
         },
         projectsToSubscribers: {
@@ -33,6 +41,14 @@ const userRoutes = new Hono<{
             project: {
               with: {
                 author: true,
+                projectsToNotes: {
+                  // HACK: unnecessary. Required for normalization
+                  with: {
+                    note: {
+                      with: { author: true, likes: true, comments: true },
+                    },
+                  },
+                },
               },
             },
           },
@@ -41,16 +57,16 @@ const userRoutes = new Hono<{
       where: eq(user.id, userId),
     });
 
-    if (!userProjects) {
+    if (!userData) {
       return c.json({ success: false, message: "Projects not found" }, 404);
     }
 
-    const ownedProjects = userProjects.map((user) => user.projects).flat();
-    const subscribedProjects = userProjects
-      .map((user) => user.projectsToSubscribers.map((pts) => pts.project))
-      .flat();
+    const ownedProjects = userData.projects;
+    const subscribedAndPublicProjects = userData.projectsToSubscribers
+      .map((pts) => pts.project)
+      .filter((project) => project.isPublic);
 
-    const projects = [...ownedProjects, ...subscribedProjects];
+    const projects = [...ownedProjects, ...subscribedAndPublicProjects];
     const normalizedProjects = normalizeProjectNew(projects).sort(
       (a, b) =>
         new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()

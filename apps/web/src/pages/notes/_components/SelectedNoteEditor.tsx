@@ -98,6 +98,12 @@ const SelectedNoteEditor: React.FC<{
                 <AddToProjectDropdown
                   noteId={selectedNote.id}
                   queryClient={queryClient}
+                  onNoteAddedOrRemoved={() => {
+                    queryClient.invalidateQueries({ queryKey: ["notes"] });
+                  }}
+                  onProjectsChange={() => {
+                    queryClient.invalidateQueries({ queryKey: ["projects"] })
+                  }}
                 />
               </div>
             </div>

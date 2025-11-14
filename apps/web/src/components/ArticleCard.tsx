@@ -1,4 +1,4 @@
-import { formatDate } from "@utils/date";
+import { formatDate, pluralize } from "@utils/date";
 import React from "react";
 import AuthorName from "./AuthorName";
 import Badge from "./Badge";
@@ -61,22 +61,8 @@ export const ArticleCard: React.FC<{
             </>
           )}
           <span>{formatDate(createdAt)}</span> ·{" "}
-          {note.commentCount ? (
-            <span>
-              <a>
-                {note.commentCount}{" "}
-                {note.commentCount > 1 ? "comments" : "comment"}
-              </a>{" "}
-              ·{" "}
-            </span>
-          ) : null}
-          {note.likeCount ? (
-            <span>
-              <a>
-                {note.likeCount} {note.likeCount > 1 ? "upvotes" : "upvote"}
-              </a>
-            </span>
-          ) : null}
+          <span>{pluralize(note.commentCount, "comment")} · </span>
+          <span>{pluralize(note.likeCount, "upvote")}</span>
         </div>
         {projects ? (
           <div>

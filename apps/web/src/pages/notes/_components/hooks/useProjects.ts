@@ -7,7 +7,7 @@ export const useProjects = () => {
   const { data: projects, isLoading: isProjectsLoading } = useQuery({
     queryKey: ["projects"],
     queryFn: async (): Promise<ProjectType[]> => {
-      const res = await client.api.projects.$get();
+      const res = await client.api.user.projects.$get();
       return await parseResponse(res);
     },
   });

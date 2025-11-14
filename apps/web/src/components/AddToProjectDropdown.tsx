@@ -40,7 +40,7 @@ const AddToProjectDropdown: React.FC<{
 
   const queryClient = useQueryClient();
 
-  const { data: allProjects = [] } = useQuery({
+  const { data: allMyProjects = [] } = useQuery({
     queryKey: ["projects"],
     queryFn: async () => {
       const res = await client.api.user.projects.$get();
@@ -48,13 +48,13 @@ const AddToProjectDropdown: React.FC<{
     },
   });
 
-  console.log("allProjects", allProjects);
+  console.log("allMyProjects", allMyProjects);
 
   const { data: projectsWithThisNote = [] } = useQuery({
     queryKey: ["projects", noteId],
     queryFn: async () => {
-      const res = await client.api.projects.note[":noteId"].$get({
-        param: { noteId },
+      const res = await client.api.note[':id'].projects.$get({
+        param: { id: noteId },
       });
       return await parseResponse(res);
     },
@@ -119,12 +119,11 @@ const AddToProjectDropdown: React.FC<{
     },
   });
 
-  const filteredProjects = allProjects.filter((project) =>
+  const filteredProjects = allMyProjects.filter((project) =>
     project.name.toLowerCase().includes(search.trim().toLowerCase())
   );
 
-
-  const projectExists = allProjects.some(
+  const projectExists = allMyProjects.some(
     (project) => project.name.toLowerCase() === search.trim().toLowerCase()
   );
 

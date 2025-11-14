@@ -1,7 +1,7 @@
 import { zValidator } from "@hono/zod-validator";
 import { notes } from "../db/schema";
 import * as schema from "../db/schema";
-import { and, eq, sql } from "drizzle-orm";
+import { and, eq, or, } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
 import type { Bindings } from "../index";
@@ -116,6 +116,61 @@ const note = new Hono<{
     }
   )
 
+  // Get all projects I own or public projects that this note is already in
+  // MARK: Refactored. v2
+  .get(
+    "/:id/projects",
+    protect,
+    zValidator(
+      "param",
+      z.object({
+        id: z.string(),
+      })
+    ),
+    async (c) => {
+      const { id: noteId } = c.req.valid("param");
+      const db = drizzle(c.env.finestdb, { schema: schema });
+
+      const noteWithProjects = await db.query.notes.findFirst({
+        where: eq(notes.id, noteId),
+        with: {
+          projectsToNotes: {
+            with: {
+              project: {
+                with: {
+                  author: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!noteWithProjects) {
+        return c.json(
+          {
+            success: false,
+            message: `Note ${noteId} not found`,
+          },
+          404
+        );
+      }
+
+      const publicProjects = noteWithProjects.projectsToNotes
+        .filter(
+          (pn) => pn.project.isPublic || pn.project.authorId === c.var.user.id
+        )
+        .map((pn) => pn.project);
+
+      const normalizedProjects = publicProjects.map((project) => {
+        const { authorId, author, ...rest } = project;
+        return { ...rest, author: { id: author.id, name: author.name } };
+      });
+
+      return c.json(normalizedProjects);
+    }
+  )
+
   // Get all public projects for a note
   // MARK: Refactored. v2
   .get(
@@ -169,7 +224,7 @@ const note = new Hono<{
   )
 
   // Get like status of a note
-  // MARK: Refactored
+  // MARK: Refactored v2
   .get(
     "/:id/like-status",
     zValidator(
@@ -182,8 +237,19 @@ const note = new Hono<{
       const { id } = c.req.valid("param");
       const db = drizzle(c.env.finestdb, { schema: schema });
 
+      const session = await auth(c.env).api.getSession({
+        headers: c.req.raw.headers,
+      });
+      const currentUser = session?.user;
+
       const noteData = await db.query.notes.findFirst({
-        where: and(eq(notes.id, id), eq(notes.isPublic, true)),
+        where: and(
+          eq(notes.id, id),
+          or(
+            eq(notes.isPublic, true),
+            eq(notes.authorId, currentUser?.id || "")
+          )
+        ),
         with: {
           likes: true,
         },
@@ -199,11 +265,6 @@ const note = new Hono<{
         );
       }
 
-      const session = await auth(c.env).api.getSession({
-        headers: c.req.raw.headers,
-      });
-      const currentUser = session?.user;
-
       const isLiked = currentUser
         ? noteData.likes.some((like) => like.userId === currentUser.id)
         : false;
@@ -217,7 +278,7 @@ const note = new Hono<{
   )
 
   // Like an article
-  // MARK: Refactored
+  // MARK: Refactored v2
   .post(
     "/:id/like",
     protect,
@@ -279,7 +340,7 @@ const note = new Hono<{
   )
 
   // Unlike an article
-  // MARK: Refactored
+  // MARK: Refactored v2
   .delete(
     "/:id/like",
     protect,
@@ -309,7 +370,7 @@ const note = new Hono<{
   )
 
   // Get bookmark status of a note
-  // MARK: Refactored
+  // MARK: Refactored v2
   .get(
     "/:id/bookmark-status",
     protect,
@@ -351,7 +412,7 @@ const note = new Hono<{
   )
 
   // Bookmark an article
-  // MARK: Refactored
+  // MARK: Refactored v2
   .post(
     "/:id/bookmark",
     protect,
@@ -414,7 +475,7 @@ const note = new Hono<{
   )
 
   // Unbookmark an article
-  // MARK: Refactored
+  // MARK: Refactored v2
   .delete(
     "/:id/bookmark",
     protect,

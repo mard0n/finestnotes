@@ -20,84 +20,84 @@ const projectRoutes = new Hono<{
   Bindings: Bindings;
   Variables: { user: User; session: Session };
 }>()
-  // Get all projects (owned + subscribed)
-  .get("/", protect, async (c) => {
-    const db = drizzle(c.env.finestdb, { schema: schema });
+  // // Get all projects (owned + subscribed)
+  // .get("/", protect, async (c) => {
+  //   const db = drizzle(c.env.finestdb, { schema: schema });
 
-    const userData = await db.query.user.findFirst({
-      where: eq(user.id, c.var.user.id),
-      with: {
-        projects: {
-          with: {
-            author: true,
-          },
-        },
-        projectsToSubscribers: {
-          with: {
-            project: {
-              with: {
-                author: true,
-              },
-            },
-          },
-        },
-      },
-    });
+  //   const userData = await db.query.user.findFirst({
+  //     where: eq(user.id, c.var.user.id),
+  //     with: {
+  //       projects: {
+  //         with: {
+  //           author: true,
+  //         },
+  //       },
+  //       projectsToSubscribers: {
+  //         with: {
+  //           project: {
+  //             with: {
+  //               author: true,
+  //             },
+  //           },
+  //         },
+  //       },
+  //     },
+  //   });
 
-    if (!userData) {
-      return c.json({ success: false, message: "User not found" }, 404);
-    }
+  //   if (!userData) {
+  //     return c.json({ success: false, message: "User not found" }, 404);
+  //   }
 
-    const projects = [
-      ...userData.projects.map((p) => ({ ...p, role: "owner" as const })),
-      ...userData.projectsToSubscribers.map((s) => ({
-        ...s.project,
-        role: "subscriber" as const,
-      })),
-    ].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  //   const projects = [
+  //     ...userData.projects.map((p) => ({ ...p, role: "owner" as const })),
+  //     ...userData.projectsToSubscribers.map((s) => ({
+  //       ...s.project,
+  //       role: "subscriber" as const,
+  //     })),
+  //   ].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
 
-    return c.json(projects);
-  })
+  //   return c.json(projects);
+  // })
 
-  // Get all projects that contain a specific note
-  .get(
-    "/note/:noteId",
-    protect,
-    zValidator(
-      "param",
-      z.object({
-        noteId: z.string(),
-      })
-    ),
-    async (c) => {
-      const { noteId } = c.req.valid("param");
-      const db = drizzle(c.env.finestdb, { schema: schema });
+  // // Get all projects with this note
+  // .get(
+  //   "/note/:noteId",
+  //   protect,
+  //   zValidator(
+  //     "param",
+  //     z.object({
+  //       noteId: z.string(),
+  //     })
+  //   ),
+  //   async (c) => {
+  //     const { noteId } = c.req.valid("param");
+  //     const db = drizzle(c.env.finestdb, { schema: schema });
 
-      const projectsWithNote = await db.query.projectsToNotes.findMany({
-        where: eq(projectsToNotes.noteId, noteId),
-        with: {
-          project: {
-            with: { author: true },
-          },
-        },
-      });
+  //     const projectsWithNote = await db.query.projectsToNotes.findMany({
+  //       where: eq(projectsToNotes.noteId, noteId),
+  //       with: {
+  //         project: {
+  //           with: { author: true },
+  //         },
+  //       },
+  //     });
 
-      const projects = projectsWithNote
-        .map((pn) => pn.project)
-        .map((project) => {
-          const { author, authorId, ...rest } = project;
-          return {
-            ...rest,
-            author: {
-              id: author.id,
-              name: author.name,
-            },
-          };
-        });
+  //     const projects = projectsWithNote
+  //       .map((pn) => pn.project)
+  //       .map((project) => {
+  //         const { author, authorId, ...rest } = project;
+  //         return {
+  //           ...rest,
+  //           author: {
+  //             id: author.id,
+  //             name: author.name,
+  //           },
+  //         };
+  //       });
 
-      return c.json(projects);
-    }
-  )
+  //     return c.json(projects);
+  //   }
+  // )
 
   // Is user subscribed to project
   .get("/:id/is-subscribed", protect, async (c) => {
@@ -159,6 +159,7 @@ const projectRoutes = new Hono<{
   })
 
   // Create a new project
+  // MARK: Refactored v2
   .post(
     "/",
     protect,
@@ -241,6 +242,7 @@ const projectRoutes = new Hono<{
   )
 
   // Delete a project
+  // MARK: Refactored v2
   .delete(
     "/:id",
     protect,
@@ -278,6 +280,7 @@ const projectRoutes = new Hono<{
   )
 
   // Add note to project
+  // MARK: Refactored v2
   .post(
     "/:id/notes",
     protect,
@@ -298,7 +301,6 @@ const projectRoutes = new Hono<{
       const { noteId } = c.req.valid("json");
       const db = drizzle(c.env.finestdb, { schema: schema });
 
-      // Check if user has access to the project
       const project = await db.query.projects.findFirst({
         where: eq(projects.id, projectId),
         with: {
@@ -314,8 +316,9 @@ const projectRoutes = new Hono<{
       const isSubscriber = project.projectsToSubscribers.some(
         (sub) => sub.authorId === c.var.user.id
       );
+      const isPublic = project.isPublic;
 
-      if (!isOwner && !isSubscriber) {
+      if (!isOwner && !isSubscriber && !isPublic) {
         return c.json({ success: false, message: "Access denied" }, 403);
       }
 
