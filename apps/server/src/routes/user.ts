@@ -8,7 +8,7 @@ import z from "zod";
 import * as schema from "../db/schema";
 import { protect } from "middlewares/auth.middleware";
 import type { User, Session } from "better-auth";
-import { normalizeProjectNew } from "../utils/normalizers";
+import { normalizeNotesNew, normalizeProjectNew } from "../utils/normalizers";
 
 const userRoutes = new Hono<{
   Bindings: Bindings;
@@ -58,7 +58,9 @@ const userRoutes = new Hono<{
 
     return c.json(normalizedProjects);
   })
+
   // Get user profile with projects and public notes
+  // MARK: Refactored
   .get(
     "/:id",
     zValidator(
@@ -72,39 +74,50 @@ const userRoutes = new Hono<{
       const db = drizzle(c.env.finestdb, { schema: schema });
 
       // Get user
-      const userData = await db.query.user.findFirst({
-        where: eq(user.id, id),
-        with: {
-          projects: {
-            where: eq(projects.isPublic, true),
-            extras: (table, { sql }) => ({
-              noteCount: sql<number>`(
-                SELECT COUNT(*)
-                FROM "projects_to_notes"
-                WHERE "projects_to_notes"."project_id" = ${table.id}
-              )`.as("note_count"),
-            }),
+      // MARK: Refactored
+      const userData = await db.query.user
+        .findFirst({
+          columns: {
+            id: true,
+            name: true,
           },
-          notes: {
-            where: eq(notes.isPublic, true),
-            with: {
-              projectsToNotes: {
-                with: {
-                  project: true,
+          where: eq(user.id, id),
+          with: {
+            projects: {
+              where: eq(projects.isPublic, true),
+              with: {
+                author: true,
+                projectsToNotes: {
+                  with: {
+                    note: {
+                      with: { author: true, likes: true, comments: true },
+                    },
+                  },
                 },
               },
-              author: true,
-              likes: true,
             },
-            extras: {
-              likeCount:
-                sql<number>`(SELECT COUNT(*) FROM likes WHERE likes.note_id = ${notes.id})`.as(
-                  "like_count"
-                ),
+            notes: {
+              where: eq(notes.isPublic, true),
+              with: {
+                author: true,
+                likes: true,
+                comments: true,
+              },
             },
           },
-        },
-      });
+        })
+        .then((user) => {
+          if (!user) return null;
+
+          const normalizedProjects = normalizeProjectNew(user.projects);
+
+          const normalizedNotes = normalizeNotesNew(user.notes);
+          return {
+            ...user,
+            projects: normalizedProjects,
+            notes: normalizedNotes,
+          };
+        });
 
       console.log("userData", userData);
 

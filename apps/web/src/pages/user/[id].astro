@@ -12,7 +12,7 @@ if (!id) {
 
 const client = createServerClient(Astro.request.headers);
 const res = await client.api.user[":id"].$get({
-  param: { id },
+  param: { id: id },
 });
 const userData = await parseResponse(res);
 
@@ -38,8 +38,8 @@ if (!userData) {
                   <div class="flex justify-between items-start font-medium">
                     <h3 class="whitespace-nowrap truncate">{project.name}</h3>
                     <span class="whitespace-nowrap ml-4">
-                      {project.noteCount}{" "}
-                      {project.noteCount === 1 ? "note" : "notes"}
+                      {project.notes?.length}{" "}
+                      {project.notes?.length === 1 ? "note" : "notes"}
                     </span>
                   </div>
                 </a>
@@ -51,9 +51,7 @@ if (!userData) {
     </section>
 
     <section>
-      <h2 class="subheading mb-6">
-        Public Notes
-      </h2>
+      <h2 class="subheading mb-6">Public Notes</h2>
       <ul class="list">
         {
           userData.notes.length === 0 ? (
@@ -62,7 +60,7 @@ if (!userData) {
             userData.notes.map((note) => (
               <ArticleCard
                 note={note}
-                projects={null}
+                projects={undefined}
                 userId={Astro.locals.user?.id}
               />
             ))
@@ -72,28 +70,3 @@ if (!userData) {
     </section>
   </main>
 </Layout>
-
-<style>
-  /* .project-item {
-    @apply py-3 border-b border-base-content/10 last:border-b-0;
-  }
-
-  .project-item a {
-    @apply hover:text-primary transition-colors;
-  }
-
-  .note-card {
-    @apply pb-6 border-b border-base-content/10 last:border-b-0;
-  }
-
-  .note-card a:hover h3 {
-    @apply text-primary;
-  }
-
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  } */
-</style>

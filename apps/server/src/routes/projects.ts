@@ -141,6 +141,14 @@ const projectRoutes = new Hono<{
       .then((project) => {
         if (!project) return null;
         return normalizeProjectNew([project])[0];
+      })
+      .then((project) => {
+        if (!project) return null;
+        // Filter to only show public notes
+        return {
+          ...project,
+          notes: project.notes?.filter((noteItem) => noteItem.isPublic)
+        };
       });
 
     if (!project) {

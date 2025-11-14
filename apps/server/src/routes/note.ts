@@ -91,6 +91,15 @@ const note = new Hono<{
             author: true,
             highlights: true,
             images: true,
+            projectsToNotes: {
+              with: {
+                project: {
+                  with: {
+                    author: true,
+                  },
+                },
+              },
+            },
           },
           where: and(eq(notes.id, id), eq(notes.isPublic, true)),
         })
