@@ -1,1 +1,1 @@
-export type { RouteType, NoteType } from "@finest/server/types";
+export type { RouteType, NoteType, ProjectType } from "@finest/server/types";

@@ -10,7 +10,6 @@ import { protect } from "middlewares/auth.middleware";
 import type { Session, User } from "better-auth";
 import createDOMPurify from "dompurify";
 import { parseHTML } from "linkedom";
-import { normalizeNotes } from "./articles";
 import { normalizeNotesNew } from "../utils/normalizers";
 import { auth } from "utils/auth";
 
@@ -404,6 +403,7 @@ const note = new Hono<{
   )
 
   // Get all notes (notes and pages)
+  // MARK: Refactored
   .get("/", protect, async (c) => {
     const db = drizzle(c.env.finestdb, { schema: schema });
 
@@ -412,57 +412,33 @@ const note = new Hono<{
         with: {
           author: true,
           likes: true,
+          comments: true,
           highlights: true,
           images: true,
-          comments: true,
-          bookmarks: true,
           projectsToNotes: {
             with: {
-              project: true,
+              project: {
+                with: {
+                  author: true,
+                },
+              },
             },
           },
         },
         where: eq(notes.authorId, c.var.user.id),
       })
-      .then((notes) => {
-        const flattenedResults = notes.map((note) => {
-          const { projectsToNotes, likes, comments, ...rest } = note;
-
-          const currentUser = c.var.user;
-          const isLikedByCurrentUser = currentUser
-            ? likes?.some((like) => like.userId === currentUser.id) ?? false
-            : false;
-          const isBookmarkedByCurrentUser = currentUser
-            ? note.bookmarks?.some(
-                (bookmark) => bookmark.userId === currentUser.id
-              ) ?? false
-            : false;
-
-          const likeCount = likes?.length ?? 0;
-          const commentCount = comments?.length ?? 0;
-
-          return {
-            ...rest,
-            likeCount,
-            commentCount,
-            projects: projectsToNotes.map((pn) => pn.project) ?? [],
-            isLikedByCurrentUser,
-            isBookmarkedByCurrentUser,
-          };
-        });
-        return flattenedResults;
-      })
-      .then(normalizeNotes);
+      .then(normalizeNotesNew);
 
     return c.json(notesData);
   })
 
   // Get all notes of a project
+  // MARK: Refactored
   .get("/project/:id", protect, async (c) => {
     const { id } = c.req.param();
     const db = drizzle(c.env.finestdb, { schema: schema });
 
-    const project = await db.query.projects
+    const notes = await db.query.projects
       .findFirst({
         with: {
           projectsToNotes: {
@@ -472,11 +448,13 @@ const note = new Hono<{
                   author: true,
                   likes: true,
                   comments: true,
-                  images: true,
-                  highlights: true,
                   projectsToNotes: {
                     with: {
-                      project: true,
+                      project: {
+                        with: {
+                          author: true,
+                        },
+                      },
                     },
                   },
                 },
@@ -489,37 +467,27 @@ const note = new Hono<{
       .then((project) => {
         if (!project) return null;
         const { projectsToNotes, ...rest } = project;
-
-        return {
-          ...rest,
-          notes: normalizeNotes(
-            projectsToNotes.map((pn) => {
-              const { projectsToNotes, likes, comments, ...rest } = pn.note;
-              const currentUser = c.var.user;
-              const isLikedByCurrentUser = currentUser
-                ? likes?.some((like) => like.userId === currentUser.id) ?? false
-                : false;
-
-              const likeCount = likes?.length ?? 0;
-              const commentCount = comments?.length ?? 0;
-
-              return {
-                ...rest,
-                likeCount,
-                commentCount,
-                projects: projectsToNotes.map((pnn) => pnn.project) ?? [],
-                isLikedByCurrentUser,
-              };
-            })
-          ),
-        };
+        const notes = projectsToNotes.map((pn) => pn.note);
+        const normalizedNotes = normalizeNotesNew(notes);
+        return normalizedNotes;
       });
 
-    return c.json(project);
+    if (!notes) {
+      return c.json(
+        {
+          success: false,
+          message: `Project ${id} and its notes not found`,
+        },
+        404
+      );
+    }
+
+    return c.json(notes);
   })
 
   // Get all saved notes
-  .get("/saved", protect, async (c) => {
+  // MARK: Refactored
+  .get("/bookmarked", protect, async (c) => {
     const db = drizzle(c.env.finestdb, { schema: schema });
 
     const notesData = await db.query.bookmarks
@@ -531,11 +499,13 @@ const note = new Hono<{
               author: true,
               likes: true,
               comments: true,
-              images: true,
-              highlights: true,
               projectsToNotes: {
                 with: {
-                  project: true,
+                  project: {
+                    with: {
+                      author: true,
+                    },
+                  },
                 },
               },
             },
@@ -543,28 +513,20 @@ const note = new Hono<{
         },
       })
       .then((bookmarks) => {
-        const notes = bookmarks.map((bookmark) => bookmark.note);
-        const flattenedResults = notes.map((note) => {
-          const { projectsToNotes, likes, comments, ...rest } = note;
-          const currentUser = c.var.user;
-          const isLikedByCurrentUser = currentUser
-            ? likes?.some((like) => like.userId === currentUser.id) ?? false
-            : false;
-          const likeCount = likes?.length ?? 0;
-          const commentCount = comments?.length ?? 0;
+        const notes = bookmarks.map((b) => b.note);
+        const normalizedNotes = normalizeNotesNew(notes);
+        return normalizedNotes;
+      });
 
-          return {
-            ...rest,
-            likeCount,
-            commentCount,
-            projects: projectsToNotes.map((pn) => pn.project) ?? [],
-            isLikedByCurrentUser,
-            isBookmarkedByCurrentUser: true,
-          };
-        });
-        return flattenedResults;
-      })
-      .then(normalizeNotes);
+    if (!notesData) {
+      return c.json(
+        {
+          success: false,
+          message: `No bookmarked notes found`,
+        },
+        404
+      );
+    }
 
     return c.json(notesData);
   })

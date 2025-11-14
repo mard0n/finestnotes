@@ -5,7 +5,7 @@ type AuthorType = Prettify<
   Pick<typeof schema.user.$inferSelect, "id" | "name">
 >;
 
-type ProjectType = Prettify<
+export type ProjectType = Prettify<
   Pick<
     typeof schema.projects.$inferSelect,
     "id" | "name" | "isPublic" | "createdAt"

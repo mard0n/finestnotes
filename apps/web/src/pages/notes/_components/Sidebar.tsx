@@ -5,114 +5,17 @@ import PrivateNotesIcon from "@assets/lock.svg?react";
 import SavedNotesIcon from "@assets/bookmark.svg?react";
 import type { FilterType } from "./Notes.tsx";
 import type React from "react";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { client } from "@utils/api.ts";
-import { parseResponse } from "hono/client";
 import type { User } from "@utils/types";
-import type { Projects } from "@utils/types.ts";
 import AuthorName from "@components/AuthorName.tsx";
+import ProjectDropdownMenu from "./modals-dropdowns/ProjectDropdownMenu.tsx";
+import { useProjects } from "./hooks/useProjects.ts";
 
 const Sidebar: React.FC<{
   filter: FilterType;
   setFilter: React.Dispatch<React.SetStateAction<FilterType>>;
-  projects: Projects | undefined;
-  isProjectsLoading: boolean;
   user: User;
-}> = ({ filter, setFilter, user, projects, isProjectsLoading }) => {
-  const queryClient = useQueryClient();
-
-  console.log("projects", projects);
-
-  const { mutate: renameProject } = useMutation({
-    mutationFn: async ({
-      projectName,
-      projectId,
-    }: {
-      projectName: string;
-      projectId: string;
-    }) => {
-      const res = await client.api.projects[":id"].$put({
-        param: { id: projectId },
-        json: { name: projectName },
-      });
-      return await parseResponse(res);
-    },
-    onSuccess: (data, variables) => {
-      console.log("renamed");
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-    },
-  });
-
-  const { mutate: changeVisibility } = useMutation({
-    mutationFn: async ({
-      projectId,
-      isPublic,
-    }: {
-      projectId: string;
-      isPublic: boolean;
-    }) => {
-      const res = await client.api.projects[":id"].$put({
-        param: { id: projectId },
-        json: { isPublic },
-      });
-      return await parseResponse(res);
-    },
-    onSuccess: (data, variables) => {
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-    },
-  });
-
-  const { mutate: deleteProject } = useMutation({
-    mutationFn: async (projectId: string) => {
-      const res = await client.api.projects[":id"].$delete({
-        param: { id: projectId },
-      });
-      return await parseResponse(res);
-    },
-    onSuccess: (data, projectId) => {
-      if (filter.type === "project" && filter.id === projectId) {
-        setFilter({ type: "all", name: "All Notes" });
-      }
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-    },
-  });
-
-  const { mutate: unsubscribe } = useMutation({
-    mutationFn: async (projectId: string) => {
-      const res = await client.api.projects[":id"].subscribers.$delete({
-        param: { id: projectId },
-      });
-      return await parseResponse(res);
-    },
-    onSuccess: (data, projectId) => {
-      if (filter.type === "project" && filter.id === projectId) {
-        setFilter({ type: "all", name: "All Notes" });
-      }
-      queryClient.invalidateQueries({ queryKey: ["projects"] });
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-    },
-  });
-
-  const handleDeleteProject = (projectId: string, projectName: string) => {
-    if (
-      window.confirm(
-        `Are you sure you want to delete "${projectName}"? This action cannot be undone.`
-      )
-    ) {
-      deleteProject(projectId);
-    }
-  };
-
-  const handleChangeVisibility = (
-    projectId: string,
-    currentIsPublic: boolean
-  ) => {
-    changeVisibility({
-      projectId,
-      isPublic: !currentIsPublic,
-    });
-  };
+}> = ({ filter, setFilter, user }) => {
+  const { projects, isProjectsLoading } = useProjects();
 
   return (
     <div>
@@ -157,15 +60,15 @@ const Sidebar: React.FC<{
               <div className="flex items-center justify-between gap-1 group">
                 <a
                   className={`link link-hover flex items-center justify-start gap-2 flex-1 min-w-0  @max-4xs/sidebar:tooltip @max-4xs/sidebar:tooltip-right ${
-                    filter.type === "project" && filter.id === project.id
+                    filter.type === "project" &&
+                    filter.project.id === project.id
                       ? "font-bold"
                       : ""
                   }`}
                   onClick={() => {
                     setFilter({
                       type: "project",
-                      id: project.id,
-                      name: project.name,
+                      project: project,
                     });
                   }}
                   data-tip={project.name}
@@ -208,65 +111,19 @@ const Sidebar: React.FC<{
                     </svg>
                   </button>
                   <div className="menu dropdown-content z-1 w-52 p-2">
-                    {project.authorId !== user.id ? (
-                      <ul className="bg-base-100 p-2 shadow-sm" tabIndex={-1}>
-                        <li onClick={() => unsubscribe(project.id)}>
-                          <a>Unsubscribe</a>
-                        </li>
-                      </ul>
-                    ) : (
-                      <ul className="bg-base-100 p-2 shadow-sm" tabIndex={-1}>
-                        <li
-                          onClick={() => {
-                            const newName = window.prompt(
-                              "Enter new project name:",
-                              project.name
-                            );
-                            if (newName && newName.trim() !== "") {
-                              renameProject({
-                                projectId: project.id,
-                                projectName: newName.trim(),
-                              });
-                            }
-                          }}
-                        >
-                          <a>Rename</a>
-                        </li>
-                        <li
-                          onClick={() =>
-                            handleChangeVisibility(project.id, project.isPublic)
-                          }
-                        >
-                          <a>
-                            Make it{" "}
-                            {project.isPublic ? (
-                              <>
-                                Private <PrivateNotesIcon />
-                              </>
-                            ) : (
-                              <>
-                                Public <PublicNotesIcon />
-                              </>
-                            )}
-                          </a>
-                        </li>
-                        <li
-                          className="text-red-400"
-                          onClick={() =>
-                            handleDeleteProject(project.id, project.name)
-                          }
-                        >
-                          <a>Delete</a>
-                        </li>
-                      </ul>
-                    )}
+                    <ProjectDropdownMenu
+                      project={project}
+                      user={user}
+                      filter={filter}
+                      setFilter={setFilter}
+                    />
                   </div>
                 </div>
               </div>
-              {project.authorId !== user.id ? (
+              {project.author.id !== user.id ? (
                 <div className="hidden @4xs:block text-xs text-content-light">
                   <AuthorName
-                    ownerId={project.authorId}
+                    ownerId={project.author.id}
                     ownerName={project.author.name}
                     userId={user.id}
                     shouldAddBy={true}
@@ -291,7 +148,9 @@ const Sidebar: React.FC<{
   );
 };
 
-const filterList: Array<FilterType & { icon: React.ReactNode }> = [
+const filterList: Array<
+  Exclude<FilterType, { type: "project" }> & { icon: React.ReactNode }
+> = [
   {
     type: "all",
     name: "All Notes",

@@ -1,5 +1,5 @@
 import type { User } from "@utils/types";
-import { type Note } from "./Notes";
+import { type FilterType } from "./Notes";
 import AnnotationViewer from "@components/AnnotationViewer";
 import NoteViewer from "@components/NoteViewer";
 import AnnotationEditor from "./editors-viewers/AnnotationEditor";
@@ -8,137 +8,24 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { client } from "@utils/api";
 import { parseResponse } from "hono/client";
 import ProjectAddIcon from "@assets/project-add.svg?react";
-import TrashIcon from "@assets/trash.svg?react";
-import GlobeIcon from "@assets/globe.svg?react";
-import LockIcon from "@assets/lock.svg?react";
 import AddToProjectDropdown from "@components/AddToProjectDropdown";
+import { useNotes } from "./hooks/useNotes";
+import UpvoteButton from "@components/UpvoteButton";
+import BookmarkButton from "@components/BookmarkButton";
+import NoteVisibilityButton from "@components/NoteVisibilityButton";
+import NoteDeleteButton from "@components/NoteDeleteButton";
 
 const SelectedNoteEditor: React.FC<{
   user: User;
-  selectedNote: Note | null;
+  filter: FilterType;
+  selectedNoteId: string | null;
   setSelectedNoteId: React.Dispatch<React.SetStateAction<string | null>>;
-}> = ({ user, selectedNote, setSelectedNoteId }) => {
+}> = ({ user, filter, selectedNoteId, setSelectedNoteId }) => {
+  const { notes } = useNotes({ filter });
+
   const queryClient = useQueryClient();
 
-  const updateNoteTitle = useMutation({
-    mutationFn: async ({ id, title }: { id: string; title: string }) => {
-      const res = await client.api.note[":id"].title.$put({
-        param: { id: id.toString() },
-        json: { title },
-      });
-      return await parseResponse(res);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-    },
-  });
-
-  const updateNoteVisibility = useMutation({
-    mutationFn: async ({ id, isPublic }: { id: string; isPublic: boolean }) => {
-      const res = await client.api.note[":id"].visibility.$put({
-        param: { id: id.toString() },
-        json: { isPublic },
-      });
-      return await parseResponse(res);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-    },
-  });
-
-  const deleteNote = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await client.api.note[":id"].$delete({
-        param: { id: id.toString() },
-      });
-      return await parseResponse(res);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-      setSelectedNoteId(null);
-    },
-  });
-
-  const likeNote = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await client.api.articles[":id"].like.$post({
-        param: { id },
-      });
-      return await parseResponse(res);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-    },
-  });
-
-  const unlikeNote = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await client.api.articles[":id"].like.$delete({
-        param: { id },
-      });
-      return await parseResponse(res);
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notes"] });
-    },
-  });
-
-  const unbookmarkMutation = useMutation({
-    mutationFn: async () => {
-      const response = await client.api.articles[":id"].bookmark.$delete({
-        param: { id: selectedNote!.id }, // TODO: Fix non-null assertion. Should not be possible to call when selectedNote is null
-      });
-      return response.json();
-    },
-    onSuccess: (data) => {
-      // TODO: Invalidate queries to reflect unbookmarking
-    },
-    onError: (error) => {
-      console.error("Error unbookmarking article:", error);
-    },
-  });
-
-  const handleBookmarkClick = () => {
-    if (!user) {
-      window.location.href = "/auth/signin";
-      return;
-    }
-
-    unbookmarkMutation.mutate();
-  };
-
-  const handleDeleteClick = () => {
-    if (
-      selectedNote &&
-      window.confirm(
-        `Are you sure you want to delete "${
-          selectedNote.title || "Untitled note"
-        }"?`
-      )
-    ) {
-      deleteNote.mutate(selectedNote.id);
-    }
-  };
-
-  const handleVisibilityChange = (isPublic: boolean) => {
-    if (selectedNote) {
-      updateNoteVisibility.mutate({ id: selectedNote.id, isPublic });
-    }
-  };
-
-  const handleLikeClick = () => {
-    if (!selectedNote) {
-      return;
-    }
-
-    if (selectedNote.isLikedByCurrentUser) {
-      unlikeNote.mutate(selectedNote.id);
-    } else {
-      likeNote.mutate(selectedNote.id);
-    }
-  };
-
-  if (!selectedNote) {
+  if (!selectedNoteId || !notes) {
     return (
       <>
         <EditorNavBar user={user} />
@@ -151,10 +38,7 @@ const SelectedNoteEditor: React.FC<{
     );
   }
 
-  console.log(
-    "selectedNote.author.id !== user.id",
-    selectedNote.author.id !== user.id
-  );
+  const selectedNote = notes.find((note) => note.id === selectedNoteId)!;
 
   if (selectedNote.author.id !== user.id) {
     return (
@@ -162,59 +46,25 @@ const SelectedNoteEditor: React.FC<{
         <EditorNavBar user={user} />
         <div className="px-6 md:px-8 py-6">
           <div className="mb-6 flex gap-3">
-            <button
-              className={`btn btn-ghost btn-sm rounded-full font-normal bg-white ${
-                selectedNote.isLikedByCurrentUser ? "text-black" : ""
-              }`}
-              onClick={handleLikeClick}
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill={
-                  selectedNote.isLikedByCurrentUser ? "currentColor" : "none"
+            <UpvoteButton
+              noteId={selectedNoteId}
+              userId={user.id}
+              queryClient={queryClient}
+              onSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: ["notes"] });
+              }}
+            />
+            <BookmarkButton
+              noteId={selectedNoteId}
+              authorId={selectedNote.author.id}
+              userId={user.id}
+              queryClient={queryClient}
+              onSuccess={() => {
+                if (filter.type === "saved") {
+                  queryClient.invalidateQueries({ queryKey: ["notes"] });
                 }
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className=""
-              >
-                <path d="M13.73 4a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
-              </svg>
-              {selectedNote.likeCount}
-            </button>
-            {selectedNote.isBookmarkedByCurrentUser ? (
-              <button
-                className={`btn btn-ghost btn-sm rounded-full bg-white font-normal ${
-                  selectedNote.isBookmarkedByCurrentUser ? "text-black" : ""
-                }`}
-                onClick={handleBookmarkClick}
-                disabled={unbookmarkMutation.isPending}
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill={
-                    selectedNote.isBookmarkedByCurrentUser
-                      ? "currentColor"
-                      : "none"
-                  }
-                  viewBox="0 0 24 24"
-                  strokeWidth="2"
-                  stroke="currentColor"
-                  className="size-4"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M17.593 3.322c1.1.128 1.907 1.077 1.907 2.185V21L12 17.25 4.5 21V5.507c0-1.108.806-2.057 1.907-2.185a48.507 48.507 0 0 1 11.186 0Z"
-                  ></path>
-                </svg>
-                <span className="hidden md:inline">Unsave</span>
-              </button>
-            ) : null}
+              }}
+            />
           </div>
           <h1 className="text-2xl font-serif outline-none text-black mb-2 grow">
             {selectedNote.title}
@@ -232,56 +82,61 @@ const SelectedNoteEditor: React.FC<{
   return (
     <>
       <EditorNavBar user={user} />
-      <div className="px-6 md:px-8 py-6">
-        <div className="hidden md:block">
-          <NoteActionBar
-            idSuffix="-desktop"
-            selectedNote={selectedNote}
-            handleVisibilityChange={handleVisibilityChange}
-            handleDeleteClick={handleDeleteClick}
-            handleLikeClick={handleLikeClick}
+      <div className="px-6 md:px-8 py-6 relative">
+        <div className="flex justify-between items-center gap-3 mb-2 lg:mb-6 md:static fixed bottom-0 left-0 w-full md:w-auto md:p-0 p-4 md:bg-transparent bg-white md:border-0 border-t border-neutral-300 z-10">
+          <div className="flex gap-3">
+            <div className="dropdown dropdown-top md:dropdown-bottom">
+              <div
+                tabIndex={0}
+                role="button"
+                className="btn btn-sm rounded-full bg-white font-normal truncate"
+              >
+                <ProjectAddIcon />
+                <span className="hidden xs:inline">Add to project</span>
+              </div>
+              <div tabIndex={-1} className="dropdown-content menu z-1 p-2 w-xs">
+                <AddToProjectDropdown
+                  noteId={selectedNote.id}
+                  queryClient={queryClient}
+                />
+              </div>
+            </div>
+            <NoteVisibilityButton
+              noteId={selectedNote.id}
+              isPublic={selectedNote.isPublic}
+              queryClient={queryClient}
+              onSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: ["notes"] });
+              }}
+            />
+            <UpvoteButton
+              noteId={selectedNote.id}
+              userId={user.id}
+              queryClient={queryClient}
+              onSuccess={() => {
+                queryClient.invalidateQueries({ queryKey: ["notes"] });
+              }}
+            />
+          </div>
+          <NoteDeleteButton
+            noteId={selectedNote.id}
+            noteTitle={selectedNote.title}
+            queryClient={queryClient}
+            onSuccess={() => {
+              queryClient.invalidateQueries({ queryKey: ["notes"] });
+              setSelectedNoteId(null);
+            }}
           />
         </div>
-        <input
-          key={selectedNote.id}
-          type="text"
-          name="title"
-          id="title"
-          className="block text-2xl font-serif outline-none text-black mb-2 w-full"
-          onPaste={(e) => {
-            e.preventDefault();
-            const text = e.clipboardData.getData("text/plain");
-            e.currentTarget.value = text;
-          }}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              (e.target as HTMLElement).blur();
-            }
-          }}
-          onBlur={(e) => {
-            updateNoteTitle.mutate({
-              id: selectedNote.id,
-              title: e.target.value,
-            });
-          }}
-          defaultValue={selectedNote.title}
-          placeholder="Untitled note"
+        <NoteTitleInput
+          noteId={selectedNote.id}
+          defaultTitle={selectedNote.title}
         />
         {selectedNote.type === "page" ? (
           <AnnotationEditor annotation={selectedNote} />
         ) : (
           <NoteEditor note={selectedNote} />
         )}
-        <div className="block md:hidden absolute bottom-0 left-0 w-full p-4 bg-white border-t border-neutral-300">
-          <NoteActionBar
-            idSuffix="-mobile"
-            selectedNote={selectedNote}
-            handleVisibilityChange={handleVisibilityChange}
-            handleDeleteClick={handleDeleteClick}
-            handleLikeClick={handleLikeClick}
-          />
-        </div>
       </div>
     </>
   );
@@ -368,139 +223,52 @@ const EditorNavBar: React.FC<{
   );
 };
 
-const NoteActionBar: React.FC<{
-  idSuffix: string;
-  selectedNote: Note;
-  handleVisibilityChange: (isPublic: boolean) => void;
-  handleDeleteClick: () => void;
-  handleLikeClick: () => void;
-}> = ({
-  idSuffix,
-  selectedNote,
-  handleVisibilityChange,
-  handleDeleteClick,
-  handleLikeClick,
-}) => {
+const NoteTitleInput: React.FC<{
+  noteId: string;
+  defaultTitle: string;
+}> = ({ noteId, defaultTitle }) => {
   const queryClient = useQueryClient();
 
-  if (!selectedNote) {
-    return null;
-  }
+  const updateNoteTitle = useMutation({
+    mutationFn: async ({ id, title }: { id: string; title: string }) => {
+      const res = await client.api.note[":id"].title.$put({
+        param: { id: id.toString() },
+        json: { title },
+      });
+      return await parseResponse(res);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notes"] });
+    },
+  });
 
   return (
-    <div className="flex justify-between items-center gap-3 mb-2 lg:mb-6">
-      <div className="flex gap-3">
-        <div className="dropdown dropdown-top md:dropdown-bottom">
-          <div
-            tabIndex={0}
-            role="button"
-            className="btn btn-sm rounded-full bg-white font-normal truncate"
-          >
-            <ProjectAddIcon />
-            <span className="hidden xs:inline">Add to project</span>
-          </div>
-          <div tabIndex={-1} className="dropdown-content menu z-1 p-2 w-xs">
-            <AddToProjectDropdown
-              noteId={selectedNote.id}
-              queryClient={queryClient}
-            />
-          </div>
-        </div>
-        <div className="dropdown dropdown-top md:dropdown-bottom">
-          <div
-            tabIndex={0}
-            role="button"
-            className="btn btn-sm rounded-full bg-white font-normal truncate"
-          >
-            <span>{selectedNote.isPublic ? <GlobeIcon /> : <LockIcon />}</span>
-            <span className="hidden xs:inline">
-              {selectedNote.isPublic ? "Public" : "Private"}
-            </span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              className="size-5"
-            >
-              <path
-                fillRule="evenodd"
-                d="M5.22 8.22a.75.75 0 0 1 1.06 0L10 11.94l3.72-3.72a.75.75 0 1 1 1.06 1.06l-4.25 4.25a.75.75 0 0 1-1.06 0L5.22 9.28a.75.75 0 0 1 0-1.06Z"
-                clipRule="evenodd"
-              />
-            </svg>
-          </div>
-          <div tabIndex={-1} className="dropdown-content p-2 z-1">
-            <ul className="menu p-2 bg-white border border-neutral-300">
-              <li>
-                <div className="flex gap-3 items-center">
-                  <input
-                    type="radio"
-                    id={`private${idSuffix}`}
-                    name={`visibility${idSuffix}`}
-                    className="radio radio-xs"
-                    checked={!selectedNote.isPublic}
-                    onChange={() => handleVisibilityChange(false)}
-                  />
-                  <label
-                    htmlFor={`private${idSuffix}`}
-                    className="flex gap-1 items-center cursor-pointer"
-                  >
-                    <LockIcon /> Private
-                  </label>
-                </div>
-              </li>
-              <li>
-                <div className="flex gap-3 items-center">
-                  <input
-                    type="radio"
-                    id={`public${idSuffix}`}
-                    name={`visibility${idSuffix}`}
-                    className="radio radio-xs"
-                    checked={selectedNote.isPublic}
-                    onChange={() => handleVisibilityChange(true)}
-                  />
-                  <label
-                    htmlFor={`public${idSuffix}`}
-                    className="flex gap-1 items-center cursor-pointer"
-                  >
-                    <GlobeIcon /> Public
-                  </label>
-                </div>
-              </li>
-            </ul>
-          </div>
-        </div>
-        <button
-          className={`btn btn-ghost btn-sm rounded-full font-normal bg-white ${
-            selectedNote.isLikedByCurrentUser ? "text-black" : ""
-          }`}
-          onClick={handleLikeClick}
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill={selectedNote.isLikedByCurrentUser ? "currentColor" : "none"}
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className=""
-          >
-            <path d="M13.73 4a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
-          </svg>
-          {selectedNote.likeCount}
-        </button>
-      </div>
-      <button
-        className="btn btn-error btn-sm rounded-full bg-white text-red-500 font-normal truncate"
-        onClick={handleDeleteClick}
-      >
-        <TrashIcon />
-        <span className="hidden xs:inline">Delete</span>
-      </button>
-    </div>
+    <input
+      key={noteId}
+      type="text"
+      name="title"
+      id="title"
+      className="block text-2xl font-serif outline-none text-black mb-2 w-full"
+      onPaste={(e) => {
+        e.preventDefault();
+        const text = e.clipboardData.getData("text/plain");
+        e.currentTarget.value = text;
+      }}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") {
+          e.preventDefault();
+          (e.target as HTMLElement).blur();
+        }
+      }}
+      onBlur={(e) => {
+        updateNoteTitle.mutate({
+          id: noteId,
+          title: e.target.value,
+        });
+      }}
+      defaultValue={defaultTitle}
+      placeholder="Untitled note"
+    />
   );
 };
 

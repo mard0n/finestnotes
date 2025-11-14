@@ -23,3 +23,7 @@ export function formatDate(createdAt: Date | string): string {
 
   return date.toLocaleDateString("en-GB", options);
 }
+
+
+export const pluralize = (count: number, singular: string) => 
+  `${count} ${count === 1 ? singular : singular + 's'}`;
