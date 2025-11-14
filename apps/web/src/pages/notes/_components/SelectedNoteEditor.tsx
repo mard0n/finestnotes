@@ -50,7 +50,7 @@ const SelectedNoteEditor: React.FC<{
     return (
       <>
         <EditorNavBar user={user} />
-        <div className="px-6 md:px-8 py-6">
+        <div className="px-6 md:px-8 py-6 relative">
           <div className="mb-6 flex gap-3">
             <UpvoteButton
               noteId={selectedNote.id}
@@ -72,7 +72,7 @@ const SelectedNoteEditor: React.FC<{
               }}
             />
           </div>
-          <h1 className="text-2xl font-serif outline-none text-black mb-2 grow">
+          <h1 className="text-2xl font-serif outline-none text-black mb-2">
             {selectedNote.title}
           </h1>
           {selectedNote.type === "page" ? (

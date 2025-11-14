@@ -173,7 +173,7 @@ const NotesLayout: React.FC<{
           </div>
         </div>
         <div className="drawer-content flex">
-          <div className="@container/sidebar overflow-visible w-14 flex flex-col justify-between border-r border-neutral-300">
+          <div className="@container/sidebar overflow-visible w-14 flex flex-col justify-between border-r border-neutral-300 shrink-0">
             {sidebar}
             <div className="m-2 tooltip tooltip-right" data-tip="Open">
               <label
@@ -184,7 +184,7 @@ const NotesLayout: React.FC<{
               </label>
             </div>
           </div>
-          <div className="w-4/12 max-w-sm border-r border-neutral-300 h-full">
+          <div className="w-4/12 max-w-sm border-r border-neutral-300 h-full shrink-0">
             {noteList}
           </div>
           <div className="grow">{editor}</div>
@@ -224,7 +224,7 @@ const NotesLayout: React.FC<{
         </div>
       </div>
       <div className="drawer-content flex">
-        <div className="w-4/12 max-w-sm border-r border-neutral-300 h-full">
+        <div className="w-4/12 max-w-sm border-r border-neutral-300 h-full shrink-0">
           {noteList}
         </div>
         <div className="grow">{editor}</div>

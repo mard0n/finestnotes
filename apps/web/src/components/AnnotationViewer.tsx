@@ -1,7 +1,6 @@
 import React from "react";
 import type { AnnotationType } from "@finest/utils/types";
 
-
 interface AnnotationViewerProps {
   annotation: Omit<AnnotationType, "likeCount" | "commentCount" | "projects">;
 }
@@ -9,6 +8,9 @@ interface AnnotationViewerProps {
 const AnnotationViewer: React.FC<AnnotationViewerProps> = ({ annotation }) => {
   return (
     <div className="flex flex-col">
+      <div className="mb-4 text-sm">
+        {annotation.description || "No description"}
+      </div>
       {annotation.annotations && annotation.annotations.length > 0 ? (
         <div className="flex text-sm flex-col gap-4 overflow-y-auto">
           {annotation.annotations.map((content) => {
@@ -32,7 +34,9 @@ const AnnotationViewer: React.FC<AnnotationViewerProps> = ({ annotation }) => {
   );
 };
 
-type HighlightContentType = NonNullable<AnnotationType["annotations"]>[number] & {
+type HighlightContentType = NonNullable<
+  AnnotationType["annotations"]
+>[number] & {
   type: "highlight";
 };
 

@@ -33,8 +33,8 @@ const AnnotationEditor: React.FC<{
       <input
         key={annotation.id}
         type="text"
-        name="title"
-        id="title"
+        name="description"
+        id="description"
         className="mb-4 text-sm outline-none"
         onPaste={(e) => {
           e.preventDefault();
