@@ -148,6 +148,13 @@
       "when": 1763012057595,
       "tag": "0020_smart_dreadnoughts",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "6",
+      "when": 1763131667161,
+      "tag": "0021_graceful_earthquake",
+      "breakpoints": true
     }
   ]
 }

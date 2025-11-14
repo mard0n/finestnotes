@@ -125,10 +125,10 @@ export const projectsToNotes = sqliteTable(
   {
     projectId: text("project_id")
       .notNull()
-      .references(() => projects.id),
+      .references(() => projects.id, { onDelete: "cascade" }),
     noteId: text("note_id")
       .notNull()
-      .references(() => notes.id),
+      .references(() => notes.id, { onDelete: "cascade" }),
   },
   (t) => [primaryKey({ columns: [t.projectId, t.noteId] })]
 );
@@ -152,10 +152,10 @@ export const projectsToSubscribers = sqliteTable(
   {
     projectId: text("project_id")
       .notNull()
-      .references(() => projects.id),
+      .references(() => projects.id, { onDelete: "cascade" }),
     authorId: text("author_id")
       .notNull()
-      .references(() => user.id),
+      .references(() => user.id, { onDelete: "cascade" }),
   },
   (t) => [primaryKey({ columns: [t.projectId, t.authorId] })]
 );

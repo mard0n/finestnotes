@@ -147,7 +147,7 @@ const projectRoutes = new Hono<{
         // Filter to only show public notes
         return {
           ...project,
-          notes: project.notes?.filter((noteItem) => noteItem.isPublic)
+          notes: project.notes?.filter((noteItem) => noteItem.isPublic),
         };
       });
 
