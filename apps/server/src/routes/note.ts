@@ -30,6 +30,7 @@ const note = new Hono<{
       })
     ),
     async (c) => {
+      +console.log("/published");
       const { page, limit } = c.req.valid("query");
       const pageNum = parseInt(page);
       const limitNum = parseInt(limit);
@@ -81,6 +82,7 @@ const note = new Hono<{
       })
     ),
     async (c) => {
+      console.log("/published/:id");
       const { id } = c.req.valid("param");
       const db = drizzle(c.env.finestdb, { schema: schema });
 
@@ -128,6 +130,7 @@ const note = new Hono<{
       })
     ),
     async (c) => {
+      +console.log("/:id/projects");
       const { id: noteId } = c.req.valid("param");
       const db = drizzle(c.env.finestdb, { schema: schema });
 
@@ -182,6 +185,7 @@ const note = new Hono<{
       })
     ),
     async (c) => {
+      console.log("/:id/public-projects");
       const { id: noteId } = c.req.valid("param");
       const db = drizzle(c.env.finestdb, { schema: schema });
 
@@ -234,6 +238,7 @@ const note = new Hono<{
       })
     ),
     async (c) => {
+      console.log("/:id/like-status");
       const { id } = c.req.valid("param");
       const db = drizzle(c.env.finestdb, { schema: schema });
 
@@ -289,6 +294,7 @@ const note = new Hono<{
       })
     ),
     async (c) => {
+      console.log("/:id/like POST");
       const { id } = c.req.valid("param");
       const userId = c.var.user.id;
 
@@ -354,6 +360,7 @@ const note = new Hono<{
       })
     ),
     async (c) => {
+      console.log("/:id/like DELETE");
       const { id } = c.req.valid("param");
       const userId = c.var.user.id;
 
@@ -372,6 +379,55 @@ const note = new Hono<{
     }
   )
 
+  // Get all saved notes
+  // MARK: Refactored
+  .get("/bookmarked", protect, async (c) => {
+    const db = drizzle(c.env.finestdb, { schema: schema });
+    console.log("bookmarked c.var.user.id", c.var.user.id);
+
+    const notesData = await db.query.bookmarks
+      .findMany({
+        where: eq(schema.bookmarks.userId, c.var.user.id),
+        with: {
+          note: {
+            with: {
+              author: true,
+              likes: true,
+              comments: true,
+              projectsToNotes: {
+                with: {
+                  project: {
+                    with: {
+                      author: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      })
+      .then((bookmarks) => {
+        const notes = bookmarks.map((b) => b.note);
+        const normalizedNotes = normalizeNotesNew(notes);
+        return normalizedNotes;
+      });
+
+    console.log("bookmarked notesData:", notesData);
+
+    if (!notesData) {
+      return c.json(
+        {
+          success: false,
+          message: `No bookmarked notes found`,
+        },
+        404
+      );
+    }
+
+    return c.json(notesData);
+  })
+
   // Get bookmark status of a note
   // MARK: Refactored v2
   .get(
@@ -384,6 +440,7 @@ const note = new Hono<{
       })
     ),
     async (c) => {
+      console.log("/:id/bookmark-status");
       const { id } = c.req.valid("param");
       const db = drizzle(c.env.finestdb, { schema: schema });
 
@@ -426,6 +483,7 @@ const note = new Hono<{
       })
     ),
     async (c) => {
+      console.log("/:id/bookmark POST");
       const { id } = c.req.valid("param");
       const userId = c.var.user.id;
 
@@ -489,6 +547,7 @@ const note = new Hono<{
       })
     ),
     async (c) => {
+      console.log("/:id/bookmark DELETE");
       const { id } = c.req.valid("param");
       const userId = c.var.user.id;
 
@@ -523,6 +582,7 @@ const note = new Hono<{
       })
     ),
     async (c) => {
+      console.log("/:id");
       const { id } = c.req.valid("param");
       const db = drizzle(c.env.finestdb, { schema: schema });
 
@@ -571,6 +631,8 @@ const note = new Hono<{
   // Get all notes (notes and pages)
   // MARK: Refactored
   .get("/", protect, async (c) => {
+    console.log("//////");
+
     const db = drizzle(c.env.finestdb, { schema: schema });
 
     const notesData = await db.query.notes
@@ -601,6 +663,8 @@ const note = new Hono<{
   // Get all notes of a project
   // MARK: Refactored
   .get("/project/:id", protect, async (c) => {
+    console.log("/project/:id");
+
     const { id } = c.req.param();
     const db = drizzle(c.env.finestdb, { schema: schema });
 
@@ -649,52 +713,6 @@ const note = new Hono<{
     }
 
     return c.json(notes);
-  })
-
-  // Get all saved notes
-  // MARK: Refactored
-  .get("/bookmarked", protect, async (c) => {
-    const db = drizzle(c.env.finestdb, { schema: schema });
-
-    const notesData = await db.query.bookmarks
-      .findMany({
-        where: eq(schema.bookmarks.userId, c.var.user.id),
-        with: {
-          note: {
-            with: {
-              author: true,
-              likes: true,
-              comments: true,
-              projectsToNotes: {
-                with: {
-                  project: {
-                    with: {
-                      author: true,
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      })
-      .then((bookmarks) => {
-        const notes = bookmarks.map((b) => b.note);
-        const normalizedNotes = normalizeNotesNew(notes);
-        return normalizedNotes;
-      });
-
-    if (!notesData) {
-      return c.json(
-        {
-          success: false,
-          message: `No bookmarked notes found`,
-        },
-        404
-      );
-    }
-
-    return c.json(notesData);
   })
 
   // Save a note
