@@ -19,7 +19,7 @@ const note = new Hono<{
 }>()
 
   // Get all published notes
-  // MARK: Refactored
+  // MARK: Refactored. v2
   .get(
     "/published",
     zValidator(
@@ -71,7 +71,7 @@ const note = new Hono<{
   )
 
   // Get a published note by id
-  // MARK: Refactored
+  // MARK: Refactored. v2
   .get(
     "/published/:id",
     zValidator(
@@ -90,21 +90,16 @@ const note = new Hono<{
             author: true,
             highlights: true,
             images: true,
-            projectsToNotes: {
-              with: {
-                project: {
-                  with: {
-                    author: true,
-                  },
-                },
-              },
-            },
           },
           where: and(eq(notes.id, id), eq(notes.isPublic, true)),
         })
         .then((notes) => {
           if (!notes) return null;
-          return normalizeNotesNew([notes])[0];
+          const { likeCount, commentCount, projects, ...rest } =
+            normalizeNotesNew([
+              { ...notes, likes: [], comments: [], projectsToNotes: [] },
+            ])[0]!; // HACK: Until we figure out dynamic normalizer
+          return rest;
         });
 
       if (!noteData) {
@@ -118,6 +113,58 @@ const note = new Hono<{
       }
 
       return c.json(noteData);
+    }
+  )
+
+  // Get all public projects for a note
+  // MARK: Refactored. v2
+  .get(
+    "/:id/public-projects",
+    zValidator(
+      "param",
+      z.object({
+        id: z.string(),
+      })
+    ),
+    async (c) => {
+      const { id: noteId } = c.req.valid("param");
+      const db = drizzle(c.env.finestdb, { schema: schema });
+
+      const noteWithProjects = await db.query.notes.findFirst({
+        where: eq(notes.id, noteId),
+        with: {
+          projectsToNotes: {
+            with: {
+              project: {
+                with: {
+                  author: true,
+                },
+              },
+            },
+          },
+        },
+      });
+
+      if (!noteWithProjects) {
+        return c.json(
+          {
+            success: false,
+            message: `Note ${noteId} not found`,
+          },
+          404
+        );
+      }
+
+      const publicProjects = noteWithProjects.projectsToNotes
+        .filter((pn) => pn.project.isPublic)
+        .map((pn) => pn.project);
+
+      const normalizedProjects = publicProjects.map((project) => {
+        const { authorId, author, ...rest } = project;
+        return { ...rest, author: { id: author.id, name: author.name } };
+      });
+
+      return c.json(normalizedProjects);
     }
   )
 
@@ -156,8 +203,6 @@ const note = new Hono<{
         headers: c.req.raw.headers,
       });
       const currentUser = session?.user;
-
-      console.log("currentUser", currentUser);
 
       const isLiked = currentUser
         ? noteData.likes.some((like) => like.userId === currentUser.id)

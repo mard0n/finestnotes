@@ -18,11 +18,15 @@ const user = Astro.locals.user;
 if (!id) {
   throw new Error("Article ID is required");
 }
+const client = createServerClient(Astro.request.headers);
 
-const response = await createServerClient(
-  Astro.request.headers
-).api.note.published[":id"].$get({ param: { id: id } });
-const article = await parseResponse(response);
+const [publishedNotesRes, projectsOfNoteRes] = await Promise.all([
+  client.api.note.published[":id"].$get({ param: { id: id } }),
+  client.api.note[":id"]["public-projects"].$get({ param: { id: id } }),
+]);
+
+const article = await parseResponse(publishedNotesRes);
+const projectsOfNote = await parseResponse(projectsOfNoteRes);
 
 if (!article) {
   throw new Error("Article not found");
@@ -125,15 +129,15 @@ if (!article) {
     }
 
     {
-      article.projects ? (
+      projectsOfNote ? (
         <div class="collapse collapse-arrow px-0 mt-10">
           <input id="projects-collapse" type="checkbox" checked={true} />
           <div class="collapse-title font-semibold px-0">
-            Projects ({article.projects.length})
+            Projects ({projectsOfNote.length})
           </div>
           <div class="collapse-content text-sm px-0">
             <ul class="flex gap-2 flex-wrap">
-              {article.projects.map((project) => (
+              {projectsOfNote.map((project) => (
                 <Badge
                   id={project.id}
                   ownerId={project.author.id}

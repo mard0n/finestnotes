@@ -1,20 +1,23 @@
 import { Prettify } from "types";
 import * as schema from "../db/schema";
 
-type AuthorType = Prettify<
-  Pick<typeof schema.user.$inferSelect, "id" | "name">
->;
+type AuthorType = {
+  id: string;
+  name: string;
+};
 
 type DBNoteType = typeof schema.notes.$inferSelect;
 
-type NoteBaseType = Prettify<
-  Pick<DBNoteType, "id" | "title" | "createdAt" | "isPublic"> & {
-    author: AuthorType;
-    likeCount: number;
-    commentCount: number;
-    projects: ProjectType[];
-  }
->;
+type NoteBaseType = {
+  id: string;
+  title: string;
+  createdAt: string;
+  isPublic: boolean;
+  author: AuthorType;
+  likeCount: number;
+  commentCount: number;
+  projects: ProjectType[];
+};
 
 type AnnotationType = Prettify<
   NoteBaseType & {
