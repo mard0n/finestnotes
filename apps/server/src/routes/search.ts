@@ -6,7 +6,7 @@ import { Hono } from "hono";
 import { type Bindings } from "../index";
 import z from "zod";
 import * as schema from "../db/schema";
-import { normalizeNotes } from "./articles";
+import { normalizeNotesNew } from "../utils/normalizers";
 
 const search = new Hono<{ Bindings: Bindings }>().get(
   "/",
@@ -31,9 +31,8 @@ const search = new Hono<{ Bindings: Bindings }>().get(
     const results = await db.query.notes.findMany({
       with: {
         author: true,
-        highlights: true,
-        images: true,
         likes: true,
+        comments: true,
         projectsToNotes: {
           with: {
             project: true,
@@ -51,30 +50,19 @@ const search = new Hono<{ Bindings: Bindings }>().get(
           like(notes.description, searchPattern)
         )
       ),
-    });
-
-    // Flatten project notes
-    const flattenedResults = results.map((result) => {
-      const { projectsToNotes, ...rest } = result;
-      return {
-        ...rest,
-        projects: projectsToNotes?.filter((pn) => pn.project.isPublic).map((pn) => pn.project) ?? [],
-      };
-    });
-
-    const normalizedResults = normalizeNotes(flattenedResults);
+    }).then(normalizeNotesNew)
 
     // Apply pagination
-    const paginatedResults = normalizedResults.slice(
+    const paginatedResults = results.slice(
       offset,
       offset + limitNum
     );
-    const hasMore = offset + limitNum < normalizedResults.length;
+    const hasMore = offset + limitNum < results.length;
 
     return c.json({
       results: paginatedResults,
       hasMore,
-      total: normalizedResults.length,
+      total: results.length,
       page: pageNum,
       limit: limitNum,
       query: q,

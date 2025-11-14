@@ -2,38 +2,25 @@
 import ArticleCard from "@components/ArticleCard";
 import Layout from "@layouts/Layout.astro";
 import { createServerClient } from "@utils/api";
-import { parseResponse, type InferResponseType } from "hono/client";
+import { parseResponse } from "hono/client";
 
 export const prerender = false;
 
 const searchQuery = Astro.url.searchParams.get("q") || "";
 
 const client = createServerClient(Astro.request.headers);
-type SearchResults = InferResponseType<
-  typeof client.api.search.$get,
-  200
->["results"];
-let searchResults: SearchResults = [];
-let total = 0;
-let hasMore = false;
 
-if (searchQuery) {
-  try {
-    const res = await client.api.search.$get({
-      query: {
-        q: searchQuery,
-        page: "1",
-        limit: "20",
-      },
-    });
-    const data = await parseResponse(res);
-    searchResults = data.results;
-    total = data.total;
-    hasMore = data.hasMore;
-  } catch (error) {
-    console.error("Search error:", error);
-  }
-}
+const res = await client.api.search.$get({
+  query: {
+    q: searchQuery,
+    page: "1",
+    limit: "20",
+  },
+});
+const data = await parseResponse(res);
+const searchResults = data.results;
+const total = data.total;
+const hasMore = data.hasMore;
 ---
 
 <Layout>
@@ -61,7 +48,7 @@ if (searchQuery) {
               return (
                 <ArticleCard
                   note={result}
-                  projects={result.projects || null}
+                  projects={[]}
                   userId={Astro.locals.user?.id}
                 />
               );
