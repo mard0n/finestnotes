@@ -15,7 +15,6 @@ const userRoutes = new Hono<{
   Variables: { user: User; session: Session };
 }>()
   // Get all projects for a user.
-  // MARK: Refactored v2
   .get("/projects", protect, async (c) => {
     const db = drizzle(c.env.finestdb, { schema: schema });
 
@@ -76,7 +75,6 @@ const userRoutes = new Hono<{
   })
 
   // Get user profile not me
-  // MARK: Refactored
   .get(
     "/:id",
     zValidator(
@@ -107,7 +105,6 @@ const userRoutes = new Hono<{
   )
 
   // Get public projects for a user
-  // MARK: Refactored v2
   .get(
     "/:id/projects",
     zValidator(
@@ -153,7 +150,6 @@ const userRoutes = new Hono<{
   )
 
   // Get public notes for a user
-  // MARK: Refactored v2
   .get(
     "/:id/notes",
     zValidator(

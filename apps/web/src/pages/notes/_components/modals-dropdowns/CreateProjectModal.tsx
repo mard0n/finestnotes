@@ -1,9 +1,4 @@
-import {
-  useQueryClient,
-  useMutation,
-  QueryClientProvider,
-  QueryClient,
-} from "@tanstack/react-query";
+import { useQueryClient, useMutation } from "@tanstack/react-query";
 import { client } from "@utils/api";
 import { parseResponse } from "hono/client";
 import { useState } from "react";
@@ -55,7 +50,7 @@ const Modal: React.FC<{
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [isPublic, setIsPublic] = useState(false);
-  
+
   const queryClient = useQueryClient();
 
   const {

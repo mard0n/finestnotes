@@ -7,7 +7,6 @@ import { authClient } from "../auth/auth-client";
 
 browser.commands.onCommand.addListener(async (command, tab) => {
   const session = await authClient.getSession()
-  console.log('session', session);
   if (!(session.data?.user)) {
     await sendMessage("showSnackbar", { message: "You need to be logged in to use this feature", duration: 5000 }, tab?.id);
     return
@@ -117,12 +116,9 @@ onMessage("deletePage", async (request) => {
 
 
 browser.runtime.onMessageExternal.addListener((message: any, sender: any, sendResponse: any) => {
-  console.log("External message received:", message, "from:", sender);
-
   if (message.type === "authToken" && message.token) {
     browser.storage.local.set({ authToken: message.token })
       .then(() => {
-        console.log("✅ Auth token saved successfully");
         sendResponse({ success: true });
       })
       .catch((error) => {

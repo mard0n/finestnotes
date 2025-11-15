@@ -8,6 +8,8 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { parseResponse } from "hono/client";
+import SearchIcon from "@assets/search.svg?react";
+import PlusIcon from "@assets/plus.svg?react";
 
 const AddToProjectDropdownWrapper: React.FC<{
   noteId: string;
@@ -48,19 +50,15 @@ const AddToProjectDropdown: React.FC<{
     },
   });
 
-  console.log("allMyProjects", allMyProjects);
-
   const { data: projectsWithThisNote = [] } = useQuery({
     queryKey: ["projects", noteId],
     queryFn: async () => {
-      const res = await client.api.note[':id'].projects.$get({
+      const res = await client.api.note[":id"].projects.$get({
         param: { id: noteId },
       });
       return await parseResponse(res);
     },
   });
-
-  console.log("projectsWithThisNote", projectsWithThisNote);
 
   const { mutate: addNoteToProject } = useMutation({
     mutationFn: async ({
@@ -181,22 +179,7 @@ const AddToProjectDropdown: React.FC<{
       <h3 className="text-lg font-medium mb-3">Add to project</h3>
 
       <label className="input input-bordered input-sm flex items-center gap-2 mb-2 w-full">
-        <svg
-          className="h-[1em] opacity-50"
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 24 24"
-        >
-          <g
-            strokeLinejoin="round"
-            strokeLinecap="round"
-            strokeWidth="2.5"
-            fill="none"
-            stroke="currentColor"
-          >
-            <circle cx="11" cy="11" r="8"></circle>
-            <path d="m21 21-4.3-4.3"></path>
-          </g>
-        </svg>
+        <SearchIcon />
         <input
           ref={inputRef}
           type="search"
@@ -228,19 +211,7 @@ const AddToProjectDropdown: React.FC<{
             `Project "${search}" already exists`
           ) : (
             <>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="h-4 w-4"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-              </svg>
+              <PlusIcon />
               Create project "{search}"
             </>
           )}

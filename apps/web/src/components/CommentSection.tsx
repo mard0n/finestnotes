@@ -10,6 +10,10 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { parseResponse, type InferResponseType } from "hono/client";
+import ChevronCollapsedIcon from "@assets/chevron-collapsed.svg?react";
+import ChevronOpenIcon from "@assets/chevron-open.svg?react";
+import TriangleUpIcon from "@assets/triangle-up.svg?react";
+import TriangleDownIcon from "@assets/triangle-down.svg?react";
 
 const $comments = client.api.comments.article[":noteId"].$get;
 export type CommentsResponse = InferResponseType<typeof $comments, 200>;
@@ -113,7 +117,9 @@ const CommentSection: React.FC<CommentSectionProps> = ({
   return (
     <div className="collapse collapse-arrow px-0">
       <input id="comments-collapse" type="checkbox" defaultChecked={isOpen} />
-      <div className="collapse-title font-semibold px-0">Comments ({totalCount})</div>
+      <div className="collapse-title font-semibold px-0">
+        Comments ({totalCount})
+      </div>
       <div className="collapse-content text-sm px-0">
         {createCommentMutation.isError && (
           <div className="alert alert-error alert-soft border border-red-400 text-sm">
@@ -375,39 +381,21 @@ const CommentComponent: React.FC<CommentComponentProps> = ({
     <div className={`${depth % 2 === 0 ? "bg-base-200" : "bg-black/3"}`}>
       <div className="flex flex-col gap-4 border border-neutral-300 rounded-none px-4 py-3">
         <div className="flex items-center gap-4 text-sm text-content-medium">
-          <span className="flex items-center gap-1">
+          <span className="flex items-center gap-2">
             {isCollapsed ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-                className="size-4 cursor-pointer"
+              <ChevronCollapsedIcon
+                className="size-3 cursor-pointer"
                 onClick={() => {
                   setIsCollapsed(false);
                 }}
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M6.22 4.22a.75.75 0 0 1 1.06 0l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.75.75 0 0 1-1.06-1.06L8.94 8 6.22 5.28a.75.75 0 0 1 0-1.06Z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              />
             ) : (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 16 16"
-                fill="currentColor"
-                className="size-4 cursor-pointer"
+              <ChevronOpenIcon
+                className="size-3 cursor-pointer"
                 onClick={() => {
                   setIsCollapsed(true);
                 }}
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M4.22 6.22a.75.75 0 0 1 1.06 0L8 8.94l2.72-2.72a.75.75 0 1 1 1.06 1.06l-3.25 3.25a.75.75 0 0 1-1.06 0L4.22 7.28a.75.75 0 0 1 0-1.06Z"
-                  clipRule="evenodd"
-                />
-              </svg>
+              />
             )}
             <AuthorName
               ownerId={comment.author.id}
@@ -422,22 +410,14 @@ const CommentComponent: React.FC<CommentComponentProps> = ({
             <button
               onClick={() => handleReact("like")}
               disabled={!currentUser}
-              className="disabled:opacity-50 disabled:cursor-not-allowed hover:text-black"
+              className={`cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:text-black ${
+                comment.userReaction === "like" ? "text-content-dark" : "text-content-light"
+              }`}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
+              <TriangleUpIcon
+                className="size-4"
                 fill={comment.userReaction === "like" ? "currentColor" : "none"}
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className=""
-              >
-                <path d="M13.73 4a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
-              </svg>
+              />
             </button>
 
             <span className="text-content-medium">
@@ -447,24 +427,14 @@ const CommentComponent: React.FC<CommentComponentProps> = ({
             <button
               onClick={() => handleReact("dislike")}
               disabled={!currentUser}
-              className="disabled:opacity-50 disabled:cursor-not-allowed hover:text-black"
+              className={`cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed hover:text-black ${
+                comment.userReaction === "dislike" ? "text-content-dark" : "text-content-light"
+              }`}
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill={
-                  comment.userReaction === "dislike" ? "currentColor" : "none"
-                }
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="rotate-180"
-              >
-                <path d="M13.73 4a2 2 0 0 0-3.46 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path>
-              </svg>
+              <TriangleDownIcon
+                className="size-4"
+                fill={comment.userReaction === "dislike" ? "currentColor" : "none"}
+              />
             </button>
           </span>
           {isAuthor ? (
@@ -498,62 +468,66 @@ const CommentComponent: React.FC<CommentComponentProps> = ({
           ) : null}
         </div>
 
-        {isEditing ? (
-          <CommentInput
-            content={editContent}
-            setContent={setEditContent}
-            placeholder="Write a comment..."
-            onCancel={() => setIsEditing(false)}
-            autoFocus={true}
-            isPending={updateCommentMutation.isPending}
-            onSubmit={(content) => {
-              setEditContent(content);
-              handleEdit();
-            }}
-          />
-        ) : (
-          <p className="text-sm whitespace-pre-wrap break-words">
-            {comment.content}
-          </p>
-        )}
+        {!isCollapsed ? (
+          <>
+            {isEditing ? (
+              <CommentInput
+                content={editContent}
+                setContent={setEditContent}
+                placeholder="Write a comment..."
+                onCancel={() => setIsEditing(false)}
+                autoFocus={true}
+                isPending={updateCommentMutation.isPending}
+                onSubmit={(content) => {
+                  setEditContent(content);
+                  handleEdit();
+                }}
+              />
+            ) : (
+              <p className="text-sm whitespace-pre-wrap break-words">
+                {comment.content}
+              </p>
+            )}
 
-        <div className="flex items-center gap-4 text-xs text-content-light">
-          {currentUser && (
-            <button
-              onClick={() => {
-                setIsReplying(!isReplying);
-                setIsEditing(false);
-              }}
-              className="link link-hover"
-            >
-              Reply
-            </button>
-          )}
-        </div>
+            <div className="flex items-center gap-4 text-xs text-content-light">
+              {currentUser && (
+                <button
+                  onClick={() => {
+                    setIsReplying(!isReplying);
+                    setIsEditing(false);
+                  }}
+                  className="link link-hover"
+                >
+                  Reply
+                </button>
+              )}
+            </div>
 
-        {isReplying && (
-          <div className="ml-8 mt-4">
-            <CommentInput
-              placeholder="Write a reply..."
-              content={replyContent}
-              setContent={setReplyContent}
-              isPending={createReplyMutation.isPending}
-              onCancel={() => setIsReplying(false)}
-              onSubmit={handleReply}
-              autoFocus={true}
-            />
-          </div>
-        )}
+            {isReplying && (
+              <div className="ml-8 mt-4">
+                <CommentInput
+                  placeholder="Write a reply..."
+                  content={replyContent}
+                  setContent={setReplyContent}
+                  isPending={createReplyMutation.isPending}
+                  onCancel={() => setIsReplying(false)}
+                  onSubmit={handleReply}
+                  autoFocus={true}
+                />
+              </div>
+            )}
 
-        {comment.replies?.map((reply) => (
-          <CommentComponent
-            key={reply.id}
-            comment={reply}
-            noteId={noteId}
-            currentUser={currentUser}
-            depth={depth + 1}
-          />
-        ))}
+            {comment.replies?.map((reply) => (
+              <CommentComponent
+                key={reply.id}
+                comment={reply}
+                noteId={noteId}
+                currentUser={currentUser}
+                depth={depth + 1}
+              />
+            ))}
+          </>
+        ) : null}
       </div>
     </div>
   );

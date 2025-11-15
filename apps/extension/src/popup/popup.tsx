@@ -5,7 +5,6 @@ import { authClientSolid } from "../auth/auth-client";
 import browser from "webextension-polyfill";
 
 async function checkIfPageSaved(url: string) {
-  console.log("Checking if page is saved for url:", url);
   if (!url) {
     return Promise.resolve(undefined);
   }
@@ -88,7 +87,6 @@ function App() {
 
   async function handleVisitDashboard() {
     // Add dashboard visit logic here
-    console.log("Visit dashboard clicked");
   }
 
   async function handleLogin() {

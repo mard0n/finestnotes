@@ -1,8 +1,6 @@
 import { SystemError } from "../utils/errors";
 import { SelectionRange } from "../utils/types";
 
-console.log("Hello from highlight-on-load");
-
 export function parseXPathLink(parseXPathLink: string): SelectionRange {
   const url = new URL(parseXPathLink);
   const xpathParam = url.searchParams.get("xpath");
@@ -53,7 +51,6 @@ export function parseXPathLink(parseXPathLink: string): SelectionRange {
 // // Listen for storage changes and rehighlight
 // browser.storage.onChanged.addListener((changes, areaName) => {
 //   if (areaName === 'local' && changes.highlights) {
-//     console.log('Highlights updated in storage, rehighlighting...')
 //     const highlightedElements = document.querySelectorAll('mark[data-finest-highlight]');
 //     const highlightedAnnotationIds = new Set<string>();
 //     highlightedElements.forEach(el => {

@@ -16,8 +16,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
       }
     );
 
-    console.log("Astro Middleware Response:", response);
-
     if (response.ok) {
       const data = await response.json();
 
@@ -27,7 +25,6 @@ export const onRequest = defineMiddleware(async (context, next) => {
       } else {
         context.locals.user = null;
         context.locals.session = null;
-        console.log("No session found - user needs to login");
       }
     } else {
       const errorText = await response.text();

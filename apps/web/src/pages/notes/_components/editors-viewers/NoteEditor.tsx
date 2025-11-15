@@ -144,7 +144,6 @@ const NoteEditor: React.FC<{
             const root = $getRoot();
 
             const htmlString = $generateHtmlFromNodes(editor, null);
-            console.log("htmlString", htmlString);
 
             throttledUpdate({
               id: note.id,

@@ -20,7 +20,6 @@ const getLocalD1 = () => {
     const isBundled = process.cwd() === '/bundle' || !fs.existsSync('package.json');
     
     if (isBundled) {
-      console.log('Detected bundled environment - this should not be used for drizzle-kit commands');
       throw new Error('Cannot access local D1 database from bundled environment. Use drizzle-kit commands from the project directory.');
     }
 

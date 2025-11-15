@@ -1,11 +1,5 @@
 import { zValidator } from "@hono/zod-validator";
-import {
-  projects,
-  projectsToSubscribers,
-  projectsToNotes,
-  user,
-  notes,
-} from "../db/schema";
+import { projects, projectsToSubscribers, projectsToNotes } from "../db/schema";
 import { and, eq, sql } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/d1";
 import { Hono } from "hono";
@@ -14,90 +8,12 @@ import z from "zod";
 import { protect } from "middlewares/auth.middleware";
 import type { Session, User } from "better-auth";
 import * as schema from "../db/schema";
-import { normalizeProjectNew } from "../utils/normalizers";
+import { normalizeNotesNew, normalizeProjectNew } from "../utils/normalizers";
 
 const projectRoutes = new Hono<{
   Bindings: Bindings;
   Variables: { user: User; session: Session };
 }>()
-  // // Get all projects (owned + subscribed)
-  // .get("/", protect, async (c) => {
-  //   const db = drizzle(c.env.finestdb, { schema: schema });
-
-  //   const userData = await db.query.user.findFirst({
-  //     where: eq(user.id, c.var.user.id),
-  //     with: {
-  //       projects: {
-  //         with: {
-  //           author: true,
-  //         },
-  //       },
-  //       projectsToSubscribers: {
-  //         with: {
-  //           project: {
-  //             with: {
-  //               author: true,
-  //             },
-  //           },
-  //         },
-  //       },
-  //     },
-  //   });
-
-  //   if (!userData) {
-  //     return c.json({ success: false, message: "User not found" }, 404);
-  //   }
-
-  //   const projects = [
-  //     ...userData.projects.map((p) => ({ ...p, role: "owner" as const })),
-  //     ...userData.projectsToSubscribers.map((s) => ({
-  //       ...s.project,
-  //       role: "subscriber" as const,
-  //     })),
-  //   ].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
-
-  //   return c.json(projects);
-  // })
-
-  // // Get all projects with this note
-  // .get(
-  //   "/note/:noteId",
-  //   protect,
-  //   zValidator(
-  //     "param",
-  //     z.object({
-  //       noteId: z.string(),
-  //     })
-  //   ),
-  //   async (c) => {
-  //     const { noteId } = c.req.valid("param");
-  //     const db = drizzle(c.env.finestdb, { schema: schema });
-
-  //     const projectsWithNote = await db.query.projectsToNotes.findMany({
-  //       where: eq(projectsToNotes.noteId, noteId),
-  //       with: {
-  //         project: {
-  //           with: { author: true },
-  //         },
-  //       },
-  //     });
-
-  //     const projects = projectsWithNote
-  //       .map((pn) => pn.project)
-  //       .map((project) => {
-  //         const { author, authorId, ...rest } = project;
-  //         return {
-  //           ...rest,
-  //           author: {
-  //             id: author.id,
-  //             name: author.name,
-  //           },
-  //         };
-  //       });
-
-  //     return c.json(projects);
-  //   }
-  // )
 
   // Is user subscribed to project
   .get("/:id/is-subscribed", protect, async (c) => {
@@ -114,8 +30,59 @@ const projectRoutes = new Hono<{
     return c.json(!!existing);
   })
 
+  // Get all notes of a project
+  .get("/:id/notes", protect, async (c) => {
+    const { id } = c.req.param();
+    const db = drizzle(c.env.finestdb, { schema: schema });
+
+    const notes = await db.query.projects
+      .findFirst({
+        with: {
+          projectsToNotes: {
+            with: {
+              note: {
+                with: {
+                  author: true,
+                  likes: true,
+                  comments: true,
+                  projectsToNotes: {
+                    with: {
+                      project: {
+                        with: {
+                          author: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        where: eq(schema.projects.id, id),
+      })
+      .then((project) => {
+        if (!project) return null;
+        const { projectsToNotes, ...rest } = project;
+        const notes = projectsToNotes.map((pn) => pn.note);
+        const normalizedNotes = normalizeNotesNew(notes);
+        return normalizedNotes;
+      });
+
+    if (!notes) {
+      return c.json(
+        {
+          success: false,
+          message: `Project ${id} and its notes not found`,
+        },
+        404
+      );
+    }
+
+    return c.json(notes);
+  })
+
   // Get a project with its items
-  // MARK: Refactored
   .get("/:id", protect, async (c) => {
     const { id } = c.req.param();
     const db = drizzle(c.env.finestdb, { schema: schema });
@@ -140,7 +107,7 @@ const projectRoutes = new Hono<{
       })
       .then((project) => {
         if (!project) return null;
-        return normalizeProjectNew([project])[0];
+        return normalizeProjectNew([project])[0]!;
       })
       .then((project) => {
         if (!project) return null;
@@ -159,7 +126,6 @@ const projectRoutes = new Hono<{
   })
 
   // Create a new project
-  // MARK: Refactored v2
   .post(
     "/",
     protect,
@@ -242,7 +208,6 @@ const projectRoutes = new Hono<{
   )
 
   // Delete a project
-  // MARK: Refactored v2
   .delete(
     "/:id",
     protect,
@@ -280,7 +245,6 @@ const projectRoutes = new Hono<{
   )
 
   // Add note to project
-  // MARK: Refactored v2
   .post(
     "/:id/notes",
     protect,

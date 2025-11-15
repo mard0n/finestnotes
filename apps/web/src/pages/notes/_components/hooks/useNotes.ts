@@ -14,7 +14,7 @@ export const useNotes = ({ filter }: { filter: FilterType }) => {
           return await parseResponse(savedRes);
 
         case "project":
-          const projectNotesRes = await client.api.note.project[":id"].$get({
+          const projectNotesRes = await client.api.projects[":id"].notes.$get({
             param: { id: filter.project.id },
           });
           return await parseResponse(projectNotesRes);

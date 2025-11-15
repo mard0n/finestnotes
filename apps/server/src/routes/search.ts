@@ -28,35 +28,35 @@ const search = new Hono<{ Bindings: Bindings }>().get(
 
     // Search in public articles only
     const searchPattern = `%${q}%`;
-    const results = await db.query.notes.findMany({
-      with: {
-        author: true,
-        likes: true,
-        comments: true,
-        projectsToNotes: {
-          with: {
-            project: true,
+    const results = await db.query.notes
+      .findMany({
+        with: {
+          author: true,
+          likes: true,
+          comments: true,
+          projectsToNotes: {
+            with: {
+              project: {
+                with: {
+                  author: true,
+                },
+              },
+            },
           },
         },
-      },
-      extras: {
-        likeCount: sql<number>`(SELECT COUNT(*) FROM likes WHERE likes.note_id = notes.id)`.as("like_count"),
-      },
-      where: and(
-        eq(notes.isPublic, true),
-        or(
-          like(notes.title, searchPattern),
-          like(notes.content, searchPattern),
-          like(notes.description, searchPattern)
-        )
-      ),
-    }).then(normalizeNotesNew)
+        where: and(
+          eq(notes.isPublic, true),
+          or(
+            like(notes.title, searchPattern),
+            like(notes.content, searchPattern),
+            like(notes.description, searchPattern)
+          )
+        ),
+      })
+      .then(normalizeNotesNew);
 
     // Apply pagination
-    const paginatedResults = results.slice(
-      offset,
-      offset + limitNum
-    );
+    const paginatedResults = results.slice(offset, offset + limitNum);
     const hasMore = offset + limitNum < results.length;
 
     return c.json({

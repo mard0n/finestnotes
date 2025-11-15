@@ -19,10 +19,9 @@ export const auth = (env: Bindings) => {
       enabled: true,
       requireEmailVerification: true,
       sendResetPassword: async ({ user, url, token }, request) => {
-        console.log('sendResetPassword url', url);
         try {
           const res = await resend.emails.send({
-            from: 'noreply@finestnotes.com', // Update with your verified domain
+            from: 'noreply@finestnotes.com',
             to: user.email,
             subject: 'Reset your password',
             html: `
@@ -41,14 +40,12 @@ export const auth = (env: Bindings) => {
               </div>
             `
           });
-          console.log('sendResetPassword res', res);
         } catch (error) {
           console.error('Failed to send password reset email:', error);
           throw error;
         }
       },
       onPasswordReset: async ({ user }, request) => {
-        console.log(`Password for user ${user.email} has been reset.`);
         // You can add additional logic here, such as:
         // - Logging the password reset event
         // - Sending a confirmation email
@@ -59,7 +56,6 @@ export const auth = (env: Bindings) => {
       sendOnSignUp: true,
       autoSignInAfterVerification: true,
       sendVerificationEmail: async ({ user, url, token }, request) => {
-        console.log('sendVerificationEmail url', url);
         try {
           const res = await resend.emails.send({
             from: 'noreply@finestnotes.com', // Update with your verified domain
@@ -80,7 +76,6 @@ export const auth = (env: Bindings) => {
               </div>
             `
           });
-          console.log('sendVerificationEmail res', res);
         } catch (error) {
           console.error('Failed to send verification email:', error);
           throw error;

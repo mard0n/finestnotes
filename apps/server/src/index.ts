@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import type { D1Database } from "@cloudflare/workers-types";
-import articles from "./routes/articles";
 import note from "./routes/note";
 import page from "./routes/page";
 import image from "./routes/image";
@@ -27,15 +26,13 @@ const app = new Hono<{
 
 app.use(logger());
 
-// CORS configuration for cross-origin cookies
 app.use(
-  "/api/auth/*", // or replace with "*" to enable cors for all routes
+  "/api/auth/*",
   cors({
     origin: (origin, c) => {
       const isDev = c.env.NODE_ENV !== "production";
 
       if (isDev) {
-        // In development, allow localhost on any port
         if (origin && origin.startsWith("http://localhost:")) {
           return origin;
         }
@@ -52,14 +49,11 @@ app.use(
 );
 
 app.on(["GET", "POST"], "/api/auth/*", async (c) => {
-  // console.log('/api/auth/* req:', c.req);
   const res = await auth(c.env).handler(c.req.raw);
-  // console.log('/api/auth/* res:', res);
   return res;
 });
 
 const routes = app
-  .route("/api/articles", articles)
   .route("/api/note", note)
   .route("/api/page", page)
   .route("/api/highlight", highlight)

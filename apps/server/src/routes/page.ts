@@ -7,6 +7,7 @@ import type { Bindings } from "../index";
 import z from "zod";
 import { protect } from "middlewares/auth.middleware";
 import { Session, User } from "better-auth";
+import { normalizeNotesNew } from "utils/normalizers";
 
 const page = new Hono<{
   Bindings: Bindings;

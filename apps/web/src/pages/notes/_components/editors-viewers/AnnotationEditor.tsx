@@ -142,8 +142,6 @@ const CommentComponent: React.FC<{
   const [isCommenting, setIsCommenting] = useState(false);
   const [newComment, setNewComment] = useState(comment || "");
 
-  console.log("newComment", newComment);
-
   return isCommenting ? (
     <div className="mr-4 w-full">
       <textarea

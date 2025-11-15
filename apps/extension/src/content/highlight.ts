@@ -1,8 +1,6 @@
 import { sendMessage } from "../messaging";
 import { Point, SelectionRange } from "../utils/types";
 
-console.log("Hello from highlight");
-
 function getPointFromStablePointContainer({ node, offset }: Point): Point {
   let currentNode = node;
   let currentOffset = offset;
@@ -75,13 +73,6 @@ export function highlight(selection: SelectionRange, highlightId: string) {
   const { node: endNode, offset: endOffset } = getPointFromStablePointContainer(
     { node: selection.endNode, offset: selection.endOffset },
   );
-
-  console.log("Normalized Selection:", {
-    startNode,
-    startOffset,
-    endNode,
-    endOffset,
-  });
 
   // Handle case where selection is within a single text node
   if (startNode === endNode) {
@@ -352,8 +343,6 @@ export function setupHighlightEventListeners() {
     });
 
     // TODO: Send message to background to delete annotation
-    console.log(`Deleted highlight ${highlightIdToDelete}`);
-
     await sendMessage("deleteHighlight", { highlightId: highlightIdToDelete });
 
 

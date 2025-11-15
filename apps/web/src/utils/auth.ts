@@ -7,9 +7,7 @@ export const authClient = createAuthClient({
   }
 })
 
-export function sendAuthToExtension(token: string, extensionId: string): Promise<any> {
-  console.log('Sending Auth To Extension');
-  
+export function sendAuthToExtension(token: string, extensionId: string): Promise<any> {  
   return new Promise((resolve, reject) => {
     if (!token || !extensionId) {
       reject(new Error("Missing token or extensionId"));
@@ -31,8 +29,6 @@ export function sendAuthToExtension(token: string, extensionId: string): Promise
       reject(error);
     };
 
-    // console.log("Sending token to extension:", extensionId);
-
     try {
       // @ts-ignore
       if (typeof chrome !== "undefined" && chrome?.runtime?.sendMessage) {
@@ -48,7 +44,6 @@ export function sendAuthToExtension(token: string, extensionId: string): Promise
             // @ts-ignore
             clearTimeoutAndReject(new Error(chrome.runtime.lastError.message));
           } else {
-            // console.log("Token sent successfully via Chrome API:", response);
             clearTimeoutAndResolve(response);
           }
         });
@@ -71,7 +66,6 @@ export function sendAuthToExtension(token: string, extensionId: string): Promise
           token,
         })
           .then((response: any) => {
-            // console.log("Token sent successfully via browser API:", response);
             clearTimeoutAndResolve(response);
           })
           .catch((error: any) => {

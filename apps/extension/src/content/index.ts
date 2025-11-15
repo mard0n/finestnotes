@@ -7,8 +7,6 @@ import { addToast } from "./snackbar";
 
 // Initial load and fetch
 async function initialize() {
-  console.log("Initializing highlight-on-load");
-
   const tabInfo = await getTabInfo();
   const highlights = await sendMessage("fetchHighlights", { url: tabInfo.url });
   
@@ -29,7 +27,6 @@ async function initialize() {
 }
 
 window.addEventListener("load", () => {
-  console.log("Page fully loaded (initial load).");
   initialize();
 });
 

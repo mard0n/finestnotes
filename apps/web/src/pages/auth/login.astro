@@ -102,13 +102,11 @@ const isLoggedIn = !!Astro.locals.user;
 	if (session.data?.session.token) {
 		const token = session.data.session.token;
 
-		console.log("Already logged in with token:", token);
 		try {
 			const response = await sendAuthToExtension(
 				token,
 				"gnoknopednpdpmkemfmhanmpgmfnfhho",
 			);
-			console.log("Auth sent:", response);
 		} catch (error) {
 			console.error("Failed to send auth:", error);
 		}
@@ -163,17 +161,14 @@ const isLoggedIn = !!Astro.locals.user;
 					return;
 				}
 
-				console.log("Login response:", data);
 				try {
 					const response = await sendAuthToExtension(
 						data.token,
 						"gnoknopednpdpmkemfmhanmpgmfnfhho",
 					); // TODO: Set id dynamically chrome, safari
-					console.log("Auth sent:", response);
 				} catch (error) {
 					console.error("Failed to send auth:", error);
 				}
-				console.log("Redirect to /");
 
 				window.location.href = "/";
 			} catch (error) {

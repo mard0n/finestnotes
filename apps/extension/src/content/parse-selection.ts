@@ -2,8 +2,6 @@ import getXPath from "get-xpath";
 import { SystemError } from "../utils/errors";
 import { Point } from "../utils/types";
 
-console.log("Hello from parse-selection");
-
 function getStablePointContainer({ node, offset }: Point): Point {
   let currentNode = node;
 
@@ -72,8 +70,7 @@ export function generateXPathLink(selection: Selection, baseURL: string): string
     node: selection.focusNode!,
     offset: selection.focusOffset,
   });
-  console.log("startContainer", startContainer);
-  console.log("endContainer", endContainer);
+  
   if (isBefore(endContainer, startContainer)) {
     [startContainer, endContainer] = [endContainer, startContainer];
   }
