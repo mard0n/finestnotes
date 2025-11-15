@@ -1,49 +1,47 @@
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "server",
-	"main": "src/index.ts",
-	"compatibility_date": "2025-09-19",
-	"dev": {
-		"port": 8080
-	},
-	"d1_databases": [
-		{
-			"binding": "finestdb",
-			"database_name": "finestdb",
-			"database_id": "a409d3f8-498d-4a22-9da6-121b113e638e",
-			"migrations_dir": "drizzle"
-		}
-	],
-	"compatibility_flags": [
-		"nodejs_compat"
-	]
-	// "vars": {
-	//   "DATABASE_URL": "my-variable"
-	// },
-	// "kv_namespaces": [
-	//   {
-	//     "binding": "MY_KV_NAMESPACE",
-	//     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-	//   }
-	// ],
-	// "r2_buckets": [
-	//   {
-	//     "binding": "MY_BUCKET",
-	//     "bucket_name": "my-bucket"
-	//   }
-	// ],
-	// "d1_databases": [
-	//   {
-	//     "binding": "MY_DB",
-	//     "database_name": "my-database",
-	//     "database_id": ""
-	//   }
-	// ],
-	// "ai": {
-	//   "binding": "AI"
-	// },
-	// "observability": {
-	//   "enabled": true,
-	//   "head_sampling_rate": 1
-	// }
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "server",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-09-19",
+  "dev": {
+    "port": 8080
+  },
+  "d1_databases": [
+    {
+      "binding": "finestdb",
+      "database_name": "finestdb",
+      "database_id": "a409d3f8-498d-4a22-9da6-121b113e638e",
+      "migrations_dir": "drizzle"
+    }
+  ],
+  "compatibility_flags": ["nodejs_compat"],
+  // "vars": {
+  //   "DATABASE_URL": "my-variable"
+  // },
+  // "kv_namespaces": [
+  //   {
+  //     "binding": "MY_KV_NAMESPACE",
+  //     "id": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+  //   }
+  // ],
+  // "r2_buckets": [
+  //   {
+  //     "binding": "MY_BUCKET",
+  //     "bucket_name": "my-bucket"
+  //   }
+  // ],
+  // "d1_databases": [
+  //   {
+  //     "binding": "MY_DB",
+  //     "database_name": "my-database",
+  //     "database_id": ""
+  //   }
+  // ],
+  // "ai": {
+  //   "binding": "AI"
+  // },
+  // "observability": {
+  //   "enabled": true,
+  //   "head_sampling_rate": 1
+  // }
 }

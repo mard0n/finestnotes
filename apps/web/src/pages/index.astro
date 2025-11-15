@@ -4,6 +4,7 @@ import { createServerClient } from "@utils/api";
 import { parseResponse } from "hono/client";
 import ArticleCard from "@components/ArticleCard";
 
+console.log('Index page');
 const user = Astro.locals.user;
 
 const page = Astro.url.searchParams.get('page') || '1'
@@ -12,9 +13,11 @@ const client = createServerClient(Astro.request.headers);
 const publishedRes = await client.api.note.published.$get({query: {
 	page
 }});
+console.log('publishedRes', publishedRes);
+
 const data = await parseResponse(publishedRes);
-const articles = data.articles;
-const hasMore = data.hasMore;
+const articles = data?.articles ?? [];
+const hasMore = data?.hasMore;
 ---
 
 <Layout>
