@@ -13,6 +13,7 @@
     "@finest/server": "workspace:^"
   },
   "devDependencies": {
-    "@finest/typescript-config": "workspace:^"
+    "@finest/typescript-config": "workspace:^",
+    "@types/node": "^24.10.1"
   }
 }

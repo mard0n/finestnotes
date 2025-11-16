@@ -15,10 +15,12 @@
     "@libsql/client": "^0.15.15",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
-    "hono": "^4.10.6"
+    "hono": "^4.10.6",
+    "vercel": "^48.10.2"
   },
   "devDependencies": {
     "@finest/typescript-config": "workspace:^",
+    "@types/node": "^24.10.1",
     "drizzle-kit": "^0.31.7",
     "tsx": "^4.7.1",
     "typescript": "^5.8.3"
