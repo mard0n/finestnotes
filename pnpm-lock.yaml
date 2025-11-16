@@ -27,7 +27,7 @@ importers:
         specifier: workspace:^
         version: link:../../packages/typescript-config
       '@types/node':
-        specifier: ^20.11.17
+        specifier: ^20.19.25
         version: 20.19.25
       drizzle-kit:
         specifier: ^0.31.7
@@ -75,6 +75,9 @@ importers:
       '@finest/typescript-config':
         specifier: workspace:^
         version: link:../typescript-config
+      '@types/node':
+        specifier: ^20.19.25
+        version: 20.19.25
 
 packages:
 

@@ -19,7 +19,6 @@
   },
   "devDependencies": {
     "@finest/typescript-config": "workspace:^",
-    "@types/node": "^20.11.17",
     "drizzle-kit": "^0.31.7",
     "tsx": "^4.7.1",
     "typescript": "^5.8.3"

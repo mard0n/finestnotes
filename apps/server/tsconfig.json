@@ -1,6 +1,5 @@
 {
   "extends": ["@finest/typescript-config"],
-  "include": ["**/*"],
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
@@ -10,11 +9,7 @@
     "lib": ["ESNext"],
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
-    // "paths": { // TODO: Breaking frontend intellisense
-    //   "@db/*": ["./src/db/*"],
-    //   "@routes/*": ["./src/routes/*"],
-    //   "@types/*": ["./src/types/*"],
-    // },
   },
+  "include": ["src/**/*", "drizzle.config.ts"],
   "exclude": ["node_modules"]
 }
