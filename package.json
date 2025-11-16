@@ -4,19 +4,32 @@
   "version": "0.0.1",
   "exports": [],
   "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
+    "dev": "wrangler types && astro dev",
+    "start": "wrangler types && astro dev",
+    "build": "wrangler types && astro check && astro build",
+    "preview": "wrangler types && wrangler dev",
     "astro": "astro",
-    "check-types": "astro check"
+    "check-types": "astro check",
+    "db:studio": "pnpm drizzle-kit studio",
+    "db:generate": "pnpm drizzle-kit generate",
+    "db:migration-list-local": "wrangler d1 migrations list finestdb --local",
+    "db:migrate-local": "wrangler d1 migrations apply finestdb --local",
+    "db:migrate-remote": "wrangler d1 migrations apply finestdb --remote"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.5",
+    "@astrojs/cloudflare": "^12.6.10",
     "@astrojs/vercel": "^9.0.0",
     "astro": "^5.15.8",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.44.7",
     "hono": "^4.10.6",
     "typescript": "^5.9.3"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "^4.20251115.0",
+    "drizzle-kit": "^0.31.7",
+    "tsx": "^4.20.6",
+    "wrangler": "^4.47.0"
   }
 }
