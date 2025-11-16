@@ -4,8 +4,9 @@ import { createServerClient } from "../utils/api";
 import Layout from "../layouts/Layout.astro";
 
 const client = createServerClient(Astro.request.headers);
-const res = await client.api.notes.$get();
-const notes = await parseResponse(res);
+const res = await client.api.notes.published.$get({ query: { page: "1" } });
+const data = await parseResponse(res);
+const notes = data.articles;
 
 const user = Astro.locals.user;
 ---
@@ -13,10 +14,10 @@ const user = Astro.locals.user;
 <Layout>
   HW, {user ? user.name : "Guest"}!
   {
-    notes.map((note) => (
+    notes?.map((note) => (
       <div>
         <h2>{note.title}</h2>
-        <h2>{note.content}</h2>
+        <h2>{note.type === "note" ? note.content : note.description}</h2>
       </div>
     ))
   }

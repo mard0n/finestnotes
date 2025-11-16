@@ -5,15 +5,8 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1763285719420,
-      "tag": "0000_certain_hydra",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "6",
-      "when": 1763292717049,
-      "tag": "0001_mixed_maestro",
+      "when": 1763306742323,
+      "tag": "0000_narrow_sumo",
       "breakpoints": true
     }
   ]
