@@ -1,8 +1,0 @@
-{
-  "name": "@finest/typescript-config",
-  "type": "module",
-  "version": "0.0.1",
-  "exports": {
-    ".": "./tsconfig.base.json"
-  }
-}

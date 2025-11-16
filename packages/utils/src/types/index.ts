@@ -1,1 +1,0 @@
-export type { RouteType } from "@finest/server/types";
