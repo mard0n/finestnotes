@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { app } from "../../server/api";
+import { app } from "../../server";
 
 export const ALL: APIRoute = ({ locals, request }) => {  
   if (!locals || !locals.runtime || !locals.runtime.env) {

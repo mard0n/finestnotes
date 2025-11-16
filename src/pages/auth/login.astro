@@ -1,0 +1,56 @@
+---
+import Layout from "../../layouts/Layout.astro";
+---
+
+<Layout>
+  <main>
+    <h1>Sign In</h1>
+    <form id="signin-form">
+      <label>
+        Email
+        <input type="email" name="email" required />
+      </label>
+      <label>
+        Password
+        <input type="password" name="password" required />
+      </label>
+      <button type="submit">Sign In</button>
+    </form>
+    <p>
+      <a href="/auth/sign-up">Need an account? Sign up</a>
+    </p>
+  </main>
+</Layout>
+
+<script>
+  import { authClient } from "../../utils/api";
+  const form = document.getElementById("signin-form") as HTMLFormElement;
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const formData = new FormData(form);
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
+
+    if (!email || !password) {
+      return;
+    }
+
+    try {
+      const response = await authClient.signIn.email({
+        email,
+        password,
+        fetchOptions: {
+          onSuccess: () => {
+            console.log("Login successful");
+            // window.location.href = "/auth/verify";
+          },
+          onError: (ctx) => {
+          },
+        },
+      });
+    } catch (error) {
+      console.error("An error occurred during login:", error);
+    }
+  });
+</script>

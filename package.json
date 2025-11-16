@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "exports": [],
   "scripts": {
-    "dev": "wrangler types && astro dev",
+    "dev": "astro dev",
     "start": "wrangler types && astro dev",
     "build": "wrangler types && astro check && astro build",
     "preview": "wrangler types && wrangler dev",
@@ -24,6 +24,7 @@
     "@astrojs/vercel": "^9.0.0",
     "@libsql/client": "^0.15.15",
     "astro": "^5.15.8",
+    "better-auth": "^1.3.34",
     "dotenv": "^17.2.3",
     "drizzle-orm": "^0.44.7",
     "hono": "^4.10.6",

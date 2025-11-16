@@ -1,7 +1,7 @@
 import { drizzle } from "drizzle-orm/d1";
 import { notes } from "../../db/schema";
 import { Hono } from "hono";
-import type { Bindings } from "..";
+import type { Bindings } from "../..";
 
 const notesRoute = new Hono<{
   Bindings: Bindings;
