@@ -1,0 +1,12 @@
+{
+  "name": "@finest/monorepo",
+  "type": "module",
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "pnpm -r --parallel dev",
+    "deploy-r": "pnpm -r deploy-r",
+    "check-types": "pnpm -r --parallel check-types"
+  },
+  "keywords": [],
+  "author": "mrnd"
+}

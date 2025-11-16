@@ -1,0 +1,18 @@
+{
+  "name": "@finest/utils",
+  "type": "module",
+  "version": "0.0.1",
+  "exports": {
+    "./types": "./src/types/index.ts"
+  },
+  "scripts": {
+    "build": "tsc --build",
+    "check-types": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@finest/server": "workspace:^"
+  },
+  "devDependencies": {
+    "@finest/typescript-config": "workspace:^"
+  }
+}

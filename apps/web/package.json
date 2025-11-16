@@ -1,0 +1,23 @@
+{
+  "name": "@finest/web",
+  "type": "module",
+  "version": "0.0.1",
+  "exports": [],
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "check-types": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.5",
+    "@finest/utils": "workspace:^",
+    "astro": "^5.15.8",
+    "hono": "^4.10.6",
+    "typescript": "^5.9.3"
+  },
+  "devDependencies": {
+    "@finest/typescript-config": "workspace:^"
+  }
+}
