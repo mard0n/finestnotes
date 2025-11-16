@@ -1,0 +1,23 @@
+---
+import Layout from "@layouts/Layout.astro";
+import Notes from "./_components/Notes";
+
+if (!Astro.locals.user) {
+  return Astro.redirect("/auth/login");
+}
+---
+
+<Layout>
+  <Fragment slot="navbar"></Fragment>
+  <Notes client:only={"react"} user={Astro.locals.user} />
+  <style>
+    html {
+      height: 100vh;
+    }
+    body {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+  </style>
+</Layout>

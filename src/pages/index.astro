@@ -1,38 +1,52 @@
 ---
+import Layout from "@layouts/Layout.astro";
+import { createServerClient } from "@utils/api";
 import { parseResponse } from "hono/client";
-import { createServerClient } from "../utils/api";
-import Layout from "../layouts/Layout.astro";
+import ArticleCard from "@components/ArticleCard";
+
+console.log('Index page');
+const user = Astro.locals.user;
+
+const page = Astro.url.searchParams.get('page') || '1'
 
 const client = createServerClient(Astro.request.headers);
-const res = await client.api.notes.published.$get({ query: { page: "1" } });
-const data = await parseResponse(res);
-const notes = data.articles;
-
-const user = Astro.locals.user;
+console.log('client created', client);
+const publishedRes = await client.api.notes.published.$get({query: {
+	page
+}});
+console.log('publishedRes', publishedRes);
+const data = await parseResponse(publishedRes);
+console.log('Index page data', data);
+const articles = data?.articles ?? [];
+const hasMore = data?.hasMore;
 ---
 
 <Layout>
-  HW, {user ? user.name : "Guest"}!
-  {
-    notes?.map((note) => (
-      <div>
-        <h2>{note.title}</h2>
-        <h2>{note.type === "note" ? note.content : note.description}</h2>
-      </div>
-    ))
-  }
-  <button id="button">Click on this button to fetch</button>
+	<main class="article-container">
+		<!-- <div role="tablist" class="tabs tabs-border gap-4">
+			<a href="/" role="tab" class="tab tab-active font-bold before:border-base-300 before:w-full before:left-0 before:bg-base-300 p-0">Articles</a>
+		</div> -->
+		<ul class="list my-8 rounded-none">
+		{
+			articles.map((article) => (
+				<ArticleCard 
+					note={article}
+					userId={user?.id}
+					projects={[]}
+				/>
+			))
+		}
+		</ul>
+		{hasMore ? <button class="link link-hover" id="load-more">Load more</button> : <></>}
+	</main>
 </Layout>
-<script>
-  import { client } from "@utils/api";
 
-  const button = document.getElementById("button")!;
-  button.addEventListener("click", () => {
-    client.api.notes.$get().then((res) => {
-      console.log("res", res);
-      res.json().then((data) => {
-        console.log("data", data);
-      });
-    });
-  });
+
+<script>
+	document.getElementById("load-more")?.addEventListener("click", () => {
+		const url = new URL(window.location.href);
+		const currentPage = parseInt(url.searchParams.get('page') || '1', 10);
+		url.searchParams.set('page', (currentPage + 1).toString());
+		window.location.href = url.toString();
+	});
 </script>

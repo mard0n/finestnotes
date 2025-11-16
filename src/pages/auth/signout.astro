@@ -1,0 +1,21 @@
+---
+import Layout from "@layouts/Layout.astro";
+---
+
+<Layout>
+  <p>Signing you out...</p>
+</Layout>
+
+<script>
+  import { authClient } from "@utils/api";
+
+  document.addEventListener("DOMContentLoaded", async () => {
+    try {
+      await authClient.signOut();
+    } catch (error) {
+      console.error("Error signing out:", error);
+    } finally {
+      window.location.href = "/";
+    }
+  });
+</script>

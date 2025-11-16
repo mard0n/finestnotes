@@ -1,0 +1,136 @@
+---
+const user = Astro.locals.user;
+const isLoggedIn = !!user;
+
+const searchQuery = Astro.url.searchParams.get("q") || "";
+---
+
+<nav class="flex items-stretch py-4 border-b border-neutral-200">
+  <div class="ml-4 md:ml-8 flex items-center font-serif font-bold text-xl whitespace-nowrap">
+    <a href="/" class="hidden xl:block">Finest Notes</a>
+    <a href="/" class="block xl:hidden">FN</a>
+  </div>
+  <div class="mx-4 md:mx-8 flex grow">
+    <form
+      id="search-form"
+      action="/search"
+      method="GET"
+      class={`input ${searchQuery ? "" : "input-ghost"} !outline-offset-0 w-full`}
+    >
+      <svg
+        class="h-[1.2em] opacity-50"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+      >
+        <g
+          stroke-linejoin="round"
+          stroke-linecap="round"
+          stroke-width="2.5"
+          fill="none"
+          stroke="currentColor"
+        >
+          <circle cx="11" cy="11" r="8"></circle>
+          <path d="m21 21-4.3-4.3"></path>
+        </g>
+      </svg>
+      <input
+        type="search"
+        name="q"
+        class="grow"
+        placeholder="Search"
+        value={searchQuery}
+        required
+      />
+    </form>
+  </div>
+  <div class="mr-4 md:mr-8 flex gap-4 md:gap-10 items-center justify-end">
+    {
+      isLoggedIn ? (
+        <>
+          <a href="/notes">
+            <span class="hidden md:block">my notes</span>
+            <span class="block md:hidden">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-file-text-icon lucide-file-text"
+              >
+                <>
+                  <path d="M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z" />
+                  <path d="M14 2v4a2 2 0 0 0 2 2h4" />
+                  <path d="M10 9H8" />
+                  <path d="M16 13H8" />
+                  <path d="M16 17H8" />
+                </>
+              </svg>
+            </span>
+          </a>
+          <div class="dropdown dropdown-hover dropdown-end">
+            <span
+              tabindex="0"
+              role="link"
+              class="hidden md:block m-1 max-w-24 truncate"
+            >
+              {user.name}
+            </span>
+            <span tabindex="0" role="link" class="block md:hidden m-1">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke-width="2"
+                stroke="currentColor"
+                class="size-6"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M17.982 18.725A7.488 7.488 0 0 0 12 15.75a7.488 7.488 0 0 0-5.982 2.975m11.963 0a9 9 0 1 0-11.963 0m11.963 0A8.966 8.966 0 0 1 12 21a8.966 8.966 0 0 1-5.982-2.275M15 9.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+                />
+              </svg>
+            </span>
+            <div class="dropdown-content menu z-1 w-52 p-2">
+              <ul class="bg-base-100 p-2 shadow-sm" tabindex="-1">
+                <li>
+                  <a href="/notes">My notes</a>
+                </li>
+                <li>
+                  <a href="https://chromewebstore.google.com/">
+                    Browser Extension
+                  </a>
+                </li>
+                <li>
+                  <a href="/settings">Settings</a>
+                </li>
+                <li>
+                  <a href="/auth/signout" id="signout">Sign out</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <a href="/auth/login">Login</a>
+        </>
+      )
+    }
+  </div>
+</nav>
+
+<script>
+  import { authClient } from "../utils/api";
+  document.getElementById("signout")?.addEventListener("click", async (e) => {
+    e.preventDefault();
+    await authClient.signOut().then(() => {
+      window.location.href = "/";
+    });
+  });
+</script>

@@ -8,7 +8,14 @@
       "@layouts/*": ["./src/layouts/*"],
       "@utils/*": ["./src/utils/*"],
       "@assets/*": ["./src/assets/*"],
-      "@styles/*": ["./src/styles/*"]
-    }
+      "@styles/*": ["./src/styles/*"],
+      "@server": ["./src/server/index"],
+      "@server/auth": ["./src/server/auth"],
+      "@server/middlewares/*": ["./src/server/middlewares/*"],
+      "@server/routes/*": ["./src/server/routes/*"],
+      "@server/db/*": ["./src/server/db/*"],
+      "@server/utils/*": ["./src/server/utils/*"],
+    },
+    "types": ["vite-plugin-svgr/client"]
   }
 }

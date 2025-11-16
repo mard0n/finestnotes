@@ -1,0 +1,419 @@
+---
+import Layout from "@layouts/Layout.astro";
+import { createServerClient } from "@utils/api";
+import { parseResponse } from "hono/client";
+
+if (!Astro.locals.user) {
+  return Astro.redirect("/auth/login");
+}
+
+const client = createServerClient(Astro.request.headers);
+const res = await client.api.settings.profile.$get();
+const user = await parseResponse(res);
+const {email, name: username} = user || {}
+---
+
+<Layout>
+  <main class="article-container max-w-2xl mx-auto py-8">
+    <h1 class="text-3xl font-bold mb-8">Settings</h1>
+
+    {email && username ? (
+      <>
+        <!-- Edit Profile Section -->
+        <section class="mb-12">
+          <h2 class="text-2xl font-semibold mb-6">Edit profile</h2>
+          
+          <div id="profile-success-message" class="alert alert-success hidden mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span id="profile-success-text">Username updated successfully!</span>
+          </div>
+
+          <div id="profile-error-message" class="alert alert-error hidden mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span id="profile-error-text">Error updating profile</span>
+          </div>
+
+          <form id="profile-form" class="space-y-4">
+            <div class="form-control w-full">
+              <label for="username" class="label">
+                <span class="label-text font-medium">User name</span>
+              </label>
+              <input
+                type="text"
+                id="username"
+                name="username"
+                value={username}
+                class="input input-bordered w-full"
+                required
+                maxlength="50"
+              />
+            </div>
+
+            <div class="form-control w-full">
+              <label for="email" class="label">
+                <span class="label-text font-medium">Email</span>
+              </label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={email}
+                class="input w-full border border-content-light/30"
+                disabled
+                style=" cursor: not-allowed;"
+              />
+            </div>
+
+            <div class="form-control mt-6">
+              <button type="submit" class="btn btn-primary">Update</button>
+            </div>
+          </form>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- Change Password Section -->
+        <section class="mb-12">
+          <h2 class="text-2xl font-semibold mb-6">Change password</h2>
+
+          <div id="password-success-message" class="alert alert-success hidden mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span id="password-success-text">Password changed successfully!</span>
+          </div>
+
+          <div id="password-error-message" class="alert alert-error hidden mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span id="password-error-text">Error changing password</span>
+          </div>
+
+          <form id="password-form" class="space-y-4">
+            <div class="form-control w-full">
+              <label for="current-password" class="label">
+                <span class="label-text font-medium">Current password</span>
+              </label>
+              <input
+                type="password"
+                id="current-password"
+                name="current-password"
+                class="input input-bordered w-full"
+                required
+                autocomplete="current-password"
+              />
+            </div>
+
+            <div class="form-control w-full">
+              <label for="new-password" class="label">
+                <span class="label-text font-medium">New password</span>
+              </label>
+              <input
+                type="password"
+                id="new-password"
+                name="new-password"
+                class="input input-bordered w-full"
+                required
+                minlength="8"
+                autocomplete="new-password"
+              />
+            </div>
+
+            <div class="form-control w-full">
+              <label for="confirm-password" class="label">
+                <span class="label-text font-medium">Confirm new password</span>
+              </label>
+              <input
+                type="password"
+                id="confirm-password"
+                name="confirm-password"
+                class="input input-bordered w-full"
+                required
+                minlength="8"
+                autocomplete="new-password"
+              />
+            </div>
+
+            <div class="form-control mt-6">
+              <button type="submit" class="btn btn-primary">Update</button>
+            </div>
+          </form>
+        </section>
+
+        <div class="divider"></div>
+
+        <!-- Delete Account Section -->
+        <section class="mb-12">
+          <h2 class="text-2xl font-semibold mb-6 text-error">Delete Account</h2>
+
+          <div id="delete-error-message" class="alert alert-error hidden mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span id="delete-error-text">Error deleting account</span>
+          </div>
+
+          <div class="alert alert-error alert-soft alert-outline mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <span>Warning: This action cannot be undone. All your data will be permanently deleted.</span>
+          </div>
+
+          <form id="delete-form" class="space-y-4">
+            <div class="form-control w-full">
+              <label for="confirm-username" class="label">
+                <span class="label-text font-medium">Confirm username</span>
+              </label>
+              <input
+                type="text"
+                id="confirm-username"
+                name="confirm-username"
+                placeholder={`Type "${username}" to confirm`}
+                class="input input-bordered w-full"
+                required
+              />
+            </div>
+
+            <div class="form-control mt-6">
+              <button type="submit" class="btn btn-error">Delete</button>
+            </div>
+          </form>
+        </section>
+      </>
+    ) : (
+      <div class="alert alert-error">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <span>Failed to load user profile</span>
+      </div>
+    )
+  }
+  </main>
+</Layout>
+
+<script>
+  import { client } from "@utils/api";
+
+  // Profile form handler
+  const profileForm = document.getElementById("profile-form") as HTMLFormElement;
+  const profileSuccessDiv = document.getElementById("profile-success-message") as HTMLDivElement;
+  const profileSuccessText = document.getElementById("profile-success-text") as HTMLSpanElement;
+  const profileErrorDiv = document.getElementById("profile-error-message") as HTMLDivElement;
+  const profileErrorText = document.getElementById("profile-error-text") as HTMLSpanElement;
+
+  profileForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(profileForm);
+    const name = formData.get("username") as string;
+
+    if (!name || name.trim().length === 0) {
+      showProfileError("Username is required");
+      return;
+    }
+
+    const submitBtn = profileForm.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Updating...';
+
+    try {
+      const res = await client.api.settings.username.$patch({
+        json: { name: name.trim() },
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        showProfileSuccess("Username updated successfully!");
+        // Update the username in the form
+        (document.getElementById("username") as HTMLInputElement).value = name.trim();
+      } else {
+        showProfileError(data.message || "Failed to update username");
+      }
+    } catch (error) {
+      console.error("Error updating username:", error);
+      showProfileError("Failed to update username");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText || "Update";
+    }
+  });
+
+  function showProfileSuccess(message: string) {
+    profileSuccessText.textContent = message;
+    profileSuccessDiv.classList.remove("hidden");
+    profileErrorDiv.classList.add("hidden");
+    setTimeout(() => {
+      profileSuccessDiv.classList.add("hidden");
+    }, 5000);
+  }
+
+  function showProfileError(message: string) {
+    profileErrorText.textContent = message;
+    profileErrorDiv.classList.remove("hidden");
+    profileSuccessDiv.classList.add("hidden");
+    setTimeout(() => {
+      profileErrorDiv.classList.add("hidden");
+    }, 5000);
+  }
+
+  // Password form handler
+  const passwordForm = document.getElementById("password-form") as HTMLFormElement;
+  const passwordSuccessDiv = document.getElementById("password-success-message") as HTMLDivElement;
+  const passwordSuccessText = document.getElementById("password-success-text") as HTMLSpanElement;
+  const passwordErrorDiv = document.getElementById("password-error-message") as HTMLDivElement;
+  const passwordErrorText = document.getElementById("password-error-text") as HTMLSpanElement;
+
+  passwordForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(passwordForm);
+    const currentPassword = formData.get("current-password") as string;
+    const newPassword = formData.get("new-password") as string;
+    const confirmPassword = formData.get("confirm-password") as string;
+
+    if (!currentPassword || !newPassword || !confirmPassword) {
+      showPasswordError("All fields are required");
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      showPasswordError("New passwords do not match");
+      return;
+    }
+
+    if (newPassword.length < 8) {
+      showPasswordError("New password must be at least 8 characters");
+      return;
+    }
+
+    const submitBtn = passwordForm.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Updating...';
+
+    try {
+      const res = await client.api.settings.password.$post({
+        json: {
+          currentPassword,
+          newPassword,
+        },
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        showPasswordSuccess("Password changed successfully!");
+        passwordForm.reset();
+      } else {
+        showPasswordError(data.message || "Failed to change password");
+      }
+    } catch (error) {
+      console.error("Error changing password:", error);
+      showPasswordError("Failed to change password. Please check your current password.");
+    } finally {
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText || "Update";
+    }
+  });
+
+  function showPasswordSuccess(message: string) {
+    passwordSuccessText.textContent = message;
+    passwordSuccessDiv.classList.remove("hidden");
+    passwordErrorDiv.classList.add("hidden");
+    setTimeout(() => {
+      passwordSuccessDiv.classList.add("hidden");
+    }, 5000);
+  }
+
+  function showPasswordError(message: string) {
+    passwordErrorText.textContent = message;
+    passwordErrorDiv.classList.remove("hidden");
+    passwordSuccessDiv.classList.add("hidden");
+    setTimeout(() => {
+      passwordErrorDiv.classList.add("hidden");
+    }, 5000);
+  }
+
+  // Delete account form handler
+  const deleteForm = document.getElementById("delete-form") as HTMLFormElement;
+  const deleteErrorDiv = document.getElementById("delete-error-message") as HTMLDivElement;
+  const deleteErrorText = document.getElementById("delete-error-text") as HTMLSpanElement;
+
+  deleteForm?.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const formData = new FormData(deleteForm);
+    const confirmUsername = formData.get("confirm-username") as string;
+    const actualUsername = (document.getElementById("username") as HTMLInputElement).value;
+
+    if (confirmUsername !== actualUsername) {
+      showDeleteError("Username does not match");
+      return;
+    }
+
+    // Double confirmation
+    const confirmed = window.confirm(
+      "Are you absolutely sure? This will permanently delete your account and all your data. This action cannot be undone."
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    const submitBtn = deleteForm.querySelector('button[type="submit"]') as HTMLButtonElement;
+    const originalText = submitBtn.textContent;
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<span class="loading loading-spinner loading-sm"></span> Deleting...';
+
+    try {
+      const res = await client.api.settings.account.$delete({
+        json: { username: confirmUsername },
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        alert("Your account has been deleted. You will be redirected to the home page.");
+        window.location.href = "/";
+      } else {
+        showDeleteError(data.message || "Failed to delete account");
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText || "Delete";
+      }
+    } catch (error) {
+      console.error("Error deleting account:", error);
+      showDeleteError("Failed to delete account");
+      submitBtn.disabled = false;
+      submitBtn.textContent = originalText || "Delete";
+    }
+  });
+
+  function showDeleteError(message: string) {
+    deleteErrorText.textContent = message;
+    deleteErrorDiv.classList.remove("hidden");
+    setTimeout(() => {
+      deleteErrorDiv.classList.add("hidden");
+    }, 5000);
+  }
+</script>
+
+<style>
+  .article-container {
+    padding: 0 1rem;
+  }
+
+  @media (min-width: 768px) {
+    .article-container {
+      padding: 0 2rem;
+    }
+  }
+</style>

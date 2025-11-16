@@ -1,0 +1,121 @@
+---
+import ArticleCard from "@components/ArticleCard";
+import AuthorName from "@components/AuthorName";
+import Layout from "@layouts/Layout.astro";
+import { createServerClient } from "@utils/api";
+import { parseResponse } from "hono/client";
+
+const { id } = Astro.params;
+const user = Astro.locals.user;
+
+if (!id) {
+  throw new Error("Article ID is required");
+}
+
+const client = createServerClient(Astro.request.headers);
+
+const [isSubscribedResponse, projectResponse] = await Promise.all([
+  client.api.projects[":id"]["is-subscribed"].$get({ param: { id: id } }),
+  client.api.projects[":id"].$get({ param: { id: id } }),
+]);
+
+const project = await parseResponse(projectResponse);
+const isSubscribed = await parseResponse(isSubscribedResponse);
+
+if (!project) {
+  throw new Error("Project not found");
+}
+---
+
+<Layout>
+  <main class="article-container">
+    <div class="flex justify-between items-start">
+      <div class="flex-1">
+        <h1 class="heading">{project.name}</h1>
+        <div class="text-xs text-gray-500 mt-1">
+          <AuthorName
+            ownerId={project.author.id}
+            ownerName={project.author.name}
+            userId={user?.id}
+            shouldAddBy={true}
+          />
+        </div>
+      </div>
+      {
+        project.author.id === Astro.locals.user?.id ? (
+          <a href={`/notes?projectId=${id}`} class="btn btn-sm btn-soft mr-2">
+            Edit Project
+          </a>
+        ) : (
+          <button
+            id="subscribe-btn"
+            class:list={[
+              "btn btn-sm",
+              isSubscribed ? "btn-outline" : "btn-primary",
+            ]}
+            data-project-id={id}
+            data-is-subscribed={isSubscribed}
+          >
+            {isSubscribed ? "Unsubscribe" : "Subscribe"}
+          </button>
+        )
+      }
+    </div>
+    <ul class="flex flex-col list rounded-box mt-8">
+      {
+        project.notes?.map((note) => (
+          <ArticleCard note={note} projects={[]} userId={user?.id} />
+        ))
+      }
+    </ul>
+  </main>
+</Layout>
+
+<script>
+  import { client } from "@utils/api";
+  import { parseResponse } from "hono/client";
+
+  const subscribeBtn = document.getElementById(
+    "subscribe-btn"
+  ) as HTMLButtonElement;
+  let isSubscribed = subscribeBtn?.dataset.isSubscribed === "true";
+
+  subscribeBtn?.addEventListener("click", async () => {
+    const projectId = subscribeBtn.dataset.projectId!;
+
+    try {
+      if (isSubscribed) {
+        const res = await client.api.projects[":id"].subscribers.$delete({
+          param: { id: projectId },
+        });
+        const data = await parseResponse(res);
+
+        if (!data.success) {
+          throw new Error(data.message || "Unsubscribe failed");
+        }
+
+        subscribeBtn.textContent = "Subscribe";
+        subscribeBtn.classList.remove("btn-outline");
+        subscribeBtn.classList.add("btn-primary");
+        isSubscribed = false;
+      } else {
+        const res = await client.api.projects[":id"].subscribers.$post({
+          param: { id: projectId },
+        });
+        const data = await parseResponse(res);
+
+        if (!data.success) {
+          throw new Error(data.message || "Subscribe failed");
+        }
+
+        subscribeBtn.textContent = "Unsubscribe";
+        subscribeBtn.classList.remove("btn-primary");
+        subscribeBtn.classList.add("btn-outline");
+        isSubscribed = true;
+      }
+    } catch (error) {
+      console.error("Failed to toggle subscription:", error);
+      alert("Failed to update subscription. Please try again.");
+    }
+  });
+</script>

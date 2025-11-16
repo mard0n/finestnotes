@@ -1,0 +1,164 @@
+---
+import Badge from "@components/Badge.tsx";
+import Layout from "@layouts/Layout.astro";
+import { createServerClient } from "@utils/api";
+import { formatDate } from "@utils/date";
+import { parseResponse } from "hono/client";
+import AuthorName from "@components/AuthorName.tsx";
+import CommentSection from "@components/CommentSection.tsx";
+import AnnotationViewer from "@components/AnnotationViewer.tsx";
+import UpvoteButton from "@components/UpvoteButton.tsx";
+import BookmarkButton from "@components/BookmarkButton.tsx";
+import AddToProjectDropdown from "@components/AddToProjectDropdown.tsx";
+import "@styles/lexical-theme.css";
+
+const { id } = Astro.params;
+const user = Astro.locals.user;
+
+if (!id) {
+  throw new Error("Article ID is required");
+}
+const client = createServerClient(Astro.request.headers);
+
+const [publishedNotesRes, projectsOfNoteRes] = await Promise.all([
+  client.api.notes.published[":id"].$get({ param: { id: id } }),
+  client.api.notes[":id"]["public-projects"].$get({ param: { id: id } }),
+]);
+
+const article = await parseResponse(publishedNotesRes);
+const projectsOfNote = await parseResponse(projectsOfNoteRes);
+
+if (!article) {
+  throw new Error("Article not found");
+}
+---
+
+<Layout>
+  <main class="max-w-2xl mx-auto my-8 px-4">
+    <div class="mb-4 flex justify-between items-center">
+      <div class="flex gap-2 md:gap-4 items-center">
+        <UpvoteButton client:load noteId={article.id} userId={user?.id} />
+        {
+          article.type === "page" && article.url ? (
+            <a
+              href={article.url}
+              class="link link-hover btn btn-ghost btn-sm rounded-full bg-white font-normal"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                class="lucide lucide-arrow-up-right-icon lucide-arrow-up-right"
+              >
+                <>
+                  <path d="M7 7h10v10" />
+                  <path d="M7 17 17 7" />
+                </>
+              </svg>
+              <span class="hidden md:inline">Visit</span>
+            </a>
+          ) : null
+        }
+      </div>
+      <div class="flex gap-2 md:gap-4 items-center">
+        <BookmarkButton
+          client:load
+          noteId={article.id}
+          authorId={article.author.id}
+          userId={user?.id}
+        />
+        <div class="dropdown dropdown-end">
+          <div
+            tabindex="0"
+            role="button"
+            class="btn btn-ghost btn-sm rounded-full bg-white font-normal"
+          >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke-width="2"
+              stroke="currentColor"
+              class="size-4"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                d="M12 10.5v6m3-3H9m4.06-7.19-2.12-2.12a1.5 1.5 0 0 0-1.061-.44H4.5A2.25 2.25 0 0 0 2.25 6v12a2.25 2.25 0 0 0 2.25 2.25h15A2.25 2.25 0 0 0 21.75 18V9a2.25 2.25 0 0 0-2.25-2.25h-5.379a1.5 1.5 0 0 1-1.06-.44Z"
+              ></path>
+            </svg>
+            <span class="hidden md:inline"> Add to project </span>
+          </div>
+          <div tabindex="-1" class="dropdown-content menu z-1 p-2 w-xs">
+            <AddToProjectDropdown client:load noteId={article.id} />
+          </div>
+        </div>
+      </div>
+    </div>
+    <h1 class="heading">{article.title}</h1>
+    {
+      article.type === "page" && article.description && (
+        <p class="text-sm mt-2 mb-3">{article.description}</p>
+      )
+    }
+    <div class="text-xs text-gray-500 mb-4 mt-1">
+      <AuthorName
+        ownerId={article.author.id}
+        ownerName={article.author.name}
+        userId={user?.id}
+        shouldAddBy={true}
+      /> ·
+      <span title={new Date(article.createdAt).toLocaleDateString()}>
+        {formatDate(article.createdAt)}
+      </span>
+    </div>
+    {
+      article.type === "note" ? (
+        <article set:html={article.contentHTML} />
+      ) : article.type === "page" ? (
+        <AnnotationViewer annotation={article} />
+      ) : null
+    }
+
+    {
+      projectsOfNote ? (
+        <div class="collapse collapse-arrow px-0 mt-10">
+          <input id="projects-collapse" type="checkbox" checked={true} />
+          <div class="collapse-title font-semibold px-0">
+            Projects ({projectsOfNote.length})
+          </div>
+          <div class="collapse-content text-sm px-0">
+            <ul class="flex gap-2 flex-wrap">
+              {projectsOfNote.map((project) => (
+                <Badge
+                  id={project.id}
+                  ownerId={project.author.id}
+                  ownerName={project.author.name}
+                  userId={Astro.locals.user?.id}
+                >
+                  {project.name}
+                </Badge>
+              ))}
+            </ul>
+          </div>
+        </div>
+      ) : null
+    }
+    <div class="mt-10">
+      <CommentSection
+        client:load
+        noteId={id}
+        currentUser={user}
+        isOpen={true}
+      />
+    </div>
+  </main>
+</Layout>
