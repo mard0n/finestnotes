@@ -18,5 +18,11 @@
   },
   "observability": {
     "enabled": true
-  }
+  },
+  "routes": [
+    {
+      "pattern": "finestnotes.com",
+      "custom_domain": true
+    }
+  ]
 }

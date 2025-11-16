@@ -1,9 +1,7 @@
 import type { APIRoute } from "astro";
 import { app } from "../../server/api";
 
-export const ALL: APIRoute = ({ locals, request }) => {
-  console.log('locals', locals);
-  
+export const ALL: APIRoute = ({ locals, request }) => {  
   if (!locals || !locals.runtime || !locals.runtime.env) {
     return new Response(JSON.stringify({ error: "Environment bindings not available. Are you running on Cloudflare Workers?" }), {
       status: 500,
