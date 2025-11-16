@@ -1,5 +1,6 @@
 {
   "extends": ["@finest/typescript-config"],
+  "include": ["**/*"],
   "compilerOptions": {
     "target": "ESNext",
     "module": "ESNext",
@@ -9,7 +10,11 @@
     "lib": ["ESNext"],
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
-    "baseUrl": "src"
+    // "paths": { // TODO: Breaking frontend intellisense
+    //   "@db/*": ["./src/db/*"],
+    //   "@routes/*": ["./src/routes/*"],
+    //   "@types/*": ["./src/types/*"],
+    // },
   },
   "exclude": ["node_modules"]
 }

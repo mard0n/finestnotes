@@ -5,16 +5,23 @@
     "./types": "./src/types/index.ts"
   },
   "scripts": {
-    "dev": "bun run src/index.ts",
-    "check-types": "tsc --noEmit"
+    "dev": "bun run --watch src/index.ts",
+    "check-types": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio"
   },
   "dependencies": {
+    "@libsql/client": "^0.15.15",
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.44.7",
     "hono": "^4.10.6"
   },
   "devDependencies": {
+    "@finest/typescript-config": "workspace:^",
     "@types/node": "^20.11.17",
+    "drizzle-kit": "^0.31.7",
     "tsx": "^4.7.1",
-    "typescript": "^5.8.3",
-    "@finest/typescript-config": "workspace:^"
+    "typescript": "^5.8.3"
   }
 }

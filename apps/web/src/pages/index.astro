@@ -8,11 +8,11 @@ const notes = await parseResponse(res);
 ---
 
 <Layout>
-  <h1>Sup?</h1>
   {
     notes.map((note) => (
       <div>
-        <p>{note}</p>
+        <h2>{note.title}</h2>
+        <p>{note.content}</p>
       </div>
     ))
   }
