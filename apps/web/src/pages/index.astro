@@ -1,0 +1,52 @@
+---
+import Layout from "@layouts/Layout.astro";
+import { createServerClient } from "@utils/api";
+import { parseResponse } from "hono/client";
+import ArticleCard from "@components/ArticleCard";
+
+console.log('Index page');
+const user = Astro.locals.user;
+
+const page = Astro.url.searchParams.get('page') || '1'
+
+const client = createServerClient(Astro.request.headers);
+console.log('client created', client);
+const publishedRes = await client.api.note.published.$get({query: {
+	page
+}});
+console.log('publishedRes', publishedRes);
+const data = await parseResponse(publishedRes);
+console.log('Index page data', data);
+const articles = data?.articles ?? [];
+const hasMore = data?.hasMore;
+---
+
+<Layout>
+	<main class="article-container">
+		<!-- <div role="tablist" class="tabs tabs-border gap-4">
+			<a href="/" role="tab" class="tab tab-active font-bold before:border-base-300 before:w-full before:left-0 before:bg-base-300 p-0">Articles</a>
+		</div> -->
+		<ul class="list my-8 rounded-none">
+		{
+			articles.map((article) => (
+				<ArticleCard 
+					note={article}
+					userId={user?.id}
+					projects={[]}
+				/>
+			))
+		}
+		</ul>
+		{hasMore ? <button class="link link-hover" id="load-more">Load more</button> : <></>}
+	</main>
+</Layout>
+
+
+<script>
+	document.getElementById("load-more")?.addEventListener("click", () => {
+		const url = new URL(window.location.href);
+		const currentPage = parseInt(url.searchParams.get('page') || '1', 10);
+		url.searchParams.set('page', (currentPage + 1).toString());
+		window.location.href = url.toString();
+	});
+</script>

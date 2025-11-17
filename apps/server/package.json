@@ -1,0 +1,43 @@
+{
+  "name": "@finest/server",
+  "type": "module",
+  "version": "0.0.1",
+  "exports": {
+    "./types": "./src/types/index.ts"
+  },
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy-r": "wrangler deploy --minify",
+    "deploy-r-exp": "pnpm run cf-gen-types && wrangler secret bulk .dev.vars.production && wrangler deploy --minify",
+    "monitor": "wrangler tail",
+    "check-types": "tsc --noEmit",
+    "cf-typegen": "wrangler types --env-interface CloudflareBindings",
+    "db:studio": "pnpm drizzle-kit studio",
+    "db:generate": "pnpm drizzle-kit generate",
+    "db:migration-list-local": "wrangler d1 migrations list finestdb --local",
+    "db:migrate-local": "wrangler d1 migrations apply finestdb --local",
+    "db:migrate-remote": "wrangler d1 migrations apply finestdb --remote",
+    "better-auth-gen-schema": "pnpm dlx @better-auth/cli@latest generate --config ./better-auth.config.ts --output ./src/db/schema.ts"
+  },
+  "dependencies": {
+    "@hono/zod-validator": "^0.7.3",
+    "@libsql/client": "^0.15.15",
+    "better-auth": "^1.3.27",
+    "dompurify": "^3.3.0",
+    "dotenv": "^17.2.2",
+    "drizzle-orm": "^0.44.6",
+    "hono": "^4.9.8",
+    "isomorphic-dompurify": "^2.30.1",
+    "linkedom": "^0.18.12",
+    "resend": "^6.1.2",
+    "zod": "^4.1.9"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20250919.0",
+    "@finest/typescript-config": "workspace:^",
+    "@types/node": "^24.5.2",
+    "drizzle-kit": "^0.31.4",
+    "tsx": "^4.20.5",
+    "wrangler": "^4.4.0"
+  }
+}

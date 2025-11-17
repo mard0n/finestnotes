@@ -1,0 +1,78 @@
+---
+import ArticleCard from "@components/ArticleCard";
+import Layout from "@layouts/Layout.astro";
+import { createServerClient } from "@utils/api";
+import { parseResponse } from "hono/client";
+
+const { id } = Astro.params;
+
+if (!id) {
+  return Astro.redirect("/404");
+}
+
+const client = createServerClient(Astro.request.headers);
+
+const [userDataResponse, projectsResponse, notesResponse] = await Promise.all([
+  client.api.user[":id"].$get({ param: { id: id } }),
+  client.api.user[":id"].projects.$get({ param: { id: id } }),
+  client.api.user[":id"].notes.$get({ param: { id: id } }),
+]);
+
+const userData = await parseResponse(userDataResponse);
+const projects = await parseResponse(projectsResponse);
+const notes = await parseResponse(notesResponse);
+
+if (!userData) {
+  throw new Error("Project not found");
+}
+---
+
+<Layout>
+  <main class="article-container">
+    <h1 class="heading mb-15">{userData.name}</h1>
+
+    <section class="mb-15">
+      <h2 class="subheading mb-6">Projects</h2>
+      <div class="space-y-3">
+        {
+          projects.length === 0 ? (
+            <p>No public projects user has created</p>
+          ) : (
+            projects.map((project) => (
+              <div>
+                <a href={`/project/${project.id}`} class="block">
+                  <div class="flex justify-between items-start font-medium">
+                    <h3 class="whitespace-nowrap truncate">{project.name}</h3>
+                    <span class="whitespace-nowrap ml-4">
+                      {project.notes?.length}{" "}
+                      {project.notes?.length === 1 ? "note" : "notes"}
+                    </span>
+                  </div>
+                </a>
+              </div>
+            ))
+          )
+        }
+      </div>
+    </section>
+
+    <section>
+      <h2 class="subheading mb-6">Public Notes</h2>
+      <ul class="list">
+        {
+          notes.length === 0 ? (
+            <p class="text-content-light">No public notes yet</p>
+          ) : (
+            notes.map((note) => (
+              <ArticleCard
+                note={{...note, projects: []}}
+                projects={[]}
+                userId={Astro.locals.user?.id}
+              />
+            ))
+          )
+        }
+      </ul>
+    </section>
+  </main>
+</Layout>

@@ -1,104 +1,12 @@
 {
-  "name": "projectx-t3-app",
-  "version": "0.1.0",
-  "private": true,
-  "@parcel/resolver-default": {
-    "packageExports": true
-  },
+  "name": "@finest/monorepo",
+  "type": "module",
+  "version": "0.0.1",
   "scripts": {
-    "dev": "run-p dev:*",
-    "dev:next": "next dev",
-    "dev:plasmo": "plasmo dev",
-    "build": "run-p build:*",
-    "build:next": "next build",
-    "build:plasmo": "plasmo build",
-    "db:push": "dotenv drizzle-kit push:mysql",
-    "db:studio": "dotenv drizzle-kit studio",
-    "lint": "next lint",
-    "start": "next start"
+    "dev": "pnpm -r --parallel dev",
+    "deploy-r": "pnpm -r deploy-r",
+    "check-types": "pnpm -r --parallel check-types"
   },
-  "dependencies": {
-    "@aws-sdk/client-s3": "^3.511.0",
-    "@aws-sdk/s3-request-presigner": "^3.511.0",
-    "@emotion/cache": "^11.11.0",
-    "@emotion/react": "^11.11.4",
-    "@emotion/styled": "^11.11.0",
-    "@fontsource/inter": "^5.0.17",
-    "@fontsource/libre-baskerville": "^5.0.12",
-    "@lexical/clipboard": "^0.12.5",
-    "@lexical/history": "^0.12.5",
-    "@lexical/html": "^0.12.5",
-    "@lexical/link": "^0.12.5",
-    "@lexical/markdown": "^0.12.5",
-    "@lexical/react": "^0.12.5",
-    "@lexical/selection": "^0.12.5",
-    "@lexical/utils": "^0.12.5",
-    "@mozilla/readability": "^0.5.0",
-    "@mui/base": "5.0.0-beta.40",
-    "@mui/joy": "5.0.0-beta.32",
-    "@planetscale/database": "^1.11.0",
-    "@plasmohq/messaging": "^0.6.1",
-    "@plasmohq/storage": "^1.9.0",
-    "@t3-oss/env-nextjs": "^0.7.1",
-    "@tanstack/react-query": "^5.18.1",
-    "@trpc/client": "11.0.0-next-beta.274",
-    "@trpc/next": "11.0.0-next-beta.274",
-    "@trpc/react-query": "11.0.0-next-beta.274",
-    "@trpc/server": "11.0.0-next-beta.274",
-    "ClickAwayListener": "link:@mui/base/ClickAwayListener",
-    "drizzle-orm": "^0.28.5",
-    "eslint-plugin-drizzle": "^0.2.3",
-    "lexical": "^0.12.5",
-    "lucide-react": "^0.363.0",
-    "next": "^14.0.3",
-    "next-auth": "5.0.0-beta.16",
-    "plasmo": "0.84.2",
-    "prismjs": "^1.29.0",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "react-markdown": "^8.0.7",
-    "react-syntax-highlighter": "^15.5.0",
-    "superjson": "^2.2.1",
-    "turndown": "^7.1.2",
-    "zod": "^3.22.4",
-    "zustand": "^4.4.7"
-  },
-  "devDependencies": {
-    "@next/eslint-plugin-next": "^14.0.3",
-    "@types/chrome": "0.0.251",
-    "@types/eslint": "^8.44.7",
-    "@types/node": "^18.17.0",
-    "@types/react": "^18.2.37",
-    "@types/react-dom": "^18.2.15",
-    "@types/react-syntax-highlighter": "^15.5.11",
-    "@types/turndown": "^5.0.4",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
-    "autoprefixer": "^10.4.14",
-    "dotenv-cli": "^7.3.0",
-    "drizzle-kit": "^0.19.3",
-    "eslint": "^8.54.0",
-    "events": "^3.1.0",
-    "mysql2": "^3.6.1",
-    "npm-run-all": "^4.1.5",
-    "postcss": "^8.4.31",
-    "prettier": "^3.1.0",
-    "prettier-plugin-tailwindcss": "^0.5.7",
-    "tailwindcss": "^3.3.5",
-    "typescript": "^5.1.6"
-  },
-  "ct3aMetadata": {
-    "initVersion": "7.25.0"
-  },
-  "packageManager": "pnpm@8.9.2",
-  "manifest": {
-    "host_permissions": [
-      "https://*/*",
-      "http://*/*",
-      "<all_urls>"
-    ],
-    "permissions": [
-      "tabs"
-    ]
-  }
+  "keywords": [],
+  "author": "mardon"
 }

@@ -1,0 +1,48 @@
+{
+  "name": "@finest/web",
+  "type": "module",
+  "version": "0.0.1",
+  "exports": [],
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "deploy-r": "astro build && wrangler deploy",
+    "astro": "astro",
+    "monitor": "wrangler tail",
+    "check-types": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/check": "^0.9.4",
+    "@astrojs/cloudflare": "^12.6.8",
+    "@astrojs/react": "^4.4.0",
+    "@finest/utils": "workspace:^",
+    "@fontsource/libre-baskerville": "^5.2.8",
+    "@fontsource/libre-franklin": "^5.2.8",
+    "@lexical/code": "^0.38.0",
+    "@lexical/hashtag": "^0.38.0",
+    "@lexical/html": "^0.38.2",
+    "@lexical/link": "^0.38.0",
+    "@lexical/list": "^0.38.0",
+    "@lexical/markdown": "^0.38.0",
+    "@lexical/react": "^0.38.0",
+    "@lexical/rich-text": "^0.38.0",
+    "@tailwindcss/vite": "^4.1.14",
+    "@tanstack/react-query": "^5.90.5",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "astro": "^5.13.8",
+    "better-auth": "^1.3.27",
+    "hono": "^4.9.8",
+    "lexical": "^0.38.0",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "tailwindcss": "^4.1.14",
+    "typescript": "^5.9.2",
+    "vite-plugin-svgr": "^4.5.0"
+  },
+  "devDependencies": {
+    "@finest/typescript-config": "workspace:^",
+    "daisyui": "^5.3.2",
+    "wrangler": "^4.38.0"
+  }
+}
