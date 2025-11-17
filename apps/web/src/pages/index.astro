@@ -10,12 +10,13 @@ const user = Astro.locals.user;
 const page = Astro.url.searchParams.get('page') || '1'
 
 const client = createServerClient(Astro.request.headers);
+console.log('client created', client);
 const publishedRes = await client.api.note.published.$get({query: {
 	page
 }});
 console.log('publishedRes', publishedRes);
-
 const data = await parseResponse(publishedRes);
+console.log('Index page data', data);
 const articles = data?.articles ?? [];
 const hasMore = data?.hasMore;
 ---

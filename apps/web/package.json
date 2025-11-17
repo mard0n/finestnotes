@@ -8,6 +8,7 @@
     "build": "astro build",
     "deploy-r": "astro build && wrangler deploy",
     "astro": "astro",
+    "monitor": "wrangler tail",
     "check-types": "astro check"
   },
   "dependencies": {

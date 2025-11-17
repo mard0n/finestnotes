@@ -27,31 +27,61 @@ const app = new Hono<{
 app.use(logger());
 
 app.use(
-  "/api/auth/*",
+  "/api/*",
   cors({
     origin: (origin, c) => {
       const isDev = c.env.NODE_ENV !== "production";
+      const allowedOrigins = [
+        "https://finestnotes.com",
+        "https://www.finestnotes.com",
+        "chrome-extension://gnoknopednpdpmkemfmhanmpgmfnfhho",
+      ];
 
-      if (isDev) {
-        if (origin && origin.startsWith("http://localhost:")) {
-          return origin;
-        }
+      console.log('=== CORS DEBUG ===');
+      console.log('origin parameter:', origin);
+      console.log('NODE_ENV:', c.env.NODE_ENV);
+      console.log('All headers:', Object.fromEntries(c.req.raw.headers));
+      console.log('==================');
+
+      if (isDev && origin?.startsWith("http://localhost:")) {
+        return origin;
       }
 
-      return null;
+      if (origin && allowedOrigins.includes(origin)) {
+        return origin;
+      }
+
+       // TODO: Refine origins later. Cloudflare removing origin.
+      // const origin =
+      //   origin || c.req.header("Origin") || c.req.header("cf-worker");
+
+      // console.log("c.req.header()", c.req.header());
+      // console.log("origin", origin);
+      // console.log("origin", origin);
+      // console.log(
+      //   "allowedOrigins.includes(origin)",
+      //   allowedOrigins.includes(origin ?? "")
+      // );
+
+      // if (origin && allowedOrigins.includes(origin)) {
+      //   return 'https://finestnotes.com';
+      // }
+
+      return 'https://finestnotes.com';
     },
-    allowHeaders: ["Content-Type", "Authorization"],
-    allowMethods: ["POST", "GET", "OPTIONS"],
-    exposeHeaders: ["Content-Length"],
-    maxAge: 600,
+    allowHeaders: ["Origin", "Content-Type", "Authorization"],
+    allowMethods: ["OPTIONS", "GET", "POST", "PATCH", "PUT", "DELETE"],
     credentials: true,
+    exposeHeaders: ["Content-Length", "Content-Type"],
+    maxAge: 600,
   })
 );
 
-app.on(["GET", "POST"], "/api/auth/*", async (c) => {
-  const res = await auth(c.env).handler(c.req.raw);
-  return res;
-});
+app.on(
+  ["GET", "POST"],
+  "/api/auth/*",
+  async (c) => await auth(c.env).handler(c.req.raw)
+);
 
 const routes = app
   .route("/api/note", note)

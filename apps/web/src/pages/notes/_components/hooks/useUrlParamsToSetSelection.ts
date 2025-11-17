@@ -1,7 +1,4 @@
 import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { client } from "@utils/api";
-import { parseResponse } from "hono/client";
 import type { FilterType } from "../Notes";
 import { useNotes } from "./useNotes";
 import { useProjects } from "./useProjects";

@@ -1,25 +1,21 @@
 import type { RouteType } from '@finest/utils/types';
 import { hc } from 'hono/client'
 
-const client = hc<RouteType>(import.meta.env.VITE_API_URL || '', {
+const client = hc<RouteType>('https://api.finestnotes.com', { // TODO: Change later
   headers: {
-    'Access-Control-Allow-Credentials': import.meta.env.PROD ? "same-origin" : 'include',
-    // 'accept-encoding': 'gzip, deflate, br',
+    'Access-Control-Allow-Credentials': 'include', // Required for sending cookies from mydomain.com to api.mydomain.com
+    // 'Access-Control-Allow-Credentials': import.meta.env.PROD ? "same-origin" : 'include',
+    'accept-encoding': 'gzip, deflate, br',
   },
 })
 
 export function createServerClient(headers: Headers) {
-  const headersObject: Record<string, string> = {};
-
-  headers.forEach((value, key) => {
-      headersObject[key] = value;
-  });
-
-  return hc<RouteType>(import.meta.env.VITE_API_URL || '', {
+  return hc<RouteType>('https://api.finestnotes.com', { // TODO: Change later
     headers: {
-      ...headersObject,
-      'Access-Control-Allow-Credentials': import.meta.env.PROD ? "same-origin" : 'include',
-      // 'accept-encoding': 'gzip, deflate, br',
+      ...Object.fromEntries(headers.entries()),
+      'Access-Control-Allow-Credentials': 'include', // Required for sending cookies from mydomain.com to api.mydomain.com
+      // 'Access-Control-Allow-Credentials': import.meta.env.PROD ? "same-origin" : 'include',
+      'accept-encoding': 'gzip, deflate, br',
     }
   })
 }
